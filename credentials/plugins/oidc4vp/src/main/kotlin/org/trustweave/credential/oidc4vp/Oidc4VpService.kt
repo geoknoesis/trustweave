@@ -16,8 +16,22 @@ import com.nimbusds.jwt.SignedJWT
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.*
-import okhttp3.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
+import okhttp3.FormBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.trustweave.core.identifiers.KeyId
 import org.trustweave.core.net.readBodyBounded
 import org.trustweave.core.util.decodeBase58
@@ -27,8 +41,13 @@ import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.model.vc.VerifiablePresentation
 import org.trustweave.credential.oidc4vp.exception.Oidc4VpException
 import org.trustweave.credential.oidc4vp.haip.HaipProfileValidator
-import org.trustweave.credential.oidc4vp.models.*
+import org.trustweave.credential.oidc4vp.models.AuthorizationRequest
 import org.trustweave.credential.oidc4vp.models.ClientIdScheme
+import org.trustweave.credential.oidc4vp.models.DcqlQuery
+import org.trustweave.credential.oidc4vp.models.PermissionRequest
+import org.trustweave.credential.oidc4vp.models.PermissionResponse
+import org.trustweave.credential.oidc4vp.models.PresentableCredential
+import org.trustweave.credential.oidc4vp.models.VerifierMetadata
 import org.trustweave.credential.oidc4vp.session.InMemorySessionStore
 import org.trustweave.credential.oidc4vp.session.SessionStore
 import org.trustweave.credential.pex.DescriptorMap
@@ -45,8 +64,8 @@ import java.net.URLDecoder
 import java.security.KeyFactory
 import java.security.PublicKey
 import java.security.spec.X509EncodedKeySpec
-import java.util.*
 import java.util.Base64
+import java.util.UUID
 
 /**
  * OIDC4VP (OpenID Connect for Verifiable Presentations) service.

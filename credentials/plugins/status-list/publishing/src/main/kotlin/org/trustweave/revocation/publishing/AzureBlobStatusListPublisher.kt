@@ -38,7 +38,6 @@ data class AzureBlobPublisherConfig(
 class AzureBlobStatusListPublisher(
     private val config: AzureBlobPublisherConfig,
 ) : StatusListPublisher {
-
     private val serviceClient by lazy {
         BlobServiceClientBuilder()
             .connectionString(config.connectionString)
@@ -50,12 +49,18 @@ class AzureBlobStatusListPublisher(
             .getBlobContainerClient(config.containerName)
             .getBlobClient(statusListId)
 
-    override suspend fun publish(statusListId: String, content: ByteArray, contentType: String): String =
+    override suspend fun publish(
+        statusListId: String,
+        content: ByteArray,
+        contentType: String,
+    ): String =
         withContext(Dispatchers.IO) {
             val client = blobClient(statusListId)
             client.upload(content.inputStream(), content.size.toLong(), true)
             client.setHttpHeaders(
-                com.azure.storage.blob.models.BlobHttpHeaders().setContentType(contentType)
+                com.azure.storage.blob.models
+                    .BlobHttpHeaders()
+                    .setContentType(contentType),
             )
             config.publicUrlPattern.replace("{id}", statusListId)
         }

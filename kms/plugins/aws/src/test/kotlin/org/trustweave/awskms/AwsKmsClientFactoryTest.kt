@@ -8,15 +8,16 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class AwsKmsClientFactoryTest {
-
     @Test
     fun `session token is propagated via AwsSessionCredentials`() {
-        val config = AwsKmsConfig.builder()
-            .region("us-east-1")
-            .accessKeyId("AKIAIOSFODNN7EXAMPLE")
-            .secretAccessKey("wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
-            .sessionToken("FwoGZXIvYXdzEXAMPLESESSIONTOKEN")
-            .build()
+        val config =
+            AwsKmsConfig
+                .builder()
+                .region("us-east-1")
+                .accessKeyId("AKIAIOSFODNN7EXAMPLE")
+                .secretAccessKey("wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
+                .sessionToken("FwoGZXIvYXdzEXAMPLESESSIONTOKEN")
+                .build()
 
         val provider = AwsKmsClientFactory.createCredentialsProvider(config)
 
@@ -25,7 +26,7 @@ class AwsKmsClientFactoryTest {
         assertTrue(
             credentials is AwsSessionCredentials,
             "Temporary credentials with a session token must resolve to AwsSessionCredentials — " +
-                "AWS rejects STS access keys presented without their session token"
+                "AWS rejects STS access keys presented without their session token",
         )
         credentials as AwsSessionCredentials
         assertEquals("AKIAIOSFODNN7EXAMPLE", credentials.accessKeyId())
@@ -35,11 +36,13 @@ class AwsKmsClientFactoryTest {
 
     @Test
     fun `static keys without session token resolve to basic credentials`() {
-        val config = AwsKmsConfig.builder()
-            .region("us-east-1")
-            .accessKeyId("AKIAIOSFODNN7EXAMPLE")
-            .secretAccessKey("wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
-            .build()
+        val config =
+            AwsKmsConfig
+                .builder()
+                .region("us-east-1")
+                .accessKeyId("AKIAIOSFODNN7EXAMPLE")
+                .secretAccessKey("wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
+                .build()
 
         val provider = AwsKmsClientFactory.createCredentialsProvider(config)
 
@@ -52,17 +55,19 @@ class AwsKmsClientFactoryTest {
 
     @Test
     fun `missing static keys fall back to the default credential provider chain`() {
-        val config = AwsKmsConfig.builder()
-            .region("us-east-1")
-            // A session token alone (no access key/secret) must NOT trigger static credentials.
-            .sessionToken("FwoGZXIvYXdzEXAMPLESESSIONTOKEN")
-            .build()
+        val config =
+            AwsKmsConfig
+                .builder()
+                .region("us-east-1")
+                // A session token alone (no access key/secret) must NOT trigger static credentials.
+                .sessionToken("FwoGZXIvYXdzEXAMPLESESSIONTOKEN")
+                .build()
 
         val provider = AwsKmsClientFactory.createCredentialsProvider(config)
 
         assertTrue(
             provider !is StaticCredentialsProvider,
-            "Without both accessKeyId and secretAccessKey the default chain must be used"
+            "Without both accessKeyId and secretAccessKey the default chain must be used",
         )
     }
 }

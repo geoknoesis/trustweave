@@ -17,4 +17,3 @@ dependencies {
     testImplementation(project(":testkit"))
     testImplementation(project(":anchors:anchor-core"))
 }
-

@@ -2,6 +2,9 @@ package org.trustweave.wallet.file
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNull
@@ -38,7 +41,6 @@ import java.util.Base64
 import javax.crypto.Cipher
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
-import kotlin.concurrent.withLock
 import kotlin.time.Clock
 
 /**
@@ -236,11 +238,7 @@ class FileWallet private constructor(
             return SecretKeySpec(keyBytes, "AES")
         }
 
-        private val ioLocks =
-            Array(64) {
-                java.util.concurrent.locks
-                    .ReentrantLock()
-            }
+        private val ioLocks = Array(64) { Mutex() }
         private val logger = LoggerFactory.getLogger(FileWallet::class.java)
 
         private const val CIPHER_TRANSFORMATION = "AES/GCM/NoPadding"
@@ -485,7 +483,7 @@ class FileWallet private constructor(
         return true
     }
 
-    private inline fun <T> withRecordLocks(
+    private suspend inline fun <T> withRecordLocks(
         credential: Path,
         metadata: Path,
         block: () -> T,
@@ -496,20 +494,29 @@ class FileWallet private constructor(
                     (it.toAbsolutePath().normalize().hashCode() and Int.MAX_VALUE) % ioLocks.size
                 }.distinct()
                 .sorted()
-        indexes.forEach { ioLocks[it].lock() }
+        var lockedCount = 0
         try {
+            for (index in indexes) {
+                ioLocks[index].lock()
+                lockedCount++
+            }
             return block()
         } finally {
-            indexes.asReversed().forEach { ioLocks[it].unlock() }
+            for (i in lockedCount - 1 downTo 0) {
+                ioLocks[indexes[i]].unlock()
+            }
         }
     }
 
     private fun ioLock(path: Path) = ioLocks[(path.toAbsolutePath().normalize().hashCode() and Int.MAX_VALUE) % ioLocks.size]
 
-    private fun readBytes(path: Path): ByteArray = ioLock(path).withLock { Files.readAllBytes(path) }
+    private suspend fun readBytes(path: Path): ByteArray = ioLock(path).withLock { Files.readAllBytes(path) }
 
-    /** Atomically replace a record. Unsupported filesystems fail without truncating the old record. */
-    private fun atomicWrite(
+    /**
+     * Atomically replace a record while the caller holds the record lock(s) via [withRecordLocks].
+     * Unsupported filesystems fail without truncating the old record.
+     */
+    private suspend fun atomicWrite(
         target: Path,
         content: ByteArray,
     ) {
@@ -520,25 +527,20 @@ class FileWallet private constructor(
                 while (bytes.hasRemaining()) channel.write(bytes)
                 channel.force(true)
             }
-            ioLock(target).withLock {
-                // Windows indexers/antivirus may briefly hold a handle without delete sharing.
-                // Retry only access-denied, with a fixed bound; never fall back to truncating writes.
-                for (attempt in 0..8) {
-                    try {
-                        Files.move(
-                            temporary,
-                            target,
-                            java.nio.file.StandardCopyOption.ATOMIC_MOVE,
-                            java.nio.file.StandardCopyOption.REPLACE_EXISTING,
-                        )
-                        break
-                    } catch (error: java.nio.file.AccessDeniedException) {
-                        if (attempt == 8) throw error
-                        // Non-suspend helper executing inside withContext(Dispatchers.IO) while holding a
-                        // thread-bound ReentrantLock (withRecordLocks); suspending with delay() here would
-                        // risk resuming on another thread and throwing IllegalMonitorStateException on unlock.
-                        Thread.sleep(25L * (attempt + 1))
-                    }
+            // Windows indexers/antivirus may briefly hold a handle without delete sharing.
+            // Retry only access-denied, with a fixed bound; never fall back to truncating writes.
+            for (attempt in 0..8) {
+                try {
+                    Files.move(
+                        temporary,
+                        target,
+                        java.nio.file.StandardCopyOption.ATOMIC_MOVE,
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+                    )
+                    break
+                } catch (error: java.nio.file.AccessDeniedException) {
+                    if (attempt == 8) throw error
+                    delay(25L * (attempt + 1))
                 }
             }
         } finally {
@@ -551,7 +553,7 @@ class FileWallet private constructor(
             stream.filter { it.fileName.toString().endsWith(".json") }.sorted().toList()
         }
 
-    private fun readRecord(path: Path): StoredCredentialRecord =
+    private suspend fun readRecord(path: Path): StoredCredentialRecord =
         withRecordLocks(path, metadataDir.resolve(path.fileName)) {
             // The record's identity is its file name (the SHA-256 of the credential id); it is the AAD
             // of both blobs, so a record moved or swapped under another name fails authentication.
@@ -561,10 +563,10 @@ class FileWallet private constructor(
                 bytes: ByteArray,
                 kind: String,
             ) = if (secretKey != null) decrypt(bytes, aad(kind, recordHash)) else String(bytes, Charsets.UTF_8)
-            val credential = json.decodeFromString(VerifiableCredential.serializer(), decode(readBytes(path), KIND_CREDENTIAL))
+            val credential = json.decodeFromString(VerifiableCredential.serializer(), decode(Files.readAllBytes(path), KIND_CREDENTIAL))
             val metadata =
                 json
-                    .parseToJsonElement(decode(readBytes(metadataDir.resolve(path.fileName)), KIND_METADATA))
+                    .parseToJsonElement(decode(Files.readAllBytes(metadataDir.resolve(path.fileName)), KIND_METADATA))
                     .jsonObject
             val handle = metadata.getValue("credentialId").jsonPrimitive.content
             check(resolveDataFile(credentialsDir, handle) == path) { "Metadata handle does not match credential file" }
@@ -572,7 +574,7 @@ class FileWallet private constructor(
         }
 
     /** Like [readRecord], but a record deleted concurrently (after listing) reads as absent. */
-    private fun readRecordOrNull(path: Path): StoredCredentialRecord? =
+    private suspend fun readRecordOrNull(path: Path): StoredCredentialRecord? =
         try {
             readRecord(path)
         } catch (_: NoSuchFileException) {

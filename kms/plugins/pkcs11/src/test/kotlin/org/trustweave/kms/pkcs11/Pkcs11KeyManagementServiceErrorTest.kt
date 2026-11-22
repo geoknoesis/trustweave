@@ -33,7 +33,6 @@ import org.trustweave.kms.results.SignResult
  * `softhsm2` CI label.
  */
 class Pkcs11KeyManagementServiceErrorTest {
-
     /** A library path guaranteed not to exist on any reasonable test machine. */
     private val bogusLibrary: String =
         if (System.getProperty("os.name").lowercase().contains("windows")) {
@@ -42,19 +41,20 @@ class Pkcs11KeyManagementServiceErrorTest {
             "/nonexistent/trustweave-test-no-such-pkcs11.so"
         }
 
-    private fun configWithBogusLibrary(): Pkcs11Config = Pkcs11Config(
-        libraryPath = bogusLibrary,
-        slot = 0,
-        providerName = "TrustWeave-Test-${System.nanoTime()}",
-    )
+    private fun configWithBogusLibrary(): Pkcs11Config =
+        Pkcs11Config(
+            libraryPath = bogusLibrary,
+            slot = 0,
+            providerName = "TrustWeave-Test-${System.nanoTime()}",
+        )
 
     /**
      * Tries to construct the service. Returns the service if construction succeeded, or `null`
      * if construction failed *cleanly* with a [Pkcs11Exception]. Any other exception is a
      * contract violation and the test fails.
      */
-    private fun tryConstruct(): Pkcs11KeyManagementService? {
-        return try {
+    private fun tryConstruct(): Pkcs11KeyManagementService? =
+        try {
             Pkcs11KeyManagementService(configWithBogusLibrary())
         } catch (e: Pkcs11Exception) {
             // Fail-fast path — the documented exception type.
@@ -66,7 +66,6 @@ class Pkcs11KeyManagementServiceErrorTest {
                     "Pkcs11Exception, but threw ${e.javaClass.name}: ${e.message}",
             )
         }
-    }
 
     @Test
     fun `construction with missing library either fails fast or defers cleanly`() {
@@ -77,53 +76,58 @@ class Pkcs11KeyManagementServiceErrorTest {
     }
 
     @Test
-    fun `generateKey surfaces failure via Result types when provider cannot be loaded`() = runTest {
-        val kms = tryConstruct() ?: return@runTest // construction already failed cleanly
-        val result = kms.generateKey(Algorithm.P256)
-        assertTrue(
-            result is GenerateKeyResult.Failure,
-            "expected GenerateKeyResult.Failure when PKCS#11 library is missing, got $result",
-        )
-    }
+    fun `generateKey surfaces failure via Result types when provider cannot be loaded`() =
+        runTest {
+            val kms = tryConstruct() ?: return@runTest // construction already failed cleanly
+            val result = kms.generateKey(Algorithm.P256)
+            assertTrue(
+                result is GenerateKeyResult.Failure,
+                "expected GenerateKeyResult.Failure when PKCS#11 library is missing, got $result",
+            )
+        }
 
     @Test
-    fun `getPublicKey surfaces failure via Result types when provider cannot be loaded`() = runTest {
-        val kms = tryConstruct() ?: return@runTest
-        val result = kms.getPublicKey(KeyId("any-label"))
-        assertTrue(
-            result is GetPublicKeyResult.Failure,
-            "expected GetPublicKeyResult.Failure when PKCS#11 library is missing, got $result",
-        )
-    }
+    fun `getPublicKey surfaces failure via Result types when provider cannot be loaded`() =
+        runTest {
+            val kms = tryConstruct() ?: return@runTest
+            val result = kms.getPublicKey(KeyId("any-label"))
+            assertTrue(
+                result is GetPublicKeyResult.Failure,
+                "expected GetPublicKeyResult.Failure when PKCS#11 library is missing, got $result",
+            )
+        }
 
     @Test
-    fun `sign surfaces failure via Result types when provider cannot be loaded`() = runTest {
-        val kms = tryConstruct() ?: return@runTest
-        val result = kms.sign(KeyId("any-label"), byteArrayOf(1, 2, 3))
-        assertTrue(
-            result is SignResult.Failure,
-            "expected SignResult.Failure when PKCS#11 library is missing, got $result",
-        )
-    }
+    fun `sign surfaces failure via Result types when provider cannot be loaded`() =
+        runTest {
+            val kms = tryConstruct() ?: return@runTest
+            val result = kms.sign(KeyId("any-label"), byteArrayOf(1, 2, 3))
+            assertTrue(
+                result is SignResult.Failure,
+                "expected SignResult.Failure when PKCS#11 library is missing, got $result",
+            )
+        }
 
     @Test
-    fun `deleteKey surfaces failure via Result types when provider cannot be loaded`() = runTest {
-        val kms = tryConstruct() ?: return@runTest
-        val result = kms.deleteKey(KeyId("any-label"))
-        // Either NotFound (if the keystore happens to be empty but loadable) or Failure.Error
-        // are acceptable; the contract is "no raw exception escapes".
-        assertTrue(
-            result is DeleteKeyResult.NotFound || result is DeleteKeyResult.Failure,
-            "expected DeleteKeyResult.NotFound or Failure when PKCS#11 library is missing, got $result",
-        )
-    }
+    fun `deleteKey surfaces failure via Result types when provider cannot be loaded`() =
+        runTest {
+            val kms = tryConstruct() ?: return@runTest
+            val result = kms.deleteKey(KeyId("any-label"))
+            // Either NotFound (if the keystore happens to be empty but loadable) or Failure.Error
+            // are acceptable; the contract is "no raw exception escapes".
+            assertTrue(
+                result is DeleteKeyResult.NotFound || result is DeleteKeyResult.Failure,
+                "expected DeleteKeyResult.NotFound or Failure when PKCS#11 library is missing, got $result",
+            )
+        }
 
     @Test
     fun `provider create rejects missing libraryPath option`() {
         val provider = Pkcs11KeyManagementServiceProvider()
-        val ex = org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException::class.java) {
-            provider.create(emptyMap())
-        }
+        val ex =
+            org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException::class.java) {
+                provider.create(emptyMap())
+            }
         assertTrue(
             ex.message!!.contains("libraryPath"),
             "error message must reference 'libraryPath'; was: ${ex.message}",

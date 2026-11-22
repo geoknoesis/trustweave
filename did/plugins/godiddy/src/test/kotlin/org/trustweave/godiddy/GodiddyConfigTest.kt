@@ -1,7 +1,11 @@
 package org.trustweave.godiddy
 
 import org.trustweave.did.didCreationOptions
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Tests for GodiddyConfig data class and companion object methods.

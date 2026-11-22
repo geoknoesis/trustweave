@@ -1,12 +1,14 @@
 package org.trustweave.kms.ibm
 
-import org.trustweave.kms.Algorithm
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import kotlin.test.*
+import org.trustweave.kms.Algorithm
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class IbmKeyManagementServiceProviderTest {
-
     @Test
     fun `test provider name`() {
         val provider = IbmKeyManagementServiceProvider()
@@ -27,10 +29,13 @@ class IbmKeyManagementServiceProviderTest {
     fun `test provider create with options`() {
         val provider = IbmKeyManagementServiceProvider()
 
-        val kms = provider.create(mapOf(
-            "apiKey" to "test-key",
-            "instanceId" to "test-instance"
-        ))
+        val kms =
+            provider.create(
+                mapOf(
+                    "apiKey" to "test-key",
+                    "instanceId" to "test-instance",
+                ),
+            )
 
         assertNotNull(kms)
         assertTrue(kms is IbmKeyManagementService)
@@ -45,4 +50,3 @@ class IbmKeyManagementServiceProviderTest {
         }
     }
 }
-

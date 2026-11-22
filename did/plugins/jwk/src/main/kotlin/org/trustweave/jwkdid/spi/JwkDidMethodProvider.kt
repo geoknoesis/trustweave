@@ -11,12 +11,14 @@ import org.trustweave.jwkdid.JwkDidMethod
  * Automatically discovered when this module is on the classpath via Java ServiceLoader.
  */
 class JwkDidMethodProvider : AbstractDidMethodProvider() {
-
     override val name: String = "jwk"
 
     override val supportedMethods: List<String> = listOf("jwk")
 
-    override fun create(methodName: String, options: DidCreationOptions): DidMethod? {
+    override fun create(
+        methodName: String,
+        options: DidCreationOptions,
+    ): DidMethod? {
         if (methodName.lowercase() != "jwk") return null
         return JwkDidMethod(resolveKms(options))
     }

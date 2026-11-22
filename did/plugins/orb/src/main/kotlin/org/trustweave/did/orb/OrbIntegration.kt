@@ -17,14 +17,16 @@ import org.trustweave.did.base.AbstractDidMethodProvider
  * `authHeaderName`, `authHeaderValue`, `timeoutSeconds`. See [OrbDidConfig.fromMap].
  */
 class OrbIntegration : AbstractDidMethodProvider() {
-
     override val name: String = "orb"
 
     override val supportedMethods: List<String> = listOf("orb")
 
     override val requiredEnvironmentVariables: List<String> = listOf("?ORB_BASE_URL")
 
-    override fun create(methodName: String, options: DidCreationOptions): DidMethod? {
+    override fun create(
+        methodName: String,
+        options: DidCreationOptions,
+    ): DidMethod? {
         if (methodName.lowercase() != "orb") return null
         val effective = mergeBaseUrlFromEnv(options.additionalProperties)
         val config = OrbDidConfig.fromMap(effective)

@@ -1,18 +1,21 @@
 package org.trustweave.credential.oidc4vci.qr
 
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /**
  * Tests for QR Code Generator.
  */
 class QrCodeGeneratorTest {
-
     @Test
     fun `test generateCredentialOfferUrl with credential_issuer`() {
-        val url = QrCodeGenerator.generateCredentialOfferUrl(
-            credentialIssuer = "https://issuer.example.com",
-            credentialConfigurationIds = listOf("PersonCredential", "EducationCredential")
-        )
+        val url =
+            QrCodeGenerator.generateCredentialOfferUrl(
+                credentialIssuer = "https://issuer.example.com",
+                credentialConfigurationIds = listOf("PersonCredential", "EducationCredential"),
+            )
         assertTrue(url.startsWith("openid-credential-offer://?credential_offer="))
 
         // The credential_offer parameter carries the whole offer as URL-encoded JSON
@@ -27,10 +30,11 @@ class QrCodeGeneratorTest {
     @Test
     fun `test generateCredentialOfferUrl with credential_offer_uri`() {
         val offerUri = "https://issuer.example.com/offers/123"
-        val url = QrCodeGenerator.generateCredentialOfferUrl(
-            credentialIssuer = "https://issuer.example.com",
-            credentialOfferUri = offerUri
-        )
+        val url =
+            QrCodeGenerator.generateCredentialOfferUrl(
+                credentialIssuer = "https://issuer.example.com",
+                credentialOfferUri = offerUri,
+            )
         assertTrue(url.startsWith("openid-credential-offer://"))
         assertTrue(url.contains("credential_offer_uri="))
         val encodedUri = java.net.URLEncoder.encode(offerUri, "UTF-8")
@@ -39,10 +43,11 @@ class QrCodeGeneratorTest {
 
     @Test
     fun `test generateCredentialOfferUrl with empty credential types`() {
-        val url = QrCodeGenerator.generateCredentialOfferUrl(
-            credentialIssuer = "https://issuer.example.com",
-            credentialConfigurationIds = emptyList()
-        )
+        val url =
+            QrCodeGenerator.generateCredentialOfferUrl(
+                credentialIssuer = "https://issuer.example.com",
+                credentialConfigurationIds = emptyList(),
+            )
         assertTrue(url.startsWith("openid-credential-offer://?credential_offer="))
 
         val encodedOffer = url.substringAfter("credential_offer=")
@@ -53,10 +58,11 @@ class QrCodeGeneratorTest {
 
     @Test
     fun `test generatePresentationRequestUrl with client_id and request_uri`() {
-        val url = QrCodeGenerator.generatePresentationRequestUrl(
-            clientId = "test-client",
-            requestUri = "https://verifier.example.com/request/123"
-        )
+        val url =
+            QrCodeGenerator.generatePresentationRequestUrl(
+                clientId = "test-client",
+                requestUri = "https://verifier.example.com/request/123",
+            )
         assertTrue(url.startsWith("openid4vp://authorize"))
         assertTrue(url.contains("client_id=test-client"))
         assertTrue(url.contains("request_uri="))
@@ -71,11 +77,12 @@ class QrCodeGeneratorTest {
 
     @Test
     fun `test generatePresentationRequestUrl with additional parameters`() {
-        val url = QrCodeGenerator.generatePresentationRequestUrl(
-            clientId = "test-client",
-            requestUri = "https://verifier.example.com/request/123",
-            additionalParams = mapOf("scope" to "openid", "response_type" to "vp_token")
-        )
+        val url =
+            QrCodeGenerator.generatePresentationRequestUrl(
+                clientId = "test-client",
+                requestUri = "https://verifier.example.com/request/123",
+                additionalParams = mapOf("scope" to "openid", "response_type" to "vp_token"),
+            )
         assertTrue(url.contains("scope="))
         assertTrue(url.contains("response_type="))
     }
@@ -89,10 +96,11 @@ class QrCodeGeneratorTest {
 
     @Test
     fun `test generated URLs are properly encoded`() {
-        val url = QrCodeGenerator.generateCredentialOfferUrl(
-            credentialIssuer = "https://issuer.example.com/path with spaces",
-            credentialConfigurationIds = listOf("Credential Type")
-        )
+        val url =
+            QrCodeGenerator.generateCredentialOfferUrl(
+                credentialIssuer = "https://issuer.example.com/path with spaces",
+                credentialConfigurationIds = listOf("Credential Type"),
+            )
         assertFalse(url.contains(" "))
         assertTrue(url.contains("%20") || url.contains("+"))
     }

@@ -3,9 +3,31 @@ package org.trustweave.credential.oidc4vci
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.*
-import okhttp3.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.double
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
+import kotlinx.serialization.json.longOrNull
+import kotlinx.serialization.json.put
+import okhttp3.FormBody
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.core.identifiers.KeyId
@@ -14,7 +36,17 @@ import org.trustweave.credential.credentialService
 import org.trustweave.credential.exchange.exception.ExchangeException
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.oidc4vci.exception.Oidc4VciException
-import org.trustweave.credential.oidc4vci.models.*
+import org.trustweave.credential.oidc4vci.models.AuthorizationServerMetadata
+import org.trustweave.credential.oidc4vci.models.BatchCredentialRequest
+import org.trustweave.credential.oidc4vci.models.BatchCredentialResponse
+import org.trustweave.credential.oidc4vci.models.BatchCredentialResponseItem
+import org.trustweave.credential.oidc4vci.models.CredentialIssuerMetadata
+import org.trustweave.credential.oidc4vci.models.DeferredCredentialRequest
+import org.trustweave.credential.oidc4vci.models.Oidc4VciCredentialRequest
+import org.trustweave.credential.oidc4vci.models.Oidc4VciIssueResult
+import org.trustweave.credential.oidc4vci.models.Oidc4VciNotification
+import org.trustweave.credential.oidc4vci.models.Oidc4VciOffer
+import org.trustweave.credential.oidc4vci.models.TxCode
 import org.trustweave.credential.requests.RevocationFailurePolicy
 import org.trustweave.credential.requests.VerificationOptions
 import org.trustweave.credential.results.VerificationResult
@@ -24,8 +56,8 @@ import org.trustweave.kms.KeyManagementService
 import org.trustweave.kms.results.SignResult
 import java.net.URLDecoder
 import java.net.URLEncoder
-import java.util.*
 import java.util.Base64
+import java.util.UUID
 
 /**
  * OIDC4VCI (OpenID Connect for Verifiable Credential Issuance) service.
@@ -125,8 +157,7 @@ class Oidc4VciService(
         val accessToken: String,
         val cNonce: String?,
     ) {
-        override fun toString(): String =
-            "TokenResponse(accessToken=[REDACTED], cNonce=${if (cNonce != null) "[REDACTED]" else "null"})"
+        override fun toString(): String = "TokenResponse(accessToken=[REDACTED], cNonce=${if (cNonce != null) "[REDACTED]" else "null"})"
     }
 
     /**

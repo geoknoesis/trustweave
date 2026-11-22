@@ -8,11 +8,11 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.testcontainers.DockerClientFactory
-import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.trustweave.did.KeyAlgorithm
 import org.trustweave.did.didCreationOptions
 import org.trustweave.did.resolver.DidResolutionResult
@@ -29,20 +29,20 @@ import kotlin.test.assertIs
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OrbDidMethodIntegrationTest {
-
     private var ownedContainer: OrbNodeContainer? = null
     private lateinit var baseUrl: String
 
     @BeforeAll
     fun setUp() {
         val externalBaseUrl = System.getenv("ORB_BASE_URL")
-        baseUrl = if (externalBaseUrl != null) {
-            externalBaseUrl
-        } else {
-            assumeTrue(DockerClientFactory.instance().isDockerAvailable, "Docker not available; skipping live-Orb integration test")
-            ownedContainer = OrbNodeContainer().apply { start() }
-            ownedContainer!!.baseUrl
-        }
+        baseUrl =
+            if (externalBaseUrl != null) {
+                externalBaseUrl
+            } else {
+                assumeTrue(DockerClientFactory.instance().isDockerAvailable, "Docker not available; skipping live-Orb integration test")
+                ownedContainer = OrbNodeContainer().apply { start() }
+                ownedContainer!!.baseUrl
+            }
     }
 
     @AfterAll
@@ -72,34 +72,37 @@ class OrbDidMethodIntegrationTest {
      *    specific error as "wire format accepted" here.
      */
     @Test
-    fun `create resolve update deactivate against a real Orb node`() = runBlocking<Unit> {
-        val kms = InMemoryKeyManagementService()
-        val cfg = OrbDidConfig(
-            baseUrl = baseUrl,
-            authHeader = System.getenv("ORB_AUTH_HEADER")?.let { headerLine ->
-                val (name, value) = headerLine.split(":", limit = 2).map { it.trim() }
-                name to value
-            },
-            timeoutSeconds = 30L,
-            anchorOrigin = ownedContainer?.anchorOrigin,
-        )
-        val method = OrbDidMethod(kms, cfg)
+    fun `create resolve update deactivate against a real Orb node`() =
+        runBlocking<Unit> {
+            val kms = InMemoryKeyManagementService()
+            val cfg =
+                OrbDidConfig(
+                    baseUrl = baseUrl,
+                    authHeader =
+                        System.getenv("ORB_AUTH_HEADER")?.let { headerLine ->
+                            val (name, value) = headerLine.split(":", limit = 2).map { it.trim() }
+                            name to value
+                        },
+                    timeoutSeconds = 30L,
+                    anchorOrigin = ownedContainer?.anchorOrigin,
+                )
+            val method = OrbDidMethod(kms, cfg)
 
-        // ── create
-        val document = method.createDid(didCreationOptions { algorithm = KeyAlgorithm.ED25519 })
-        assertTrue(document.id.value.startsWith("did:orb:"))
+            // ── create
+            val document = method.createDid(didCreationOptions { algorithm = KeyAlgorithm.ED25519 })
+            assertTrue(document.id.value.startsWith("did:orb:"))
 
-        // ── resolve long-form
-        val resolved = method.resolveDid(document.id)
-        assertIs<DidResolutionResult.Success>(resolved)
+            // ── resolve long-form
+            val resolved = method.resolveDid(document.id)
+            assertIs<DidResolutionResult.Success>(resolved)
 
-        // ── update wire format: we don't go through method.updateDid (which would
-        //    fail with "create operation not found" until the create is anchored —
-        //    a configured-Orb-operator concern). Instead submit the update envelope
-        //    directly and assert Orb's response is either success or that specific
-        //    not-yet-anchored error. Any other 400 means we have a wire-format bug.
-        assertOrbAcceptsWireFormat(method)
-    }
+            // ── update wire format: we don't go through method.updateDid (which would
+            //    fail with "create operation not found" until the create is anchored —
+            //    a configured-Orb-operator concern). Instead submit the update envelope
+            //    directly and assert Orb's response is either success or that specific
+            //    not-yet-anchored error. Any other 400 means we have a wire-format bug.
+            assertOrbAcceptsWireFormat(method)
+        }
 
     private suspend fun assertOrbAcceptsWireFormat(method: OrbDidMethod) {
         // Build a second DID just so the local key store has something to use; we
@@ -107,50 +110,64 @@ class OrbDidMethodIntegrationTest {
         // the published-operation-required path that needs full anchoring.
         val secondDoc = method.createDid(didCreationOptions { algorithm = KeyAlgorithm.ED25519 })
         val httpClient = OkHttpClient()
-        val sidetree = method.javaClass.getDeclaredField("sidetree").apply { isAccessible = true }
-            .get(method) as SidetreeOrbClient
+        val sidetree =
+            method.javaClass
+                .getDeclaredField("sidetree")
+                .apply { isAccessible = true }
+                .get(method) as SidetreeOrbClient
 
-        val updateOp = sidetree.buildUpdateOperation(
-            did = secondDoc.id.value,
-            updatedDocument = secondDoc,
-            previousUpdateKeyPair = sidetree.generateP256KeyPair(),
-            nextUpdatePublicJwk = sidetree.generateP256KeyPair().publicJwk,
-        )
+        val updateOp =
+            sidetree.buildUpdateOperation(
+                did = secondDoc.id.value,
+                updatedDocument = secondDoc,
+                previousUpdateKeyPair = sidetree.generateP256KeyPair(),
+                nextUpdatePublicJwk = sidetree.generateP256KeyPair().publicJwk,
+            )
         assertOrbParsesOperation(httpClient, updateOp.toString(), kind = "update")
 
-        val recoverOp = sidetree.buildRecoverOperation(
-            did = secondDoc.id.value,
-            newDocument = secondDoc,
-            previousRecoveryKeyPair = sidetree.generateP256KeyPair(),
-            nextUpdatePublicJwk = sidetree.generateP256KeyPair().publicJwk,
-            nextRecoveryPublicJwk = sidetree.generateP256KeyPair().publicJwk,
-        )
+        val recoverOp =
+            sidetree.buildRecoverOperation(
+                did = secondDoc.id.value,
+                newDocument = secondDoc,
+                previousRecoveryKeyPair = sidetree.generateP256KeyPair(),
+                nextUpdatePublicJwk = sidetree.generateP256KeyPair().publicJwk,
+                nextRecoveryPublicJwk = sidetree.generateP256KeyPair().publicJwk,
+            )
         assertOrbParsesOperation(httpClient, recoverOp.toString(), kind = "recover")
 
-        val deactivateOp = sidetree.buildDeactivateOperation(
-            did = secondDoc.id.value,
-            previousRecoveryKeyPair = sidetree.generateP256KeyPair(),
-        )
+        val deactivateOp =
+            sidetree.buildDeactivateOperation(
+                did = secondDoc.id.value,
+                previousRecoveryKeyPair = sidetree.generateP256KeyPair(),
+            )
         assertOrbParsesOperation(httpClient, deactivateOp.toString(), kind = "deactivate")
     }
 
-    private fun assertOrbParsesOperation(httpClient: OkHttpClient, body: String, kind: String) {
+    private fun assertOrbParsesOperation(
+        httpClient: OkHttpClient,
+        body: String,
+        kind: String,
+    ) {
         val payload = body.toRequestBody("application/json".toMediaType())
-        val request = Request.Builder()
-            .url("$baseUrl/sidetree/v1/operations")
-            .post(payload)
-            .build()
+        val request =
+            Request
+                .Builder()
+                .url("$baseUrl/sidetree/v1/operations")
+                .post(payload)
+                .build()
         httpClient.newCall(request).execute().use { response ->
             val responseBody = response.body?.string() ?: ""
             // Wire-format acceptance: either Orb queued the op (any 2xx) or it
             // rejected with a known post-parse error that indicates the envelope
             // was understood. Anything else — especially `bad request: parse operation`
             // — is a real spec violation.
-            val isWireOk = response.isSuccessful || listOf(
-                "create operation not found",
-                "no operations to update",
-                "operation already exists",
-            ).any { responseBody.contains(it, ignoreCase = true) }
+            val isWireOk =
+                response.isSuccessful ||
+                    listOf(
+                        "create operation not found",
+                        "no operations to update",
+                        "operation already exists",
+                    ).any { responseBody.contains(it, ignoreCase = true) }
             assertTrue(
                 isWireOk,
                 "$kind wire format rejected by Orb: HTTP ${response.code} $responseBody",

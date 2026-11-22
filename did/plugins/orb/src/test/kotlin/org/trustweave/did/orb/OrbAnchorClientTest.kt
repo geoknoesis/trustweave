@@ -26,21 +26,23 @@ import kotlin.test.assertIs
  * Tests the Orb operator-credit cost model surfaced through [OrbAnchorClient].
  */
 class OrbAnchorClientTest {
-
     private lateinit var server: MockWebServer
     private lateinit var method: OrbDidMethod
 
     @BeforeEach
     fun setUp() {
         server = MockWebServer().apply { start() }
-        val config = OrbDidConfig(
-            baseUrl = server.url("/").toString().trimEnd('/'),
-            operatorId = "operator-test",
-        )
-        val http = OkHttpClient.Builder()
-            .connectTimeout(5, TimeUnit.SECONDS)
-            .readTimeout(5, TimeUnit.SECONDS)
-            .build()
+        val config =
+            OrbDidConfig(
+                baseUrl = server.url("/").toString().trimEnd('/'),
+                operatorId = "operator-test",
+            )
+        val http =
+            OkHttpClient
+                .Builder()
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(5, TimeUnit.SECONDS)
+                .build()
         method = OrbDidMethod(InMemoryKeyManagementService(), config, http)
     }
 
@@ -64,63 +66,70 @@ class OrbAnchorClientTest {
     }
 
     @Test
-    fun `estimate returns one operator credit regardless of operation kind`() = runBlocking<Unit> {
-        val client = method.anchorClient
-        val estimate = client.estimate(
-            OperationDescriptor(kind = "did.create", chainId = client.chainId),
-        )
-        assertEquals(client.chainId, estimate.chainId)
-        assertEquals(AssetRef.OperatorCredit("operator-test"), estimate.asset)
-        assertEquals(BigInteger.ONE, estimate.amount)
-    }
-
-    @Test
-    fun `writePayload returns one credit fee and operator payerAddress`() = runBlocking<Unit> {
-        server.enqueue(
-            MockResponse()
-                .setResponseCode(200)
-                .setBody("""{"didDocument":{"id":"did:orb:abc"}}"""),
-        )
-        val client = method.anchorClient
-        val payload = JsonObject(mapOf("type" to JsonPrimitive("create")))
-        val result = client.writePayload(payload, PaymentContext.unmanaged(client.chainId))
-
-        assertEquals(BigInteger.ONE, result.fee?.amount)
-        assertEquals(AssetRef.OperatorCredit("operator-test"), result.fee?.asset)
-        assertEquals("operator:operator-test", result.payerAddress)
-        assertEquals(client.chainId, result.ref.chainId)
-    }
-
-    @Test
-    fun `writePayload enforces caller maxFee when denominated in OperatorCredit`() = runBlocking<Unit> {
-        val client = method.anchorClient
-        val ctx = PaymentContext(
-            domainId = "domain-1",
-            payerDid = "did:example:domain-1",
-            chainId = client.chainId,
-            feeStrategy = FeeStrategy.DomainPays,
-            maxFee = TokenAmount(client.chainId, AssetRef.OperatorCredit("operator-test"), BigInteger.ZERO),
-        )
-        val payload = JsonObject(mapOf("type" to JsonPrimitive("create")))
-        val ex = assertFailsWith<TreasuryException.CallerCapExceeded> {
-            client.writePayload(payload, ctx)
+    fun `estimate returns one operator credit regardless of operation kind`() =
+        runBlocking<Unit> {
+            val client = method.anchorClient
+            val estimate =
+                client.estimate(
+                    OperationDescriptor(kind = "did.create", chainId = client.chainId),
+                )
+            assertEquals(client.chainId, estimate.chainId)
+            assertEquals(AssetRef.OperatorCredit("operator-test"), estimate.asset)
+            assertEquals(BigInteger.ONE, estimate.amount)
         }
-        assertEquals(client.chainId, ex.chainId)
-        assertEquals(BigInteger.ONE, ex.estimated.amount)
-        // No HTTP request was issued.
-        assertEquals(0, server.requestCount)
-    }
 
     @Test
-    fun `writePayload skips cap enforcement for unmanaged ctx`() = runBlocking<Unit> {
-        server.enqueue(
-            MockResponse()
-                .setResponseCode(200)
-                .setBody("""{"didDocument":{"id":"did:orb:xyz"}}"""),
-        )
-        val client = method.anchorClient
-        val payload = JsonObject(mapOf("type" to JsonPrimitive("create")))
-        val result = client.writePayload(payload, PaymentContext.unmanaged(client.chainId))
-        assertIs<TokenAmount>(result.fee)
-    }
+    fun `writePayload returns one credit fee and operator payerAddress`() =
+        runBlocking<Unit> {
+            server.enqueue(
+                MockResponse()
+                    .setResponseCode(200)
+                    .setBody("""{"didDocument":{"id":"did:orb:abc"}}"""),
+            )
+            val client = method.anchorClient
+            val payload = JsonObject(mapOf("type" to JsonPrimitive("create")))
+            val result = client.writePayload(payload, PaymentContext.unmanaged(client.chainId))
+
+            assertEquals(BigInteger.ONE, result.fee?.amount)
+            assertEquals(AssetRef.OperatorCredit("operator-test"), result.fee?.asset)
+            assertEquals("operator:operator-test", result.payerAddress)
+            assertEquals(client.chainId, result.ref.chainId)
+        }
+
+    @Test
+    fun `writePayload enforces caller maxFee when denominated in OperatorCredit`() =
+        runBlocking<Unit> {
+            val client = method.anchorClient
+            val ctx =
+                PaymentContext(
+                    domainId = "domain-1",
+                    payerDid = "did:example:domain-1",
+                    chainId = client.chainId,
+                    feeStrategy = FeeStrategy.DomainPays,
+                    maxFee = TokenAmount(client.chainId, AssetRef.OperatorCredit("operator-test"), BigInteger.ZERO),
+                )
+            val payload = JsonObject(mapOf("type" to JsonPrimitive("create")))
+            val ex =
+                assertFailsWith<TreasuryException.CallerCapExceeded> {
+                    client.writePayload(payload, ctx)
+                }
+            assertEquals(client.chainId, ex.chainId)
+            assertEquals(BigInteger.ONE, ex.estimated.amount)
+            // No HTTP request was issued.
+            assertEquals(0, server.requestCount)
+        }
+
+    @Test
+    fun `writePayload skips cap enforcement for unmanaged ctx`() =
+        runBlocking<Unit> {
+            server.enqueue(
+                MockResponse()
+                    .setResponseCode(200)
+                    .setBody("""{"didDocument":{"id":"did:orb:xyz"}}"""),
+            )
+            val client = method.anchorClient
+            val payload = JsonObject(mapOf("type" to JsonPrimitive("create")))
+            val result = client.writePayload(payload, PaymentContext.unmanaged(client.chainId))
+            assertIs<TokenAmount>(result.fee)
+        }
 }

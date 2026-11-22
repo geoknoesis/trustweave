@@ -60,7 +60,6 @@ import java.nio.file.Path
 class SoftHsm2Container(
     image: DockerImageName = DockerImageName.parse(System.getProperty("softhsm2.image", IMAGE)),
 ) : GenericContainer<SoftHsm2Container>(image) {
-
     /** PIN used by [Pkcs11KeyManagementServiceIntegrationTest]; must match. */
     val pin: CharArray = "5678".toCharArray()
 
@@ -98,14 +97,19 @@ class SoftHsm2Container(
     override fun start() {
         super.start()
 
-        val initResult = execInContainer(
-            "softhsm2-util",
-            "--init-token",
-            "--slot", slot.toString(),
-            "--label", tokenLabel,
-            "--so-pin", String(soPin),
-            "--pin", String(pin),
-        )
+        val initResult =
+            execInContainer(
+                "softhsm2-util",
+                "--init-token",
+                "--slot",
+                slot.toString(),
+                "--label",
+                tokenLabel,
+                "--so-pin",
+                String(soPin),
+                "--pin",
+                String(pin),
+            )
         check(initResult.exitCode == 0) {
             "softhsm2-util --init-token failed (exit=${initResult.exitCode}): " +
                 "stdout=${initResult.stdout} stderr=${initResult.stderr}"
@@ -113,7 +117,7 @@ class SoftHsm2Container(
 
         libraryPath = System.getProperty(SOFTHSM2_LIB_PROPERTY)
             ?: System.getenv("SOFTHSM2_LIB")
-                    ?: copyLibraryFromContainer()
+            ?: copyLibraryFromContainer()
     }
 
     /**

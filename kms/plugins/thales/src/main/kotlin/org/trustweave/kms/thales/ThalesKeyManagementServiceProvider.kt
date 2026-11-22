@@ -14,4 +14,3 @@ class ThalesKeyManagementServiceProvider : KeyManagementServiceProvider {
         return ThalesKeyManagementService(config)
     }
 }
-

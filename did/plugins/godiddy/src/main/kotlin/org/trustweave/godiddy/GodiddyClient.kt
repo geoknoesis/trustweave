@@ -1,81 +1,94 @@
 package org.trustweave.godiddy
 
-import org.trustweave.core.exception.TrustWeaveException
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
-import kotlinx.coroutines.Dispatchers
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.contentType
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import org.trustweave.core.exception.TrustWeaveException
 
 /**
  * Base HTTP client wrapper for godiddy API calls.
  */
 class GodiddyClient(
-    internal val config: GodiddyConfig
+    internal val config: GodiddyConfig,
 ) : AutoCloseable {
-    private val httpClient: HttpClient = HttpClient(CIO) {
-        install(ContentNegotiation) {
-            json(Json {
-                ignoreUnknownKeys = true
-                isLenient = true
-            })
-        }
+    private val httpClient: HttpClient =
+        HttpClient(CIO) {
+            install(ContentNegotiation) {
+                json(
+                    Json {
+                        ignoreUnknownKeys = true
+                        isLenient = true
+                    },
+                )
+            }
 
-        engine {
-            requestTimeout = config.timeout
+            engine {
+                requestTimeout = config.timeout
+            }
         }
-    }
 
     /**
      * Makes a GET request and returns HttpResponse.
      */
-    suspend fun getJson(path: String) = withContext(Dispatchers.IO) {
-        try {
-            httpClient.get("${config.baseUrl}$path") {
-                config.apiKey?.let { apiKey ->
-                    header("Authorization", "Bearer $apiKey")
+    suspend fun getJson(path: String) =
+        withContext(Dispatchers.IO) {
+            try {
+                httpClient.get("${config.baseUrl}$path") {
+                    config.apiKey?.let { apiKey ->
+                        header("Authorization", "Bearer $apiKey")
+                    }
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 }
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (e: Exception) {
+                throw org.trustweave.core.exception.TrustWeaveException.Unknown(
+                    message = "Failed to GET $path: ${e.message ?: "Unknown error"}",
+                    context = mapOf("path" to path, "method" to "GET"),
+                    cause = e,
+                )
             }
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (e: Exception) {
-            throw org.trustweave.core.exception.TrustWeaveException.Unknown(
-                message = "Failed to GET $path: ${e.message ?: "Unknown error"}",
-                context = mapOf("path" to path, "method" to "GET"),
-                cause = e
-            )
         }
-    }
 
     /**
      * Makes a POST request with a JSON body.
      */
-    internal suspend inline fun <reified T> post(path: String, body: Any): T {
+    internal suspend inline fun <reified T> post(
+        path: String,
+        body: Any,
+    ): T {
         val baseUrl = config.baseUrl
         val apiKey = config.apiKey
         return withContext(Dispatchers.IO) {
             try {
-                httpClient.post("$baseUrl$path") {
-                    contentType(ContentType.Application.Json)
-                    apiKey?.let {
-                        header("Authorization", "Bearer $it")
-                    }
-                    setBody(body)
-                }.body()
+                httpClient
+                    .post("$baseUrl$path") {
+                        contentType(ContentType.Application.Json)
+                        apiKey?.let {
+                            header("Authorization", "Bearer $it")
+                        }
+                        setBody(body)
+                    }.body()
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (e: Exception) {
                 throw org.trustweave.core.exception.TrustWeaveException.Unknown(
                     message = "Failed to POST $path: ${e.message ?: "Unknown error"}",
                     context = mapOf("path" to path, "method" to "POST"),
-                    cause = e
+                    cause = e,
                 )
             }
         }
@@ -84,7 +97,10 @@ class GodiddyClient(
     /**
      * Makes a POST request with JsonElement body and returns HttpResponse.
      */
-    suspend fun postJson(path: String, body: kotlinx.serialization.json.JsonElement) = withContext(Dispatchers.IO) {
+    suspend fun postJson(
+        path: String,
+        body: kotlinx.serialization.json.JsonElement,
+    ) = withContext(Dispatchers.IO) {
         try {
             httpClient.post("${config.baseUrl}$path") {
                 contentType(ContentType.Application.Json)
@@ -99,7 +115,7 @@ class GodiddyClient(
             throw TrustWeaveException.Unknown(
                 message = "Failed to POST $path: ${e.message ?: "Unknown error"}",
                 context = mapOf("path" to path, "method" to "POST"),
-                cause = e
+                cause = e,
             )
         }
     }
@@ -111,4 +127,3 @@ class GodiddyClient(
         httpClient.close()
     }
 }
-

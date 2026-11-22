@@ -53,7 +53,6 @@ import java.util.Date
  * configuration (KMS opt-in / x5chain + IACA anchors), and device-auth fail-closed behavior.
  */
 class MdocProofEngineSecurityTest {
-
     private lateinit var kms: InMemoryKeyManagementService
     private lateinit var engineOptIn: MdocProofEngine
     private lateinit var engineDefault: MdocProofEngine
@@ -65,192 +64,220 @@ class MdocProofEngineSecurityTest {
     private val issuerKeyId = KeyId(issuerDid.value)
 
     @BeforeEach
-    fun setup() = runBlocking<Unit> {
-        kms = InMemoryKeyManagementService()
-        val result = kms.generateKey(Algorithm.Ed25519, mapOf("keyId" to issuerKeyId.value))
-        result.shouldBeInstanceOf<GenerateKeyResult.Success>()
+    fun setup() =
+        runBlocking<Unit> {
+            kms = InMemoryKeyManagementService()
+            val result = kms.generateKey(Algorithm.Ed25519, mapOf("keyId" to issuerKeyId.value))
+            result.shouldBeInstanceOf<GenerateKeyResult.Success>()
 
-        engineOptIn = MdocProofEngine(
-            kms,
-            config = ProofEngineConfig(
-                properties = mapOf(MdocProofEngine.OPTION_ALLOW_KMS_ISSUER_KEY_LOOKUP to true)
-            )
-        )
-        engineDefault = MdocProofEngine(kms)
-    }
+            engineOptIn =
+                MdocProofEngine(
+                    kms,
+                    config =
+                        ProofEngineConfig(
+                            properties = mapOf(MdocProofEngine.OPTION_ALLOW_KMS_ISSUER_KEY_LOOKUP to true),
+                        ),
+                )
+            engineDefault = MdocProofEngine(kms)
+        }
 
     // ------------------------------------------------------------------------------
     // Issuer trust configuration
     // ------------------------------------------------------------------------------
 
     @Test
-    fun `issued credential verifies via explicit KMS opt-in (happy path)`() = runBlocking<Unit> {
-        val vc = engineOptIn.issue(buildIssuanceRequest())
-        val result = engineOptIn.verify(vc, VerificationOptions())
-        result.shouldBeInstanceOf<VerificationResult.Valid>()
-    }
+    fun `issued credential verifies via explicit KMS opt-in (happy path)`() =
+        runBlocking<Unit> {
+            val vc = engineOptIn.issue(buildIssuanceRequest())
+            val result = engineOptIn.verify(vc, VerificationOptions())
+            result.shouldBeInstanceOf<VerificationResult.Valid>()
+        }
 
     @Test
-    fun `verification without opt-in and without x5chain fails closed`() = runBlocking<Unit> {
-        val vc = engineOptIn.issue(buildIssuanceRequest())
-        val result = engineDefault.verify(vc, VerificationOptions())
-        result.shouldBeInstanceOf<VerificationResult.Invalid.InvalidProof>()
-        result.reason
-            .shouldContain(MdocProofEngine.OPTION_ALLOW_KMS_ISSUER_KEY_LOOKUP)
-    }
+    fun `verification without opt-in and without x5chain fails closed`() =
+        runBlocking<Unit> {
+            val vc = engineOptIn.issue(buildIssuanceRequest())
+            val result = engineDefault.verify(vc, VerificationOptions())
+            result.shouldBeInstanceOf<VerificationResult.Invalid.InvalidProof>()
+            result.reason
+                .shouldContain(MdocProofEngine.OPTION_ALLOW_KMS_ISSUER_KEY_LOOKUP)
+        }
 
     @Test
-    fun `x5chain without configured IACA anchors fails closed even with KMS opt-in`() = runBlocking<Unit> {
-        val keyPair = generateP256KeyPair()
-        val cert = generateSelfSignedCert(keyPair)
-        val vc = engineOptIn.issue(buildIssuanceRequest())
-        val resigned = resignWithX5Chain(vc, keyPair, cert)
+    fun `x5chain without configured IACA anchors fails closed even with KMS opt-in`() =
+        runBlocking<Unit> {
+            val keyPair = generateP256KeyPair()
+            val cert = generateSelfSignedCert(keyPair)
+            val vc = engineOptIn.issue(buildIssuanceRequest())
+            val resigned = resignWithX5Chain(vc, keyPair, cert)
 
-        val result = engineOptIn.verify(resigned, VerificationOptions())
-        result.shouldBeInstanceOf<VerificationResult.Invalid.InvalidProof>()
-        result.reason.shouldContain("IACA trust anchors")
-    }
-
-    @Test
-    fun `x5chain verifies against configured IACA trust anchor`() = runBlocking<Unit> {
-        val keyPair = generateP256KeyPair()
-        val cert = generateSelfSignedCert(keyPair)
-        val vc = engineOptIn.issue(buildIssuanceRequest())
-        val resigned = resignWithX5Chain(vc, keyPair, cert)
-
-        val engineWithAnchor = MdocProofEngine(
-            kms,
-            config = ProofEngineConfig(
-                properties = mapOf(MdocProofEngine.OPTION_IACA_TRUST_ANCHORS to listOf(cert))
-            )
-        )
-        val result = engineWithAnchor.verify(resigned, VerificationOptions())
-        result.shouldBeInstanceOf<VerificationResult.Valid>()
-    }
+            val result = engineOptIn.verify(resigned, VerificationOptions())
+            result.shouldBeInstanceOf<VerificationResult.Invalid.InvalidProof>()
+            result.reason.shouldContain("IACA trust anchors")
+        }
 
     @Test
-    fun `x5chain not chaining to the configured anchor fails`() = runBlocking<Unit> {
-        val keyPair = generateP256KeyPair()
-        val cert = generateSelfSignedCert(keyPair)
-        val unrelatedAnchor = generateSelfSignedCert(generateP256KeyPair(), "CN=Other IACA")
-        val vc = engineOptIn.issue(buildIssuanceRequest())
-        val resigned = resignWithX5Chain(vc, keyPair, cert)
+    fun `x5chain verifies against configured IACA trust anchor`() =
+        runBlocking<Unit> {
+            val keyPair = generateP256KeyPair()
+            val cert = generateSelfSignedCert(keyPair)
+            val vc = engineOptIn.issue(buildIssuanceRequest())
+            val resigned = resignWithX5Chain(vc, keyPair, cert)
 
-        val engineWithWrongAnchor = MdocProofEngine(
-            kms,
-            config = ProofEngineConfig(
-                properties = mapOf(MdocProofEngine.OPTION_IACA_TRUST_ANCHORS to listOf(unrelatedAnchor))
-            )
-        )
-        val result = engineWithWrongAnchor.verify(resigned, VerificationOptions())
-        result.shouldBeInstanceOf<VerificationResult.Invalid.InvalidProof>()
-    }
+            val engineWithAnchor =
+                MdocProofEngine(
+                    kms,
+                    config =
+                        ProofEngineConfig(
+                            properties = mapOf(MdocProofEngine.OPTION_IACA_TRUST_ANCHORS to listOf(cert)),
+                        ),
+                )
+            val result = engineWithAnchor.verify(resigned, VerificationOptions())
+            result.shouldBeInstanceOf<VerificationResult.Valid>()
+        }
 
     @Test
-    fun `x5chain signature not matching the leaf certificate fails`() = runBlocking<Unit> {
-        val keyPair = generateP256KeyPair()
-        val wrongCert = generateSelfSignedCert(generateP256KeyPair(), "CN=Wrong Key Cert")
-        val vc = engineOptIn.issue(buildIssuanceRequest())
-        // Signed with keyPair but carrying a certificate for a DIFFERENT key.
-        val resigned = resignWithX5Chain(vc, keyPair, wrongCert)
+    fun `x5chain not chaining to the configured anchor fails`() =
+        runBlocking<Unit> {
+            val keyPair = generateP256KeyPair()
+            val cert = generateSelfSignedCert(keyPair)
+            val unrelatedAnchor = generateSelfSignedCert(generateP256KeyPair(), "CN=Other IACA")
+            val vc = engineOptIn.issue(buildIssuanceRequest())
+            val resigned = resignWithX5Chain(vc, keyPair, cert)
 
-        val engineWithAnchor = MdocProofEngine(
-            kms,
-            config = ProofEngineConfig(
-                properties = mapOf(MdocProofEngine.OPTION_IACA_TRUST_ANCHORS to listOf(wrongCert))
-            )
-        )
-        val result = engineWithAnchor.verify(resigned, VerificationOptions())
-        result.shouldBeInstanceOf<VerificationResult.Invalid.InvalidProof>()
-    }
+            val engineWithWrongAnchor =
+                MdocProofEngine(
+                    kms,
+                    config =
+                        ProofEngineConfig(
+                            properties = mapOf(MdocProofEngine.OPTION_IACA_TRUST_ANCHORS to listOf(unrelatedAnchor)),
+                        ),
+                )
+            val result = engineWithWrongAnchor.verify(resigned, VerificationOptions())
+            result.shouldBeInstanceOf<VerificationResult.Invalid.InvalidProof>()
+        }
+
+    @Test
+    fun `x5chain signature not matching the leaf certificate fails`() =
+        runBlocking<Unit> {
+            val keyPair = generateP256KeyPair()
+            val wrongCert = generateSelfSignedCert(generateP256KeyPair(), "CN=Wrong Key Cert")
+            val vc = engineOptIn.issue(buildIssuanceRequest())
+            // Signed with keyPair but carrying a certificate for a DIFFERENT key.
+            val resigned = resignWithX5Chain(vc, keyPair, wrongCert)
+
+            val engineWithAnchor =
+                MdocProofEngine(
+                    kms,
+                    config =
+                        ProofEngineConfig(
+                            properties = mapOf(MdocProofEngine.OPTION_IACA_TRUST_ANCHORS to listOf(wrongCert)),
+                        ),
+                )
+            val result = engineWithAnchor.verify(resigned, VerificationOptions())
+            result.shouldBeInstanceOf<VerificationResult.Invalid.InvalidProof>()
+        }
 
     // ------------------------------------------------------------------------------
     // Envelope reconciliation
     // ------------------------------------------------------------------------------
 
     @Test
-    fun `swapped envelope claim value fails verification`() = runBlocking<Unit> {
-        val vc = engineOptIn.issue(buildIssuanceRequest())
-        val tampered = vc.withEnvelopeClaims(
-            vc.credentialSubject.claims + ("family_name" to JsonPrimitive("Mallory"))
-        )
-
-        val result = engineOptIn.verify(tampered, VerificationOptions())
-        result.shouldBeInstanceOf<VerificationResult.Invalid.InvalidProof>()
-        result.reason.shouldContain("family_name")
-    }
-
-    @Test
-    fun `unbacked envelope claim fails verification`() = runBlocking<Unit> {
-        val vc = engineOptIn.issue(buildIssuanceRequest())
-        val tampered = vc.withEnvelopeClaims(
-            vc.credentialSubject.claims + ("admin" to JsonPrimitive(true))
-        )
-
-        val result = engineOptIn.verify(tampered, VerificationOptions())
-        result.shouldBeInstanceOf<VerificationResult.Invalid.InvalidProof>()
-        result.reason.shouldContain("not backed")
-    }
-
-    @Test
-    fun `swapped envelope boolean claim fails verification`() = runBlocking<Unit> {
-        val vc = engineOptIn.issue(buildIssuanceRequest())
-        val tampered = vc.withEnvelopeClaims(
-            vc.credentialSubject.claims + ("age_over_18" to JsonPrimitive(false))
-        )
-
-        val result = engineOptIn.verify(tampered, VerificationOptions())
-        result.shouldBeInstanceOf<VerificationResult.Invalid.InvalidProof>()
-    }
-
-    @Test
-    fun `untampered envelope with mixed claim types verifies`() = runBlocking<Unit> {
-        val vc = engineOptIn.issue(
-            buildIssuanceRequest(
-                claims = mapOf(
-                    "family_name" to JsonPrimitive("Smith"),
-                    "age" to JsonPrimitive(42L),
-                    "height_m" to JsonPrimitive(1.85),
-                    "age_over_18" to JsonPrimitive(true)
+    fun `swapped envelope claim value fails verification`() =
+        runBlocking<Unit> {
+            val vc = engineOptIn.issue(buildIssuanceRequest())
+            val tampered =
+                vc.withEnvelopeClaims(
+                    vc.credentialSubject.claims + ("family_name" to JsonPrimitive("Mallory")),
                 )
-            )
-        )
-        val result = engineOptIn.verify(vc, VerificationOptions())
-        result.shouldBeInstanceOf<VerificationResult.Valid>()
-    }
+
+            val result = engineOptIn.verify(tampered, VerificationOptions())
+            result.shouldBeInstanceOf<VerificationResult.Invalid.InvalidProof>()
+            result.reason.shouldContain("family_name")
+        }
+
+    @Test
+    fun `unbacked envelope claim fails verification`() =
+        runBlocking<Unit> {
+            val vc = engineOptIn.issue(buildIssuanceRequest())
+            val tampered =
+                vc.withEnvelopeClaims(
+                    vc.credentialSubject.claims + ("admin" to JsonPrimitive(true)),
+                )
+
+            val result = engineOptIn.verify(tampered, VerificationOptions())
+            result.shouldBeInstanceOf<VerificationResult.Invalid.InvalidProof>()
+            result.reason.shouldContain("not backed")
+        }
+
+    @Test
+    fun `swapped envelope boolean claim fails verification`() =
+        runBlocking<Unit> {
+            val vc = engineOptIn.issue(buildIssuanceRequest())
+            val tampered =
+                vc.withEnvelopeClaims(
+                    vc.credentialSubject.claims + ("age_over_18" to JsonPrimitive(false)),
+                )
+
+            val result = engineOptIn.verify(tampered, VerificationOptions())
+            result.shouldBeInstanceOf<VerificationResult.Invalid.InvalidProof>()
+        }
+
+    @Test
+    fun `untampered envelope with mixed claim types verifies`() =
+        runBlocking<Unit> {
+            val vc =
+                engineOptIn.issue(
+                    buildIssuanceRequest(
+                        claims =
+                            mapOf(
+                                "family_name" to JsonPrimitive("Smith"),
+                                "age" to JsonPrimitive(42L),
+                                "height_m" to JsonPrimitive(1.85),
+                                "age_over_18" to JsonPrimitive(true),
+                            ),
+                    ),
+                )
+            val result = engineOptIn.verify(vc, VerificationOptions())
+            result.shouldBeInstanceOf<VerificationResult.Valid>()
+        }
 
     // ------------------------------------------------------------------------------
     // Selective disclosure: envelope filtering
     // ------------------------------------------------------------------------------
 
     @Test
-    fun `createPresentation filters the envelope credentialSubject to disclosed claims`() = runBlocking<Unit> {
-        val vc = engineOptIn.issue(buildIssuanceRequest())
+    fun `createPresentation filters the envelope credentialSubject to disclosed claims`() =
+        runBlocking<Unit> {
+            val vc = engineOptIn.issue(buildIssuanceRequest())
 
-        val vp = engineOptIn.createPresentation(
-            listOf(vc),
-            PresentationRequest(disclosedClaims = setOf("family_name"))
-        )
+            val vp =
+                engineOptIn.createPresentation(
+                    listOf(vc),
+                    PresentationRequest(disclosedClaims = setOf("family_name")),
+                )
 
-        val presented = vp.verifiableCredential[0]
-        presented.credentialSubject.claims.shouldContainExactly(
-            mapOf<String, JsonElement>("family_name" to JsonPrimitive("Smith"))
-        )
-        // Holder id is retained on the envelope.
-        presented.credentialSubject.id?.value shouldBe holderDid.value
-    }
+            val presented = vp.verifiableCredential[0]
+            presented.credentialSubject.claims.shouldContainExactly(
+                mapOf<String, JsonElement>("family_name" to JsonPrimitive("Smith")),
+            )
+            // Holder id is retained on the envelope.
+            presented.credentialSubject.id?.value shouldBe holderDid.value
+        }
 
     @Test
-    fun `presented credential with filtered envelope verifies`() = runBlocking<Unit> {
-        val vc = engineOptIn.issue(buildIssuanceRequest())
-        val vp = engineOptIn.createPresentation(
-            listOf(vc),
-            PresentationRequest(disclosedClaims = setOf("family_name"))
-        )
+    fun `presented credential with filtered envelope verifies`() =
+        runBlocking<Unit> {
+            val vc = engineOptIn.issue(buildIssuanceRequest())
+            val vp =
+                engineOptIn.createPresentation(
+                    listOf(vc),
+                    PresentationRequest(disclosedClaims = setOf("family_name")),
+                )
 
-        val result = engineOptIn.verify(vp.verifiableCredential[0], VerificationOptions())
-        result.shouldBeInstanceOf<VerificationResult.Valid>()
-    }
+            val result = engineOptIn.verify(vp.verifiableCredential[0], VerificationOptions())
+            result.shouldBeInstanceOf<VerificationResult.Valid>()
+        }
 
     // ------------------------------------------------------------------------------
     // Device authentication fail-closed behavior
@@ -275,10 +302,11 @@ class MdocProofEngineSecurityTest {
             val vc = engineOptIn.issue(buildIssuanceRequest())
             val withDevice = vc.withDummyDeviceSigned()
 
-            val issuerOnly = VerificationOptions(
-                verifyPresentationProof = false,
-                enforceHolderBinding = false
-            )
+            val issuerOnly =
+                VerificationOptions(
+                    verifyPresentationProof = false,
+                    enforceHolderBinding = false,
+                )
             val result = engineOptIn.verify(withDevice, issuerOnly)
             result.shouldBeInstanceOf<VerificationResult.Valid>()
         }
@@ -288,86 +316,98 @@ class MdocProofEngineSecurityTest {
         runBlocking<Unit> {
             val vc = engineOptIn.issue(buildIssuanceRequest())
 
-            val options = VerificationOptions(
-                additionalOptions = mapOf(
-                    MdocProofEngine.OPTION_SESSION_TRANSCRIPT to CBORObject.NewArray().EncodeToBytes()
+            val options =
+                VerificationOptions(
+                    additionalOptions =
+                        mapOf(
+                            MdocProofEngine.OPTION_SESSION_TRANSCRIPT to CBORObject.NewArray().EncodeToBytes(),
+                        ),
                 )
-            )
             val result = engineOptIn.verify(vc, options)
             result.shouldBeInstanceOf<VerificationResult.Invalid.InvalidProof>()
             result.reason.shouldContain("deviceSigned")
         }
 
     @Test
-    fun `session transcript with garbage device signature fails`() = runBlocking<Unit> {
-        val vc = engineOptIn.issue(buildIssuanceRequest())
-        val withDevice = vc.withDummyDeviceSigned()
+    fun `session transcript with garbage device signature fails`() =
+        runBlocking<Unit> {
+            val vc = engineOptIn.issue(buildIssuanceRequest())
+            val withDevice = vc.withDummyDeviceSigned()
 
-        val options = VerificationOptions(
-            additionalOptions = mapOf(
-                MdocProofEngine.OPTION_SESSION_TRANSCRIPT to CBORObject.NewArray().EncodeToBytes()
-            )
-        )
-        val result = engineOptIn.verify(withDevice, options)
-        result.shouldBeInstanceOf<VerificationResult.Invalid.InvalidProof>()
-    }
+            val options =
+                VerificationOptions(
+                    additionalOptions =
+                        mapOf(
+                            MdocProofEngine.OPTION_SESSION_TRANSCRIPT to CBORObject.NewArray().EncodeToBytes(),
+                        ),
+                )
+            val result = engineOptIn.verify(withDevice, options)
+            result.shouldBeInstanceOf<VerificationResult.Invalid.InvalidProof>()
+        }
 
     // ------------------------------------------------------------------------------
     // Fixtures and helpers
     // ------------------------------------------------------------------------------
 
     private fun buildIssuanceRequest(
-        claims: Map<String, JsonElement> = mapOf(
-            "family_name" to JsonPrimitive("Smith"),
-            "given_name" to JsonPrimitive("John"),
-            "age_over_18" to JsonPrimitive(true)
-        )
-    ): IssuanceRequest {
-        return IssuanceRequest(
+        claims: Map<String, JsonElement> =
+            mapOf(
+                "family_name" to JsonPrimitive("Smith"),
+                "given_name" to JsonPrimitive("John"),
+                "age_over_18" to JsonPrimitive(true),
+            ),
+    ): IssuanceRequest =
+        IssuanceRequest(
             format = ProofSuiteId.MDOC,
             issuer = Issuer.fromDid(issuerDid),
             issuerKeyId = VerificationMethodId(issuerDid, issuerKeyId),
             credentialSubject = CredentialSubject.fromDid(holderDid, claims = claims),
-            type = listOf(
-                CredentialType.fromString("VerifiableCredential"),
-                CredentialType.fromString(MdlNamespace.MDL_DOC_TYPE)
-            ),
-            proofOptions = ProofOptions(
-                additionalOptions = mapOf(
-                    "namespace" to MdlNamespace.ISO_18013_5_1,
-                    "docType" to MdlNamespace.MDL_DOC_TYPE,
-                    "algorithm" to "Ed25519"
-                )
-            )
+            type =
+                listOf(
+                    CredentialType.fromString("VerifiableCredential"),
+                    CredentialType.fromString(MdlNamespace.MDL_DOC_TYPE),
+                ),
+            proofOptions =
+                ProofOptions(
+                    additionalOptions =
+                        mapOf(
+                            "namespace" to MdlNamespace.ISO_18013_5_1,
+                            "docType" to MdlNamespace.MDL_DOC_TYPE,
+                            "algorithm" to "Ed25519",
+                        ),
+                ),
         )
-    }
 
-    private fun VerifiableCredential.withEnvelopeClaims(
-        claims: Map<String, JsonElement>
-    ): VerifiableCredential =
+    private fun VerifiableCredential.withEnvelopeClaims(claims: Map<String, JsonElement>): VerifiableCredential =
         copy(credentialSubject = credentialSubject.copy(claims = claims))
 
     /** Attach an (unverifiable) deviceSigned structure, simulating a presentation artifact. */
     private fun VerifiableCredential.withDummyDeviceSigned(): VerifiableCredential {
         val mdocProof = proof as CredentialProof.MdocProof
         val doc = MdocCbor.decodeMobileDocument(mdocProof.deviceResponse)
-        val dummyCoseSign1 = CBORObject.NewArray().apply {
-            Add(CBORObject.FromObject(ByteArray(0))) // protected
-            Add(CBORObject.NewOrderedMap()) // unprotected
-            Add(CBORObject.FromObject(ByteArray(0))) // payload
-            Add(CBORObject.FromObject(ByteArray(64))) // signature
-        }.EncodeToBytes()
-        val withDevice = doc.copy(
-            deviceSigned = DeviceSigned(
-                nameSpaces = CBORObject.NewOrderedMap().EncodeToBytes(),
-                deviceAuth = DeviceAuth(deviceSignature = dummyCoseSign1)
+        val dummyCoseSign1 =
+            CBORObject
+                .NewArray()
+                .apply {
+                    Add(CBORObject.FromObject(ByteArray(0))) // protected
+                    Add(CBORObject.NewOrderedMap()) // unprotected
+                    Add(CBORObject.FromObject(ByteArray(0))) // payload
+                    Add(CBORObject.FromObject(ByteArray(64))) // signature
+                }.EncodeToBytes()
+        val withDevice =
+            doc.copy(
+                deviceSigned =
+                    DeviceSigned(
+                        nameSpaces = CBORObject.NewOrderedMap().EncodeToBytes(),
+                        deviceAuth = DeviceAuth(deviceSignature = dummyCoseSign1),
+                    ),
             )
-        )
         return copy(
-            proof = CredentialProof.MdocProof(
-                deviceResponse = MdocCbor.encodeMobileDocument(withDevice),
-                docType = mdocProof.docType
-            )
+            proof =
+                CredentialProof.MdocProof(
+                    deviceResponse = MdocCbor.encodeMobileDocument(withDevice),
+                    docType = mdocProof.docType,
+                ),
         )
     }
 
@@ -379,7 +419,7 @@ class MdocProofEngineSecurityTest {
     private fun resignWithX5Chain(
         vc: VerifiableCredential,
         keyPair: KeyPair,
-        cert: X509Certificate
+        cert: X509Certificate,
     ): VerifiableCredential {
         val mdocProof = vc.proof as CredentialProof.MdocProof
         val doc = MdocCbor.decodeMobileDocument(mdocProof.deviceResponse)
@@ -391,65 +431,77 @@ class MdocProofEngineSecurityTest {
         val protectedBytes = protectedMap.EncodeToBytes()
 
         // Sig_structure = ["Signature1", protected, external-aad, payload]
-        val sigStructure = CBORObject.NewArray().apply {
-            Add(CBORObject.FromObject("Signature1"))
-            Add(CBORObject.FromObject(protectedBytes))
-            Add(CBORObject.FromObject(ByteArray(0)))
-            Add(CBORObject.FromObject(msoBytes))
-        }
-        val signer = Signature.getInstance("SHA256withECDSA").apply {
-            initSign(keyPair.private)
-            update(sigStructure.EncodeToBytes())
-        }
+        val sigStructure =
+            CBORObject.NewArray().apply {
+                Add(CBORObject.FromObject("Signature1"))
+                Add(CBORObject.FromObject(protectedBytes))
+                Add(CBORObject.FromObject(ByteArray(0)))
+                Add(CBORObject.FromObject(msoBytes))
+            }
+        val signer =
+            Signature.getInstance("SHA256withECDSA").apply {
+                initSign(keyPair.private)
+                update(sigStructure.EncodeToBytes())
+            }
         val rawSignature = derToRawSignature(signer.sign())
 
         val unprotectedMap = CBORObject.NewOrderedMap()
         unprotectedMap[CBORObject.FromObject(33)] = CBORObject.FromObject(cert.encoded)
 
-        val coseSign1 = CBORObject.NewArray().apply {
-            Add(CBORObject.FromObject(protectedBytes))
-            Add(unprotectedMap)
-            Add(CBORObject.FromObject(msoBytes))
-            Add(CBORObject.FromObject(rawSignature))
-        }
+        val coseSign1 =
+            CBORObject.NewArray().apply {
+                Add(CBORObject.FromObject(protectedBytes))
+                Add(unprotectedMap)
+                Add(CBORObject.FromObject(msoBytes))
+                Add(CBORObject.FromObject(rawSignature))
+            }
 
-        val newDoc = doc.copy(
-            issuerSigned = doc.issuerSigned.copy(issuerAuth = coseSign1.EncodeToBytes())
-        )
-        return vc.copy(
-            proof = CredentialProof.MdocProof(
-                deviceResponse = MdocCbor.encodeMobileDocument(newDoc),
-                docType = mdocProof.docType
+        val newDoc =
+            doc.copy(
+                issuerSigned = doc.issuerSigned.copy(issuerAuth = coseSign1.EncodeToBytes()),
             )
+        return vc.copy(
+            proof =
+                CredentialProof.MdocProof(
+                    deviceResponse = MdocCbor.encodeMobileDocument(newDoc),
+                    docType = mdocProof.docType,
+                ),
         )
     }
 
     private fun generateP256KeyPair(): KeyPair =
-        KeyPairGenerator.getInstance("EC").apply {
-            initialize(ECGenParameterSpec("secp256r1"))
-        }.generateKeyPair()
+        KeyPairGenerator
+            .getInstance("EC")
+            .apply {
+                initialize(ECGenParameterSpec("secp256r1"))
+            }.generateKeyPair()
 
     private fun generateSelfSignedCert(
         keyPair: KeyPair,
-        subject: String = "CN=Test IACA"
+        subject: String = "CN=Test IACA",
     ): X509Certificate {
         val name = X500Name(subject)
         val now = System.currentTimeMillis()
-        val builder = JcaX509v3CertificateBuilder(
-            name,
-            BigInteger.valueOf(now),
-            Date(now - 3_600_000L),
-            Date(now + 86_400_000L),
-            name,
-            keyPair.public
-        )
+        val builder =
+            JcaX509v3CertificateBuilder(
+                name,
+                BigInteger.valueOf(now),
+                Date(now - 3_600_000L),
+                Date(now + 86_400_000L),
+                name,
+                keyPair.public,
+            )
         val contentSigner = JcaContentSignerBuilder("SHA256withECDSA").build(keyPair.private)
         return JcaX509CertificateConverter().getCertificate(builder.build(contentSigner))
     }
 
     /** Convert a DER ECDSA signature to the raw `r || s` form used by COSE (P-256: 32+32). */
-    private fun derToRawSignature(der: ByteArray, componentSize: Int = 32): ByteArray {
+    private fun derToRawSignature(
+        der: ByteArray,
+        componentSize: Int = 32,
+    ): ByteArray {
         val seq = ASN1Sequence.getInstance(der)
+
         fun pad(value: BigInteger): ByteArray {
             val bytes = value.toByteArray().dropWhile { it == 0.toByte() }.toByteArray()
             require(bytes.size <= componentSize) { "Signature component too large" }

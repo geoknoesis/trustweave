@@ -31,8 +31,7 @@ dependencies {
     testImplementation(project(":testkit"))
     testImplementation(libs.kotlin.test)
     testImplementation(libs.junit.jupiter)
-    
+
     // MockWebServer for HTTP mocking
     testImplementation(libs.mockwebserver)
 }
-

@@ -4,12 +4,12 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import org.trustweave.anchor.AnchorRef
 import org.trustweave.anchor.AnchorResult
+import org.trustweave.anchor.exceptions.TreasuryException
 import org.trustweave.anchor.payment.AssetRef
 import org.trustweave.anchor.payment.OperationDescriptor
 import org.trustweave.anchor.payment.PaymentContext
 import org.trustweave.anchor.payment.TokenAmount
 import org.trustweave.anchor.payment.isUnmanaged
-import org.trustweave.anchor.exceptions.TreasuryException
 import java.math.BigInteger
 
 /**
@@ -39,7 +39,6 @@ class OrbAnchorClient internal constructor(
     private val sidetree: SidetreeOrbClient,
     private val config: OrbDidConfig,
 ) {
-
     /** Chain identifier surfaced through [estimate] and [AnchorResult.payerAddress]. */
     val chainId: String get() = config.chainId
 
@@ -55,8 +54,9 @@ class OrbAnchorClient internal constructor(
      * underlying on-chain fee across them; the per-operation credit charge is
      * the only number a caller can reason about up-front.
      */
-    suspend fun estimate(@Suppress("UNUSED_PARAMETER") op: OperationDescriptor): TokenAmount =
-        TokenAmount(chainId, asset, BigInteger.ONE)
+    suspend fun estimate(
+        @Suppress("UNUSED_PARAMETER") op: OperationDescriptor,
+    ): TokenAmount = TokenAmount(chainId, asset, BigInteger.ONE)
 
     /**
      * Payment-aware submission. Threads [ctx] through for fee-cap enforcement
@@ -95,15 +95,17 @@ class OrbAnchorClient internal constructor(
             throw OrbException.httpError(response.httpStatus, response.error ?: response.rawBody)
         }
         return AnchorResult(
-            ref = AnchorRef(
-                chainId = chainId,
-                txHash = response.did ?: response.rawBody,
-                contract = null,
-                extra = buildMap {
-                    response.did?.let { put("did", it) }
-                    put("baseUrl", config.baseUrl)
-                },
-            ),
+            ref =
+                AnchorRef(
+                    chainId = chainId,
+                    txHash = response.did ?: response.rawBody,
+                    contract = null,
+                    extra =
+                        buildMap {
+                            response.did?.let { put("did", it) }
+                            put("baseUrl", config.baseUrl)
+                        },
+                ),
             payload = operation as JsonElement,
             mediaType = mediaType,
             timestamp = null,

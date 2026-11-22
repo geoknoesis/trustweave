@@ -23,7 +23,6 @@ import java.security.spec.X509EncodedKeySpec
  * The protected header contains the algorithm identifier (alg = -7 for ES256).
  */
 internal object MdocCoseSign {
-
     init {
         if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
             Security.addProvider(BouncyCastleProvider())
@@ -52,7 +51,7 @@ internal object MdocCoseSign {
         payload: ByteArray,
         keyId: KeyId,
         kms: KeyManagementService,
-        algorithm: Algorithm = Algorithm.P256
+        algorithm: Algorithm = Algorithm.P256,
     ): ByteArray {
         val coseAlg = algorithmToCose(algorithm)
 
@@ -70,15 +69,16 @@ internal object MdocCoseSign {
         val toBeSigned = sigStructure.EncodeToBytes()
 
         val signResult = kms.sign(keyId, toBeSigned, algorithm)
-        val signature = when (signResult) {
-            is SignResult.Success -> signResult.signature
-            is SignResult.Failure.KeyNotFound ->
-                throw MdocException("KMS_KEY_NOT_FOUND", "Issuer signing key not found: ${keyId.value}")
-            is SignResult.Failure.UnsupportedAlgorithm ->
-                throw MdocException("KMS_UNSUPPORTED_ALG", "Algorithm not supported for key: ${keyId.value}")
-            is SignResult.Failure.Error ->
-                throw MdocException("KMS_SIGN_ERROR", "Signing failed: ${signResult.reason}", signResult.cause)
-        }
+        val signature =
+            when (signResult) {
+                is SignResult.Success -> signResult.signature
+                is SignResult.Failure.KeyNotFound ->
+                    throw MdocException("KMS_KEY_NOT_FOUND", "Issuer signing key not found: ${keyId.value}")
+                is SignResult.Failure.UnsupportedAlgorithm ->
+                    throw MdocException("KMS_UNSUPPORTED_ALG", "Algorithm not supported for key: ${keyId.value}")
+                is SignResult.Failure.Error ->
+                    throw MdocException("KMS_SIGN_ERROR", "Signing failed: ${signResult.reason}", signResult.cause)
+            }
 
         // COSE_Sign1 = [protected-bstr, unprotected-map, payload-bstr, signature-bstr]
         val coseSign1 = CBORObject.NewArray()
@@ -102,7 +102,7 @@ internal object MdocCoseSign {
     suspend fun verify(
         coseSign1Bytes: ByteArray,
         kms: KeyManagementService,
-        keyId: KeyId
+        keyId: KeyId,
     ): ByteArray {
         val coseSign1 = CBORObject.DecodeFromBytes(coseSign1Bytes)
         require(coseSign1.size() == 4) {
@@ -115,8 +115,9 @@ internal object MdocCoseSign {
 
         // Decode algorithm from protected header
         val protectedHeaderMap = CBORObject.DecodeFromBytes(protectedHeaderBytes)
-        val coseAlg = protectedHeaderMap[CBORObject.FromObject(HEADER_ALG)]?.AsInt32()
-            ?: throw MdocException.invalidCoseSign1("Missing 'alg' in protected header")
+        val coseAlg =
+            protectedHeaderMap[CBORObject.FromObject(HEADER_ALG)]?.AsInt32()
+                ?: throw MdocException.invalidCoseSign1("Missing 'alg' in protected header")
 
         val algorithm = coseAlgorithmToAlgorithm(coseAlg)
 
@@ -129,13 +130,14 @@ internal object MdocCoseSign {
         val toBeSigned = sigStructure.EncodeToBytes()
 
         // Get public key bytes from KMS
-        val publicKeyBytes = when (val result = kms.getPublicKey(keyId)) {
-            is GetPublicKeyResult.Success -> extractPublicKeyBytes(result.keyHandle.publicKeyJwk, algorithm)
-            is GetPublicKeyResult.Failure.KeyNotFound ->
-                throw MdocException("KMS_KEY_NOT_FOUND", "Verifier key not found: ${keyId.value}")
-            is GetPublicKeyResult.Failure.Error ->
-                throw MdocException("KMS_KEY_ERROR", "Failed to get public key: ${result.reason}")
-        }
+        val publicKeyBytes =
+            when (val result = kms.getPublicKey(keyId)) {
+                is GetPublicKeyResult.Success -> extractPublicKeyBytes(result.keyHandle.publicKeyJwk, algorithm)
+                is GetPublicKeyResult.Failure.KeyNotFound ->
+                    throw MdocException("KMS_KEY_NOT_FOUND", "Verifier key not found: ${keyId.value}")
+                is GetPublicKeyResult.Failure.Error ->
+                    throw MdocException("KMS_KEY_ERROR", "Failed to get public key: ${result.reason}")
+            }
 
         val valid = verifySignature(toBeSigned, signature, publicKeyBytes, algorithm)
         if (!valid) throw MdocException.invalidCoseSign1("Signature verification failed")
@@ -170,44 +172,45 @@ internal object MdocCoseSign {
         docType: String,
         deviceNameSpacesBytes: ByteArray,
         deviceKeyBytes: ByteArray,
-    ): Boolean = try {
-        val coseSign1 = CBORObject.DecodeFromBytes(coseSign1Bytes)
-        if (coseSign1.size() != 4) return false
+    ): Boolean =
+        try {
+            val coseSign1 = CBORObject.DecodeFromBytes(coseSign1Bytes)
+            if (coseSign1.size() != 4) return false
 
-        val protectedHeaderBytes = coseSign1[0].GetByteString()
-        val signature = coseSign1[3].GetByteString()
+            val protectedHeaderBytes = coseSign1[0].GetByteString()
+            val signature = coseSign1[3].GetByteString()
 
-        // Decode signing algorithm from protected header
-        val protectedHeaderMap = CBORObject.DecodeFromBytes(protectedHeaderBytes)
-        val coseAlg = protectedHeaderMap[CBORObject.FromObject(HEADER_ALG)]?.AsInt32() ?: return false
-        val algorithm = coseAlgorithmToAlgorithm(coseAlg)
+            // Decode signing algorithm from protected header
+            val protectedHeaderMap = CBORObject.DecodeFromBytes(protectedHeaderBytes)
+            val coseAlg = protectedHeaderMap[CBORObject.FromObject(HEADER_ALG)]?.AsInt32() ?: return false
+            val algorithm = coseAlgorithmToAlgorithm(coseAlg)
 
-        // Decode device public key bytes from the CBOR COSE_Key embedded in the MSO
-        val devicePublicKeyBytes = decodeDeviceKey(CBORObject.DecodeFromBytes(deviceKeyBytes)) ?: return false
+            // Decode device public key bytes from the CBOR COSE_Key embedded in the MSO
+            val devicePublicKeyBytes = decodeDeviceKey(CBORObject.DecodeFromBytes(deviceKeyBytes)) ?: return false
 
-        // Build DeviceAuthentication payload (per §9.1.3.6)
-        val sessionTranscriptCbor = CBORObject.DecodeFromBytes(sessionTranscript)
-        val deviceNameSpacesBstr = CBORObject.FromObjectAndTag(deviceNameSpacesBytes, 24) // tag 24 = bstr-wrapped CBOR
+            // Build DeviceAuthentication payload (per §9.1.3.6)
+            val sessionTranscriptCbor = CBORObject.DecodeFromBytes(sessionTranscript)
+            val deviceNameSpacesBstr = CBORObject.FromObjectAndTag(deviceNameSpacesBytes, 24) // tag 24 = bstr-wrapped CBOR
 
-        val deviceAuthentication = CBORObject.NewArray()
-        deviceAuthentication.Add(CBORObject.FromObject("DeviceAuthentication"))
-        deviceAuthentication.Add(sessionTranscriptCbor)
-        deviceAuthentication.Add(CBORObject.FromObject(docType))
-        deviceAuthentication.Add(deviceNameSpacesBstr)
-        val authPayload = deviceAuthentication.EncodeToBytes()
+            val deviceAuthentication = CBORObject.NewArray()
+            deviceAuthentication.Add(CBORObject.FromObject("DeviceAuthentication"))
+            deviceAuthentication.Add(sessionTranscriptCbor)
+            deviceAuthentication.Add(CBORObject.FromObject(docType))
+            deviceAuthentication.Add(deviceNameSpacesBstr)
+            val authPayload = deviceAuthentication.EncodeToBytes()
 
-        // Sig_Structure for the device COSE_Sign1 uses the DeviceAuthentication as payload
-        val sigStructure = CBORObject.NewArray()
-        sigStructure.Add(CBORObject.FromObject("Signature1"))
-        sigStructure.Add(CBORObject.FromObject(protectedHeaderBytes))
-        sigStructure.Add(CBORObject.FromObject(ByteArray(0))) // empty external AAD
-        sigStructure.Add(CBORObject.FromObject(authPayload))
-        val toBeSigned = sigStructure.EncodeToBytes()
+            // Sig_Structure for the device COSE_Sign1 uses the DeviceAuthentication as payload
+            val sigStructure = CBORObject.NewArray()
+            sigStructure.Add(CBORObject.FromObject("Signature1"))
+            sigStructure.Add(CBORObject.FromObject(protectedHeaderBytes))
+            sigStructure.Add(CBORObject.FromObject(ByteArray(0))) // empty external AAD
+            sigStructure.Add(CBORObject.FromObject(authPayload))
+            val toBeSigned = sigStructure.EncodeToBytes()
 
-        verifySignature(toBeSigned, signature, devicePublicKeyBytes, algorithm)
-    } catch (_: Exception) {
-        false
-    }
+            verifySignature(toBeSigned, signature, devicePublicKeyBytes, algorithm)
+        } catch (_: Exception) {
+            false
+        }
 
     /**
      * Decode the uncompressed EC or raw OKP public key bytes from a CBOR COSE_Key map.
@@ -230,7 +233,12 @@ internal object MdocCoseSign {
                 val crv = coseKey[CBORObject.FromObject(-1)]?.AsInt32() ?: 1
                 val x = coseKey[CBORObject.FromObject(-2)]?.GetByteString() ?: return null
                 val y = coseKey[CBORObject.FromObject(-3)]?.GetByteString() ?: return null
-                val keySize = when (crv) { 2 -> 48; 3 -> 66; else -> 32 }
+                val keySize =
+                    when (crv) {
+                        2 -> 48
+                        3 -> 66
+                        else -> 32
+                    }
                 byteArrayOf(0x04) + x.padStart(keySize) + y.padStart(keySize)
             }
             else -> null
@@ -247,44 +255,57 @@ internal object MdocCoseSign {
         return coseSign1[2].GetByteString()
     }
 
-    private fun algorithmToCose(algorithm: Algorithm): Int = when (algorithm) {
-        Algorithm.P256 -> ALG_ES256
-        Algorithm.P384 -> ALG_ES384
-        Algorithm.P521 -> ALG_ES512
-        Algorithm.Ed25519 -> ALG_EDDSA
-        else -> ALG_ES256
-    }
+    private fun algorithmToCose(algorithm: Algorithm): Int =
+        when (algorithm) {
+            Algorithm.P256 -> ALG_ES256
+            Algorithm.P384 -> ALG_ES384
+            Algorithm.P521 -> ALG_ES512
+            Algorithm.Ed25519 -> ALG_EDDSA
+            else -> ALG_ES256
+        }
 
-    private fun coseAlgorithmToAlgorithm(coseAlg: Int): Algorithm = when (coseAlg) {
-        ALG_ES256 -> Algorithm.P256
-        ALG_ES384 -> Algorithm.P384
-        ALG_ES512 -> Algorithm.P521
-        ALG_EDDSA -> Algorithm.Ed25519
-        else -> Algorithm.P256
-    }
+    private fun coseAlgorithmToAlgorithm(coseAlg: Int): Algorithm =
+        when (coseAlg) {
+            ALG_ES256 -> Algorithm.P256
+            ALG_ES384 -> Algorithm.P384
+            ALG_ES512 -> Algorithm.P521
+            ALG_EDDSA -> Algorithm.Ed25519
+            else -> Algorithm.P256
+        }
 
-    private fun extractPublicKeyBytes(jwk: Map<String, Any?>?, algorithm: Algorithm): ByteArray {
+    private fun extractPublicKeyBytes(
+        jwk: Map<String, Any?>?,
+        algorithm: Algorithm,
+    ): ByteArray {
         if (jwk == null) throw MdocException("MISSING_PUBLIC_KEY", "No public key JWK available for verification")
-        val x = jwk["x"]?.toString()
-            ?: throw MdocException("MISSING_PUBLIC_KEY_X", "Missing 'x' coordinate in JWK")
+        val x =
+            jwk["x"]?.toString()
+                ?: throw MdocException("MISSING_PUBLIC_KEY_X", "Missing 'x' coordinate in JWK")
         val y = jwk["y"]?.toString()
         val crv = jwk["crv"]?.toString()
 
         return when (algorithm) {
             Algorithm.Ed25519 -> {
-                java.util.Base64.getUrlDecoder().decode(x)
+                java.util.Base64
+                    .getUrlDecoder()
+                    .decode(x)
             }
             else -> {
                 // For EC keys, reconstruct uncompressed public key: 04 || x || y
-                val xBytes = java.util.Base64.getUrlDecoder().decode(x)
-                val yBytes = java.util.Base64.getUrlDecoder().decode(
-                    y ?: throw MdocException("MISSING_PUBLIC_KEY_Y", "Missing 'y' coordinate in JWK")
-                )
-                val keySize = when (crv) {
-                    "P-384" -> 48
-                    "P-521" -> 66
-                    else -> 32 // P-256
-                }
+                val xBytes =
+                    java.util.Base64
+                        .getUrlDecoder()
+                        .decode(x)
+                val yBytes =
+                    java.util.Base64.getUrlDecoder().decode(
+                        y ?: throw MdocException("MISSING_PUBLIC_KEY_Y", "Missing 'y' coordinate in JWK"),
+                    )
+                val keySize =
+                    when (crv) {
+                        "P-384" -> 48
+                        "P-521" -> 66
+                        else -> 32 // P-256
+                    }
                 val xPadded = xBytes.padStart(keySize)
                 val yPadded = yBytes.padStart(keySize)
                 byteArrayOf(0x04) + xPadded + yPadded
@@ -301,9 +322,9 @@ internal object MdocCoseSign {
         data: ByteArray,
         signature: ByteArray,
         publicKeyBytes: ByteArray,
-        algorithm: Algorithm
-    ): Boolean {
-        return try {
+        algorithm: Algorithm,
+    ): Boolean =
+        try {
             when (algorithm) {
                 Algorithm.Ed25519 -> verifyEd25519(data, signature, publicKeyBytes)
                 else -> verifyEcdsa(data, signature, publicKeyBytes, algorithm)
@@ -311,19 +332,28 @@ internal object MdocCoseSign {
         } catch (e: Exception) {
             false
         }
-    }
 
-    private fun verifyEcdsa(data: ByteArray, signature: ByteArray, publicKeyBytes: ByteArray, algorithm: Algorithm): Boolean {
-        val (jcaAlgorithm, curveName) = when (algorithm) {
-            Algorithm.P384 -> "SHA384withECDSA" to "secp384r1"
-            Algorithm.P521 -> "SHA512withECDSA" to "secp521r1"
-            else -> "SHA256withECDSA" to "secp256r1"
-        }
+    private fun verifyEcdsa(
+        data: ByteArray,
+        signature: ByteArray,
+        publicKeyBytes: ByteArray,
+        algorithm: Algorithm,
+    ): Boolean {
+        val (jcaAlgorithm, curveName) =
+            when (algorithm) {
+                Algorithm.P384 -> "SHA384withECDSA" to "secp384r1"
+                Algorithm.P521 -> "SHA512withECDSA" to "secp521r1"
+                else -> "SHA256withECDSA" to "secp256r1"
+            }
         val keyFactory = KeyFactory.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME)
-        val ecPoint = org.bouncycastle.jce.ECNamedCurveTable.getParameterSpec(curveName)
-            ?: throw MdocException("INVALID_CURVE", "Unknown EC curve: $curveName")
+        val ecPoint =
+            org.bouncycastle.jce.ECNamedCurveTable
+                .getParameterSpec(curveName)
+                ?: throw MdocException("INVALID_CURVE", "Unknown EC curve: $curveName")
         val point = ecPoint.curve.decodePoint(publicKeyBytes)
-        val pubKeySpec = org.bouncycastle.jce.spec.ECPublicKeySpec(point, ecPoint)
+        val pubKeySpec =
+            org.bouncycastle.jce.spec
+                .ECPublicKeySpec(point, ecPoint)
         val pubKey = keyFactory.generatePublic(pubKeySpec)
 
         val derSig = rawToDerSignature(signature)
@@ -333,13 +363,29 @@ internal object MdocCoseSign {
         return signer.verify(derSig)
     }
 
-    private fun verifyEd25519(data: ByteArray, signature: ByteArray, publicKeyBytes: ByteArray): Boolean {
+    private fun verifyEd25519(
+        data: ByteArray,
+        signature: ByteArray,
+        publicKeyBytes: ByteArray,
+    ): Boolean {
         val keyFactory = KeyFactory.getInstance("Ed25519", BouncyCastleProvider.PROVIDER_NAME)
         // Ed25519 public key: 32 raw bytes — wrap in SubjectPublicKeyInfo (X.509 encoded)
         // OID for Ed25519: 1.3.101.112
-        val spkiPrefix = byteArrayOf(
-            0x30, 0x2a, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x03, 0x21, 0x00
-        )
+        val spkiPrefix =
+            byteArrayOf(
+                0x30,
+                0x2a,
+                0x30,
+                0x05,
+                0x06,
+                0x03,
+                0x2b,
+                0x65,
+                0x70,
+                0x03,
+                0x21,
+                0x00,
+            )
         val spki = spkiPrefix + publicKeyBytes
         val pubKey = keyFactory.generatePublic(X509EncodedKeySpec(spki))
         val signer = Signature.getInstance("Ed25519", BouncyCastleProvider.PROVIDER_NAME)

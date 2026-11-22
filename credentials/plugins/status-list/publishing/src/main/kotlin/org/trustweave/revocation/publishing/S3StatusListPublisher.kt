@@ -94,13 +94,19 @@ class S3StatusListPublisher private constructor(
         private val SAFE_STATUS_LIST_ID = Regex("^[A-Za-z0-9._-]+$")
     }
 
-    override suspend fun publish(statusListId: String, content: ByteArray, contentType: String): String {
-        val request = PutObjectRequest.builder()
-            .bucket(config.bucket)
-            .key(objectKey(statusListId))
-            .contentType(contentType)
-            .contentLength(content.size.toLong())
-            .build()
+    override suspend fun publish(
+        statusListId: String,
+        content: ByteArray,
+        contentType: String,
+    ): String {
+        val request =
+            PutObjectRequest
+                .builder()
+                .bucket(config.bucket)
+                .key(objectKey(statusListId))
+                .contentType(contentType)
+                .contentLength(content.size.toLong())
+                .build()
 
         s3Client.putObject(request, AsyncRequestBody.fromBytes(content)).await()
 
@@ -108,19 +114,23 @@ class S3StatusListPublisher private constructor(
     }
 
     override suspend fun delete(statusListId: String) {
-        val request = DeleteObjectRequest.builder()
-            .bucket(config.bucket)
-            .key(objectKey(statusListId))
-            .build()
+        val request =
+            DeleteObjectRequest
+                .builder()
+                .bucket(config.bucket)
+                .key(objectKey(statusListId))
+                .build()
 
         s3Client.deleteObject(request).await()
     }
 
     override suspend fun getUrl(statusListId: String): String? {
-        val request = HeadObjectRequest.builder()
-            .bucket(config.bucket)
-            .key(objectKey(statusListId))
-            .build()
+        val request =
+            HeadObjectRequest
+                .builder()
+                .bucket(config.bucket)
+                .key(objectKey(statusListId))
+                .build()
 
         return try {
             s3Client.headObject(request).await()

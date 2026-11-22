@@ -98,6 +98,8 @@ val bouncyCastleVersion = libs.versions.bouncycastle.get()
 val bouncyCastleLtsVersion = libs.versions.bclts.get()
 val netty41Version = libs.versions.netty41.get()
 val netty42Version = libs.versions.netty42.get()
+val vertx45Version = libs.versions.vertx45.get()
+val msgpackVersion = libs.versions.msgpack.get()
 
 // Modules built and tested in CI but deliberately excluded from Maven Central publication.
 // Mirror their produced binary JAR filenames in config/release-unpublished-jars.json so
@@ -329,6 +331,17 @@ subprojects {
                 if (requested.group == "io.netty" && requested.version?.startsWith("4.2.") == true) {
                     useVersion(netty42Version)
                     because("Netty 4.2.12 advisories GHSA-558v-64gr-wgg4, GHSA-mj4r-2hfc-f8p6, GHSA-rwm7-x88c-3g2p")
+                }
+                if (requested.group == "io.vertx" &&
+                    requested.name == "vertx-core" &&
+                    requested.version?.startsWith("4.5.") == true
+                ) {
+                    useVersion(vertx45Version)
+                    because("Vert.x 4.5 advisories GHSA-3g76-f9xq-8vp6 (CVE-2026-6860) and GHSA-cphf-4846-3xx9 (CVE-2026-1002)")
+                }
+                if (requested.group == "org.msgpack" && requested.name == "msgpack-core") {
+                    useVersion(msgpackVersion)
+                    because("msgpack-core advisory GHSA-cw39-r4h6-8j3x (CVE-2026-21452)")
                 }
             }
         }

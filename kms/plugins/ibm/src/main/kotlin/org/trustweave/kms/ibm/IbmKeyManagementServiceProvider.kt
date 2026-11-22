@@ -12,7 +12,7 @@ import org.trustweave.kms.spi.KeyManagementServiceProvider
  * **Example:**
  * ```kotlin
  * import org.trustweave.kms.*
- * 
+ *
  * val kms = KeyManagementServices.create("ibm", mapOf(
  *     "apiKey" to "xxx",
  *     "instanceId" to "xxx",
@@ -26,19 +26,19 @@ class IbmKeyManagementServiceProvider : KeyManagementServiceProvider {
     override val supportedAlgorithms: Set<Algorithm> = IbmKeyManagementService.SUPPORTED_ALGORITHMS
 
     override fun create(options: Map<String, Any?>): KeyManagementService {
-        val config = try {
-            IbmKmsConfig.fromMap(options)
-        } catch (e: Exception) {
-            // Try environment variables as fallback
-            IbmKmsConfig.fromEnvironment()
-                ?: throw IllegalArgumentException(
-                    "IBM Key Protect configuration requires 'apiKey' and 'instanceId' in options or environment variables. " +
-                    "Error: ${e.message}",
-                    e
-                )
-        }
+        val config =
+            try {
+                IbmKmsConfig.fromMap(options)
+            } catch (e: Exception) {
+                // Try environment variables as fallback
+                IbmKmsConfig.fromEnvironment()
+                    ?: throw IllegalArgumentException(
+                        "IBM Key Protect configuration requires 'apiKey' and 'instanceId' in options or environment variables. " +
+                            "Error: ${e.message}",
+                        e,
+                    )
+            }
 
         return IbmKeyManagementService(config)
     }
 }
-

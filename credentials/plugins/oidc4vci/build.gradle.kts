@@ -8,7 +8,7 @@ group = "org.trustweave.credentials"
 dependencies {
     // Credential API and exchange API
     implementation(project(":credentials:credential-api"))
-    
+
     implementation(project(":did:did-core"))
     implementation(project(":kms:kms-core"))
     implementation(project(":common"))
@@ -30,4 +30,3 @@ dependencies {
     // MockWebServer for HTTP mocking
     testImplementation(libs.mockwebserver)
 }
-

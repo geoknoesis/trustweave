@@ -1,13 +1,23 @@
 package org.trustweave.godiddy.verifier
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.double
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.long
+import kotlinx.serialization.json.longOrNull
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.godiddy.GodiddyClient
 import org.trustweave.godiddy.models.GodiddyVerifyCredentialRequest
 import org.trustweave.godiddy.models.GodiddyVerifyCredentialResponse
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.*
 
 /**
  * Result of credential verification.
@@ -15,14 +25,14 @@ import kotlinx.serialization.json.*
 data class CredentialVerificationResult(
     val verified: Boolean,
     val error: String? = null,
-    val checks: Map<String, Boolean>? = null
+    val checks: Map<String, Boolean>? = null,
 )
 
 /**
  * Client for godiddy Universal Verifier service.
  */
 class GodiddyVerifier(
-    private val client: GodiddyClient
+    private val client: GodiddyClient,
 ) {
     /**
      * Verifies a Verifiable Credential using Universal Verifier.
@@ -33,69 +43,79 @@ class GodiddyVerifier(
      */
     suspend fun verifyCredential(
         credential: JsonObject,
-        options: Map<String, Any?> = emptyMap()
-    ): CredentialVerificationResult = withContext(Dispatchers.IO) {
-        try {
-            // Universal Verifier endpoint: POST /1.0/credentials/verify
-            val path = "/1.0/credentials/verify"
+        options: Map<String, Any?> = emptyMap(),
+    ): CredentialVerificationResult =
+        withContext(Dispatchers.IO) {
+            try {
+                // Universal Verifier endpoint: POST /1.0/credentials/verify
+                val path = "/1.0/credentials/verify"
 
-            // Convert options to JsonElement map
-            val jsonOptions = options.mapValues { (_, value) ->
-                when (value) {
-                    is String -> JsonPrimitive(value)
-                    is Number -> JsonPrimitive(value.toDouble())
-                    is Boolean -> JsonPrimitive(value)
-                    is Map<*, *> -> JsonObject(value.mapKeys { it.key.toString() }
-                        .mapValues { convertToJsonElement(it.value) })
-                    is List<*> -> JsonArray(value.map { convertToJsonElement(it) })
-                    else -> JsonNull
-                }
+                // Convert options to JsonElement map
+                val jsonOptions =
+                    options.mapValues { (_, value) ->
+                        when (value) {
+                            is String -> JsonPrimitive(value)
+                            is Number -> JsonPrimitive(value.toDouble())
+                            is Boolean -> JsonPrimitive(value)
+                            is Map<*, *> ->
+                                JsonObject(
+                                    value
+                                        .mapKeys { it.key.toString() }
+                                        .mapValues { convertToJsonElement(it.value) },
+                                )
+                            is List<*> -> JsonArray(value.map { convertToJsonElement(it) })
+                            else -> JsonNull
+                        }
+                    }
+
+                val request =
+                    GodiddyVerifyCredentialRequest(
+                        credential = credential,
+                        options = jsonOptions,
+                    )
+
+                val response: GodiddyVerifyCredentialResponse = client.post(path, request)
+
+                CredentialVerificationResult(
+                    verified = response.verified,
+                    error = response.error,
+                    checks = response.checks,
+                )
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (e: Exception) {
+                throw TrustWeaveException.Unknown(
+                    code = "CREDENTIAL_VERIFICATION_FAILED",
+                    message = "Verification failed: ${e.message ?: "Unknown error"}",
+                    cause = e,
+                )
             }
-
-            val request = GodiddyVerifyCredentialRequest(
-                credential = credential,
-                options = jsonOptions
-            )
-
-            val response: GodiddyVerifyCredentialResponse = client.post(path, request)
-
-            CredentialVerificationResult(
-                verified = response.verified,
-                error = response.error,
-                checks = response.checks
-            )
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                code = "CREDENTIAL_VERIFICATION_FAILED",
-                message = "Verification failed: ${e.message ?: "Unknown error"}",
-                cause = e
-            )
         }
-    }
 
     /**
      * Converts Any to JsonElement.
      */
-    private fun convertToJsonElement(value: Any?): JsonElement {
-        return when (value) {
+    private fun convertToJsonElement(value: Any?): JsonElement =
+        when (value) {
             null -> JsonNull
             is String -> JsonPrimitive(value)
             is Number -> JsonPrimitive(value.toDouble())
             is Boolean -> JsonPrimitive(value)
-            is Map<*, *> -> JsonObject(value.mapKeys { it.key.toString() }
-                .mapValues { convertToJsonElement(it.value) })
+            is Map<*, *> ->
+                JsonObject(
+                    value
+                        .mapKeys { it.key.toString() }
+                        .mapValues { convertToJsonElement(it.value) },
+                )
             is List<*> -> JsonArray(value.map { convertToJsonElement(it) })
             else -> JsonPrimitive(value.toString())
         }
-    }
 
     /**
      * Converts JsonElement to Any.
      */
-    private fun convertJsonElement(element: JsonElement): Any? {
-        return when (element) {
+    private fun convertJsonElement(element: JsonElement): Any? =
+        when (element) {
             is JsonPrimitive -> {
                 when {
                     element.isString -> element.content
@@ -109,6 +129,4 @@ class GodiddyVerifier(
             is JsonObject -> element.entries.associate { it.key to convertJsonElement(it.value) }
             is JsonNull -> null
         }
-    }
 }
-

@@ -1,12 +1,12 @@
 package org.trustweave.kms.ibm
 
-import org.trustweave.kms.Algorithm
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import kotlin.test.*
+import org.trustweave.kms.Algorithm
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class AlgorithmMappingTest {
-
     @Test
     fun `test to ibm key type for all supported algorithms`() {
         assertEquals("Ed25519", AlgorithmMapping.toIbmKeyType(Algorithm.Ed25519))
@@ -61,8 +61,9 @@ class AlgorithmMappingTest {
     @Test
     fun `test resolve key id`() {
         assertEquals("key-123", AlgorithmMapping.resolveKeyId("key-123"))
-        assertEquals("crn:v1:bluemix:public:kms:us-south:a/xxx:key:xxx",
-            AlgorithmMapping.resolveKeyId("crn:v1:bluemix:public:kms:us-south:a/xxx:key:xxx"))
+        assertEquals(
+            "crn:v1:bluemix:public:kms:us-south:a/xxx:key:xxx",
+            AlgorithmMapping.resolveKeyId("crn:v1:bluemix:public:kms:us-south:a/xxx:key:xxx"),
+        )
     }
 }
-

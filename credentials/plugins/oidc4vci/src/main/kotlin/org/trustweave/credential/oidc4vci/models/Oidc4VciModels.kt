@@ -143,8 +143,7 @@ data class BatchCredentialRequest(
     val credentialRequests: List<Oidc4VciCredentialRequest>,
     val accessToken: String,
 ) {
-    override fun toString(): String =
-        "BatchCredentialRequest(credentialRequestsCount=${credentialRequests.size}, accessToken=[REDACTED])"
+    override fun toString(): String = "BatchCredentialRequest(credentialRequestsCount=${credentialRequests.size}, accessToken=[REDACTED])"
 }
 
 /**

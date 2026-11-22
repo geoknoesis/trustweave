@@ -1,19 +1,24 @@
 package org.trustweave.godiddy.issuer
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.godiddy.GodiddyClient
 import org.trustweave.godiddy.models.GodiddyIssueCredentialRequest
 import org.trustweave.godiddy.models.GodiddyIssueCredentialResponse
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.*
 
 /**
  * Client for godiddy Universal Issuer service.
  */
 class GodiddyIssuer(
-    private val client: GodiddyClient
+    private val client: GodiddyClient,
 ) {
     /**
      * Issues a Verifiable Credential using Universal Issuer.
@@ -24,67 +29,76 @@ class GodiddyIssuer(
      */
     suspend fun issueCredential(
         credential: JsonObject,
-        options: Map<String, Any?> = emptyMap()
-    ): JsonObject = withContext(Dispatchers.IO) {
-        try {
-            // Universal Issuer endpoint: POST /1.0/credentials/issue
-            val path = "/1.0/credentials/issue"
+        options: Map<String, Any?> = emptyMap(),
+    ): JsonObject =
+        withContext(Dispatchers.IO) {
+            try {
+                // Universal Issuer endpoint: POST /1.0/credentials/issue
+                val path = "/1.0/credentials/issue"
 
-            // Convert options to JsonElement map
-            val jsonOptions = options.mapValues { (_, value) ->
-                when (value) {
-                    is String -> JsonPrimitive(value)
-                    is Number -> JsonPrimitive(value.toDouble())
-                    is Boolean -> JsonPrimitive(value)
-                    is Map<*, *> -> JsonObject(value.mapKeys { it.key.toString() }
-                        .mapValues { convertToJsonElement(it.value) })
-                    is List<*> -> JsonArray(value.map { convertToJsonElement(it) })
-                    else -> JsonNull
+                // Convert options to JsonElement map
+                val jsonOptions =
+                    options.mapValues { (_, value) ->
+                        when (value) {
+                            is String -> JsonPrimitive(value)
+                            is Number -> JsonPrimitive(value.toDouble())
+                            is Boolean -> JsonPrimitive(value)
+                            is Map<*, *> ->
+                                JsonObject(
+                                    value
+                                        .mapKeys { it.key.toString() }
+                                        .mapValues { convertToJsonElement(it.value) },
+                                )
+                            is List<*> -> JsonArray(value.map { convertToJsonElement(it) })
+                            else -> JsonNull
+                        }
+                    }
+
+                val request =
+                    GodiddyIssueCredentialRequest(
+                        credential = credential,
+                        options = jsonOptions,
+                    )
+
+                val response: GodiddyIssueCredentialResponse = client.post(path, request)
+
+                if (response.credential == null) {
+                    throw TrustWeaveException.Unknown(
+                        code = "CREDENTIAL_ISSUANCE_FAILED",
+                        message = response.error ?: "unknown error",
+                    )
                 }
-            }
 
-            val request = GodiddyIssueCredentialRequest(
-                credential = credential,
-                options = jsonOptions
-            )
-
-            val response: GodiddyIssueCredentialResponse = client.post(path, request)
-
-            if (response.credential == null) {
+                response.credential.jsonObject
+            } catch (e: TrustWeaveException) {
+                throw e
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (e: Exception) {
                 throw TrustWeaveException.Unknown(
                     code = "CREDENTIAL_ISSUANCE_FAILED",
-                    message = response.error ?: "unknown error"
+                    message = e.message ?: "Unknown error",
+                    cause = e,
                 )
             }
-
-            response.credential.jsonObject
-        } catch (e: TrustWeaveException) {
-            throw e
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (e: Exception) {
-            throw TrustWeaveException.Unknown(
-                code = "CREDENTIAL_ISSUANCE_FAILED",
-                message = e.message ?: "Unknown error",
-                cause = e
-            )
         }
-    }
 
     /**
      * Converts Any to JsonElement.
      */
-    private fun convertToJsonElement(value: Any?): JsonElement {
-        return when (value) {
+    private fun convertToJsonElement(value: Any?): JsonElement =
+        when (value) {
             null -> JsonNull
             is String -> JsonPrimitive(value)
             is Number -> JsonPrimitive(value.toDouble())
             is Boolean -> JsonPrimitive(value)
-            is Map<*, *> -> JsonObject(value.mapKeys { it.key.toString() }
-                .mapValues { convertToJsonElement(it.value) })
+            is Map<*, *> ->
+                JsonObject(
+                    value
+                        .mapKeys { it.key.toString() }
+                        .mapValues { convertToJsonElement(it.value) },
+                )
             is List<*> -> JsonArray(value.map { convertToJsonElement(it) })
             else -> JsonPrimitive(value.toString())
         }
-    }
 }
-

@@ -16,7 +16,6 @@ import kotlin.test.assertNull
  *    producing signatures that could not be verified consistently).
  */
 class Pkcs11SignatureSchemeTest {
-
     @Test
     fun `EC curves map to the hash matching the curve strength`() {
         assertEquals("SHA256withECDSA", Pkcs11KeyManagementService.signatureSchemeFor(Algorithm.P256, "EC"))
@@ -28,15 +27,15 @@ class Pkcs11SignatureSchemeTest {
     fun `RSA maps to PKCS1 v1_5 with hash sized to the key`() {
         assertEquals(
             "SHA256withRSA",
-            Pkcs11KeyManagementService.signatureSchemeFor(Algorithm.RSA.RSA_2048, "RSA")
+            Pkcs11KeyManagementService.signatureSchemeFor(Algorithm.RSA.RSA_2048, "RSA"),
         )
         assertEquals(
             "SHA384withRSA",
-            Pkcs11KeyManagementService.signatureSchemeFor(Algorithm.RSA.RSA_3072, "RSA")
+            Pkcs11KeyManagementService.signatureSchemeFor(Algorithm.RSA.RSA_3072, "RSA"),
         )
         assertEquals(
             "SHA512withRSA",
-            Pkcs11KeyManagementService.signatureSchemeFor(Algorithm.RSA.RSA_4096, "RSA")
+            Pkcs11KeyManagementService.signatureSchemeFor(Algorithm.RSA.RSA_4096, "RSA"),
         )
     }
 

@@ -1,7 +1,7 @@
 package org.trustweave.godiddy
 
-import org.trustweave.did.registry.DidMethodRegistry
 import org.junit.jupiter.api.Test
+import org.trustweave.did.registry.DidMethodRegistry
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -9,7 +9,6 @@ import kotlin.test.assertTrue
  * Test for godiddy integration helper.
  */
 class GodiddyIntegrationTest {
-
     @Test
     fun `test discoverAndRegister with default configuration`() {
         val registry = DidMethodRegistry()
@@ -41,4 +40,3 @@ class GodiddyIntegrationTest {
         assertTrue(result.registeredDidMethods.contains("web"), "Should register 'web' method")
     }
 }
-

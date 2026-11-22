@@ -1,12 +1,12 @@
 package org.trustweave.googlekms
 
-import com.google.api.gax.core.FixedCredentialsProvider
 import com.google.api.gax.core.CredentialsProvider
+import com.google.api.gax.core.FixedCredentialsProvider
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.cloud.kms.v1.KeyManagementServiceClient
 import com.google.cloud.kms.v1.KeyManagementServiceSettings
-import java.io.FileInputStream
 import java.io.ByteArrayInputStream
+import java.io.FileInputStream
 
 /**
  * Factory for creating Google Cloud KMS clients.
@@ -52,7 +52,7 @@ object GoogleKmsClientFactory {
         // Use credentials JSON string if provided
         config.credentialsJson?.let { json ->
             return GoogleCredentials.fromStream(
-                ByteArrayInputStream(json.toByteArray())
+                ByteArrayInputStream(json.toByteArray()),
             )
         }
 
@@ -66,4 +66,3 @@ object GoogleKmsClientFactory {
         return null
     }
 }
-

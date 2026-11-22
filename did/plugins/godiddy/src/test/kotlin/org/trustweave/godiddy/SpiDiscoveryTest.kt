@@ -1,7 +1,7 @@
 package org.trustweave.godiddy
 
-import org.trustweave.did.spi.DidMethodProvider
 import org.junit.jupiter.api.Test
+import org.trustweave.did.spi.DidMethodProvider
 import java.util.ServiceLoader
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -10,7 +10,6 @@ import kotlin.test.assertTrue
  * Test for SPI discovery of godiddy DID method provider.
  */
 class SpiDiscoveryTest {
-
     @Test
     fun `test godiddy DID method provider discovery`() {
         val providers = ServiceLoader.load(DidMethodProvider::class.java)
@@ -28,7 +27,7 @@ class SpiDiscoveryTest {
         assertNotNull(godiddyProvider, "godiddy DID method provider should be discoverable")
         assertTrue(
             godiddyProvider!!.supportedMethods.contains("algo"),
-            "godiddy provider should support did:algo method"
+            "godiddy provider should support did:algo method",
         )
     }
 
@@ -49,4 +48,3 @@ class SpiDiscoveryTest {
         println("Supported DID methods: ${supportedMethods.joinToString(", ")}")
     }
 }
-

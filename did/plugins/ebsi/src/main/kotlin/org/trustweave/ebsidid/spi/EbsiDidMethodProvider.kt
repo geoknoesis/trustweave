@@ -23,12 +23,14 @@ import org.trustweave.ebsidid.EbsiDidMethod
  * in resolve-only mode (no bearer token).
  */
 class EbsiDidMethodProvider : AbstractDidMethodProvider() {
-
     override val name: String = "ebsi"
 
     override val supportedMethods: List<String> = listOf("ebsi")
 
-    override fun create(methodName: String, options: DidCreationOptions): DidMethod? {
+    override fun create(
+        methodName: String,
+        options: DidCreationOptions,
+    ): DidMethod? {
         if (methodName.lowercase() != "ebsi") return null
         val config = EbsiDidConfig.fromMap(options.additionalProperties)
         return EbsiDidMethod(resolveKms(options), config)

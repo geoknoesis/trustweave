@@ -10,7 +10,16 @@ import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.PlainJWT
 import com.nimbusds.jwt.SignedJWT
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.trustweave.credential.identifiers.CredentialId
@@ -24,9 +33,17 @@ import org.trustweave.did.identifiers.Did
 import org.trustweave.kms.Algorithm
 import org.trustweave.kms.KeyHandle
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import java.util.*
 import java.util.Base64
-import kotlin.test.*
+import java.util.UUID
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Clock
 
 /**

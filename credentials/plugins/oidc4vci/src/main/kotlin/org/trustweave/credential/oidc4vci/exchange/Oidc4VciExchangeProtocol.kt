@@ -1,7 +1,17 @@
 package org.trustweave.credential.oidc4vci.exchange
 
-import kotlinx.serialization.json.*
-import org.trustweave.credential.exchange.*
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
+import org.trustweave.credential.exchange.CredentialExchangeProtocol
+import org.trustweave.credential.exchange.ExchangeOperation
 import org.trustweave.credential.exchange.capability.ExchangeProtocolCapabilities
 import org.trustweave.credential.exchange.model.ExchangeMessageEnvelope
 import org.trustweave.credential.exchange.model.ExchangeMessageType

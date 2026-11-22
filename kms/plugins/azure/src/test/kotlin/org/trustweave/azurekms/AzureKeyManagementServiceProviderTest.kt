@@ -1,12 +1,14 @@
 package org.trustweave.azurekms
 
-import org.trustweave.kms.Algorithm
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import kotlin.test.*
+import org.trustweave.kms.Algorithm
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class AzureKeyManagementServiceProviderTest {
-
     @Test
     fun `test AzureKeyManagementServiceProvider`() {
         val provider = AzureKeyManagementServiceProvider()
@@ -23,9 +25,12 @@ class AzureKeyManagementServiceProviderTest {
     fun `test AzureKeyManagementServiceProvider create with options`() {
         val provider = AzureKeyManagementServiceProvider()
 
-        val kms = provider.create(mapOf(
-            "vaultUrl" to "https://testvault.vault.azure.net"
-        ))
+        val kms =
+            provider.create(
+                mapOf(
+                    "vaultUrl" to "https://testvault.vault.azure.net",
+                ),
+            )
 
         assertNotNull(kms)
         assertTrue(kms is AzureKeyManagementService)
@@ -44,15 +49,17 @@ class AzureKeyManagementServiceProviderTest {
     fun `test AzureKeyManagementServiceProvider create with service principal`() {
         val provider = AzureKeyManagementServiceProvider()
 
-        val kms = provider.create(mapOf(
-            "vaultUrl" to "https://testvault.vault.azure.net",
-            "clientId" to "test-client-id",
-            "clientSecret" to "test-client-secret",
-            "tenantId" to "test-tenant-id"
-        ))
+        val kms =
+            provider.create(
+                mapOf(
+                    "vaultUrl" to "https://testvault.vault.azure.net",
+                    "clientId" to "test-client-id",
+                    "clientSecret" to "test-client-secret",
+                    "tenantId" to "test-tenant-id",
+                ),
+            )
 
         assertNotNull(kms)
         assertTrue(kms is AzureKeyManagementService)
     }
 }
-

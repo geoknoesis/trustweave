@@ -15,7 +15,11 @@ interface StatusListPublisher {
      * @param contentType MIME type of the content (e.g. `application/json`, `application/jwt`).
      * @return The public URL at which the status list can be fetched by verifiers.
      */
-    suspend fun publish(statusListId: String, content: ByteArray, contentType: String): String
+    suspend fun publish(
+        statusListId: String,
+        content: ByteArray,
+        contentType: String,
+    ): String
 
     /**
      * Delete a published status list from cloud storage.

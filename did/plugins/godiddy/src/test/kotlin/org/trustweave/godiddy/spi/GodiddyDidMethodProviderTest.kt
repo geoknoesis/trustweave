@@ -1,14 +1,15 @@
 package org.trustweave.godiddy.spi
 
-import org.trustweave.did.didCreationOptions
 import org.junit.jupiter.api.Test
-import kotlin.test.*
+import org.trustweave.did.didCreationOptions
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 /**
  * Branch coverage tests for GodiddyDidMethodProvider.
  */
 class GodiddyDidMethodProviderTest {
-
     @Test
     fun `test GodiddyDidMethodProvider name`() {
         val provider = GodiddyDidMethodProvider()
@@ -29,9 +30,10 @@ class GodiddyDidMethodProviderTest {
     @Test
     fun `test GodiddyDidMethodProvider create with valid method`() {
         val provider = GodiddyDidMethodProvider()
-        val options = didCreationOptions {
-            property("baseUrl", "https://example.com")
-        }
+        val options =
+            didCreationOptions {
+                property("baseUrl", "https://example.com")
+            }
 
         val method = provider.create("key", options)
 
@@ -42,9 +44,10 @@ class GodiddyDidMethodProviderTest {
     @Test
     fun `test GodiddyDidMethodProvider create with different method`() {
         val provider = GodiddyDidMethodProvider()
-        val options = didCreationOptions {
-            property("baseUrl", "https://example.com")
-        }
+        val options =
+            didCreationOptions {
+                property("baseUrl", "https://example.com")
+            }
 
         val method = provider.create("web", options)
 
@@ -55,9 +58,10 @@ class GodiddyDidMethodProviderTest {
     @Test
     fun `test GodiddyDidMethodProvider create handles registrar exception`() {
         val provider = GodiddyDidMethodProvider()
-        val options = didCreationOptions {
-            property("baseUrl", "https://example.com")
-        }
+        val options =
+            didCreationOptions {
+                property("baseUrl", "https://example.com")
+            }
 
         // Should handle registrar creation failure gracefully
         val method = provider.create("key", options)
@@ -78,10 +82,11 @@ class GodiddyDidMethodProviderTest {
     @Test
     fun `test GodiddyDidMethodProvider create with custom baseUrl`() {
         val provider = GodiddyDidMethodProvider()
-        val options = didCreationOptions {
-            property("baseUrl", "https://custom.example.com")
-            property("timeout", 30000)
-        }
+        val options =
+            didCreationOptions {
+                property("baseUrl", "https://custom.example.com")
+                property("timeout", 30000)
+            }
 
         val method = provider.create("key", options)
 
@@ -91,16 +96,14 @@ class GodiddyDidMethodProviderTest {
     @Test
     fun `test GodiddyDidMethodProvider create with apiKey`() {
         val provider = GodiddyDidMethodProvider()
-        val options = didCreationOptions {
-            property("baseUrl", "https://example.com")
-            property("apiKey", "test-key")
-        }
+        val options =
+            didCreationOptions {
+                property("baseUrl", "https://example.com")
+                property("apiKey", "test-key")
+            }
 
         val method = provider.create("key", options)
 
         assertNotNull(method)
     }
 }
-
-
-

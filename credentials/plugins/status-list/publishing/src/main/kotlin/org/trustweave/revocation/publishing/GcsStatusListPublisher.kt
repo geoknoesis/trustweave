@@ -40,22 +40,27 @@ data class GcsPublisherConfig(
 class GcsStatusListPublisher(
     private val config: GcsPublisherConfig,
 ) : StatusListPublisher {
-
     private val storage by lazy {
-        StorageOptions.newBuilder()
+        StorageOptions
+            .newBuilder()
             .setProjectId(config.projectId)
             .build()
             .service
     }
 
-    private fun blobId(statusListId: String): BlobId =
-        BlobId.of(config.bucketName, statusListId)
+    private fun blobId(statusListId: String): BlobId = BlobId.of(config.bucketName, statusListId)
 
-    override suspend fun publish(statusListId: String, content: ByteArray, contentType: String): String =
+    override suspend fun publish(
+        statusListId: String,
+        content: ByteArray,
+        contentType: String,
+    ): String =
         withContext(Dispatchers.IO) {
-            val blobInfo = BlobInfo.newBuilder(blobId(statusListId))
-                .setContentType(contentType)
-                .build()
+            val blobInfo =
+                BlobInfo
+                    .newBuilder(blobId(statusListId))
+                    .setContentType(contentType)
+                    .build()
             storage.create(blobInfo, content)
             config.publicUrlPattern.replace("{id}", statusListId)
         }

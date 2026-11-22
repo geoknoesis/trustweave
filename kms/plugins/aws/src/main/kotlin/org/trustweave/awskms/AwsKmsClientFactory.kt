@@ -5,11 +5,8 @@ import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
-import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.kms.KmsClient
-import software.amazon.awssdk.services.kms.KmsClientBuilder
-import java.io.Closeable
 import java.net.URI
 
 /**
@@ -25,8 +22,10 @@ object AwsKmsClientFactory {
      * @return Configured KMS client
      */
     fun createClient(config: AwsKmsConfig): KmsClient {
-        val builder = KmsClient.builder()
-            .region(Region.of(config.region))
+        val builder =
+            KmsClient
+                .builder()
+                .region(Region.of(config.region))
 
         // Configure credentials
         val credentialsProvider = createCredentialsProvider(config)
@@ -54,25 +53,24 @@ object AwsKmsClientFactory {
      * @param config AWS KMS configuration
      * @return Credentials provider
      */
-    internal fun createCredentialsProvider(config: AwsKmsConfig): AwsCredentialsProvider {
-        return if (config.accessKeyId != null && config.secretAccessKey != null) {
-            val credentials = if (config.sessionToken != null) {
-                AwsSessionCredentials.create(
-                    config.accessKeyId,
-                    config.secretAccessKey,
-                    config.sessionToken
-                )
-            } else {
-                AwsBasicCredentials.create(
-                    config.accessKeyId,
-                    config.secretAccessKey
-                )
-            }
+    internal fun createCredentialsProvider(config: AwsKmsConfig): AwsCredentialsProvider =
+        if (config.accessKeyId != null && config.secretAccessKey != null) {
+            val credentials =
+                if (config.sessionToken != null) {
+                    AwsSessionCredentials.create(
+                        config.accessKeyId,
+                        config.secretAccessKey,
+                        config.sessionToken,
+                    )
+                } else {
+                    AwsBasicCredentials.create(
+                        config.accessKeyId,
+                        config.secretAccessKey,
+                    )
+                }
             StaticCredentialsProvider.create(credentials)
         } else {
             // Use default credential provider chain (IAM roles, environment variables, etc.)
             DefaultCredentialsProvider.create()
         }
-    }
 }
-

@@ -1,15 +1,15 @@
 package org.trustweave.azurekms
 
-import org.trustweave.kms.Algorithm
-import com.azure.security.keyvault.keys.models.KeyType
-import com.azure.security.keyvault.keys.models.KeyCurveName
 import com.azure.security.keyvault.keys.cryptography.models.SignatureAlgorithm
+import com.azure.security.keyvault.keys.models.KeyCurveName
+import com.azure.security.keyvault.keys.models.KeyType
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import kotlin.test.*
+import org.trustweave.kms.Algorithm
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class AlgorithmMappingTest {
-
     @Test
     fun `test algorithm mapping to Azure key type`() {
         val (keyType1, curveName1) = AlgorithmMapping.toAzureKeyType(Algorithm.Secp256k1)
@@ -83,4 +83,3 @@ class AlgorithmMappingTest {
         assertNull(AlgorithmMapping.parseAlgorithmFromKeyType(KeyType.RSA, null, 1024)) // Unsupported key size
     }
 }
-

@@ -6,7 +6,6 @@ import org.trustweave.did.spi.DidMethodProvider
 import org.trustweave.godiddy.issuer.GodiddyIssuer
 import org.trustweave.godiddy.registrar.GodiddyRegistrar
 import org.trustweave.godiddy.resolver.GodiddyResolver
-import org.trustweave.godiddy.spi.GodiddyDidMethodProvider
 import org.trustweave.godiddy.verifier.GodiddyVerifier
 import java.util.ServiceLoader
 
@@ -15,7 +14,6 @@ import java.util.ServiceLoader
  * Provides SPI-based discovery and registration of godiddy implementations.
  */
 object GodiddyIntegration {
-
     /**
      * Discovers and registers all godiddy DID methods via SPI.
      *
@@ -24,7 +22,7 @@ object GodiddyIntegration {
      */
     fun discoverAndRegister(
         registry: DidMethodRegistry,
-        options: DidCreationOptions = DidCreationOptions()
+        options: DidCreationOptions = DidCreationOptions(),
     ): GodiddyIntegrationResult {
         // Create configuration from options
         val config = GodiddyConfig.fromOptions(options)
@@ -32,26 +30,30 @@ object GodiddyIntegration {
 
         // Create service clients
         val resolver = GodiddyResolver(client)
-        val registrar = try {
-            GodiddyRegistrar(client)
-        } catch (e: Exception) {
-            null // Registrar may not be available
-        }
-        val issuer = try {
-            GodiddyIssuer(client)
-        } catch (e: Exception) {
-            null // Issuer may not be available
-        }
-        val verifier = try {
-            GodiddyVerifier(client)
-        } catch (e: Exception) {
-            null // Verifier may not be available
-        }
+        val registrar =
+            try {
+                GodiddyRegistrar(client)
+            } catch (e: Exception) {
+                null // Registrar may not be available
+            }
+        val issuer =
+            try {
+                GodiddyIssuer(client)
+            } catch (e: Exception) {
+                null // Issuer may not be available
+            }
+        val verifier =
+            try {
+                GodiddyVerifier(client)
+            } catch (e: Exception) {
+                null // Verifier may not be available
+            }
 
         // Discover DID method provider
         val didProviders = ServiceLoader.load(DidMethodProvider::class.java)
-        val godiddyDidProvider = didProviders.find { it.name == "godiddy" }
-            ?: throw IllegalStateException("godiddy DID method provider not found. Ensure TrustWeave-godiddy is on classpath.")
+        val godiddyDidProvider =
+            didProviders.find { it.name == "godiddy" }
+                ?: throw IllegalStateException("godiddy DID method provider not found. Ensure TrustWeave-godiddy is on classpath.")
 
         // Register supported DID methods
         val registeredMethods = mutableListOf<String>()
@@ -69,7 +71,7 @@ object GodiddyIntegration {
             resolver = resolver,
             registrar = registrar,
             issuer = issuer,
-            verifier = verifier
+            verifier = verifier,
         )
     }
 
@@ -85,14 +87,15 @@ object GodiddyIntegration {
         baseUrl: String? = null,
         registry: DidMethodRegistry,
         didMethods: List<String>? = null,
-        options: DidCreationOptions = DidCreationOptions()
+        options: DidCreationOptions = DidCreationOptions(),
     ): GodiddyIntegrationResult {
         // Merge baseUrl into options if provided
-        val mergedOptions = if (baseUrl != null) {
-            options.copy(additionalProperties = options.additionalProperties + ("baseUrl" to baseUrl))
-        } else {
-            options
-        }
+        val mergedOptions =
+            if (baseUrl != null) {
+                options.copy(additionalProperties = options.additionalProperties + ("baseUrl" to baseUrl))
+            } else {
+                options
+            }
 
         // Create configuration
         val config = GodiddyConfig.fromOptions(mergedOptions)
@@ -100,26 +103,30 @@ object GodiddyIntegration {
 
         // Create service clients
         val resolver = GodiddyResolver(client)
-        val registrar = try {
-            GodiddyRegistrar(client)
-        } catch (e: Exception) {
-            null
-        }
-        val issuer = try {
-            GodiddyIssuer(client)
-        } catch (e: Exception) {
-            null
-        }
-        val verifier = try {
-            GodiddyVerifier(client)
-        } catch (e: Exception) {
-            null
-        }
+        val registrar =
+            try {
+                GodiddyRegistrar(client)
+            } catch (e: Exception) {
+                null
+            }
+        val issuer =
+            try {
+                GodiddyIssuer(client)
+            } catch (e: Exception) {
+                null
+            }
+        val verifier =
+            try {
+                GodiddyVerifier(client)
+            } catch (e: Exception) {
+                null
+            }
 
         // Discover DID method provider
         val didProviders = ServiceLoader.load(DidMethodProvider::class.java)
-        val godiddyDidProvider = didProviders.find { it.name == "godiddy" }
-            ?: throw IllegalStateException("godiddy DID method provider not found. Ensure TrustWeave-godiddy is on classpath.")
+        val godiddyDidProvider =
+            didProviders.find { it.name == "godiddy" }
+                ?: throw IllegalStateException("godiddy DID method provider not found. Ensure TrustWeave-godiddy is on classpath.")
 
         // Register requested DID methods or all supported
         val methodsToRegister = didMethods ?: godiddyDidProvider.supportedMethods
@@ -141,8 +148,7 @@ object GodiddyIntegration {
             resolver = resolver,
             registrar = registrar,
             issuer = issuer,
-            verifier = verifier
+            verifier = verifier,
         )
     }
 }
-

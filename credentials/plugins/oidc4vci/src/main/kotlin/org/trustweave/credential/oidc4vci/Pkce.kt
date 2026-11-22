@@ -17,8 +17,7 @@ public object Pkce {
     private val b64Url = Base64.getUrlEncoder().withoutPadding()
 
     /** A high-entropy `code_verifier` (RFC 7636 §4.1): 32 random bytes as a 43-char base64url string. */
-    public fun generateCodeVerifier(): String =
-        b64Url.encodeToString(ByteArray(32).also(random::nextBytes))
+    public fun generateCodeVerifier(): String = b64Url.encodeToString(ByteArray(32).also(random::nextBytes))
 
     /** The S256 `code_challenge` (RFC 7636 §4.2): `base64url(SHA-256(ASCII(codeVerifier)))`. */
     public fun codeChallengeS256(codeVerifier: String): String =

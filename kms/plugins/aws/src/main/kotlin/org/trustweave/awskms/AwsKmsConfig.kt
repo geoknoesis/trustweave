@@ -32,7 +32,7 @@ data class AwsKmsConfig(
      * [fromMap] and [fromEnvironment] always fall back to the default when
      * the option is absent or unparsable.
      */
-    val cacheTtlSeconds: Long? = DEFAULT_CACHE_TTL_SECONDS
+    val cacheTtlSeconds: Long? = DEFAULT_CACHE_TTL_SECONDS,
 ) {
     init {
         require(region.isNotBlank()) { "AWS region must be specified" }
@@ -51,8 +51,8 @@ data class AwsKmsConfig(
      * [secretAccessKey] and [sessionToken] verbatim into any log statement.
      * Non-sensitive fields remain readable for debugging.
      */
-    override fun toString(): String {
-        return "AwsKmsConfig(" +
+    override fun toString(): String =
+        "AwsKmsConfig(" +
             "region=$region, " +
             "accessKeyId=$accessKeyId, " +
             "secretAccessKey=${redact(secretAccessKey)}, " +
@@ -60,7 +60,6 @@ data class AwsKmsConfig(
             "endpointOverride=$endpointOverride, " +
             "pendingWindowInDays=$pendingWindowInDays, " +
             "cacheTtlSeconds=$cacheTtlSeconds)"
-    }
 
     private fun redact(value: String?): String = if (value == null) "null" else "***"
 
@@ -92,9 +91,10 @@ data class AwsKmsConfig(
          * @return AwsKmsConfig instance, or null if region is not set
          */
         fun fromEnvironment(): AwsKmsConfig? {
-            val region = System.getenv("AWS_REGION")
-                ?: System.getenv("AWS_DEFAULT_REGION")
-                ?: return null
+            val region =
+                System.getenv("AWS_REGION")
+                    ?: System.getenv("AWS_DEFAULT_REGION")
+                    ?: return null
 
             return Builder()
                 .region(region)
@@ -105,9 +105,8 @@ data class AwsKmsConfig(
                 // Absent/unparsable env var must keep the default TTL, not disable expiry.
                 .cacheTtlSeconds(
                     System.getenv("AWS_KMS_CACHE_TTL_SECONDS")?.toLongOrNull()
-                        ?: DEFAULT_CACHE_TTL_SECONDS
-                )
-                .build()
+                        ?: DEFAULT_CACHE_TTL_SECONDS,
+                ).build()
         }
 
         /**
@@ -118,8 +117,9 @@ data class AwsKmsConfig(
          * @throws IllegalArgumentException if region is not provided
          */
         fun fromMap(options: Map<String, Any?>): AwsKmsConfig {
-            val region = options[AwsKmsOptionKeys.REGION] as? String
-                ?: throw IllegalArgumentException("AWS region must be specified in options")
+            val region =
+                options[AwsKmsOptionKeys.REGION] as? String
+                    ?: throw IllegalArgumentException("AWS region must be specified in options")
 
             return Builder()
                 .region(region)
@@ -131,9 +131,8 @@ data class AwsKmsConfig(
                 // Absent/non-numeric option must keep the default TTL, not disable expiry.
                 // "Cache forever" (null) is only available programmatically via the builder.
                 .cacheTtlSeconds(
-                    (options["cacheTtlSeconds"] as? Number)?.toLong() ?: DEFAULT_CACHE_TTL_SECONDS
-                )
-                .build()
+                    (options["cacheTtlSeconds"] as? Number)?.toLong() ?: DEFAULT_CACHE_TTL_SECONDS,
+                ).build()
         }
     }
 
@@ -193,9 +192,8 @@ data class AwsKmsConfig(
                 sessionToken = sessionToken,
                 endpointOverride = endpointOverride,
                 pendingWindowInDays = pendingWindowInDays,
-                cacheTtlSeconds = cacheTtlSeconds
+                cacheTtlSeconds = cacheTtlSeconds,
             )
         }
     }
 }
-

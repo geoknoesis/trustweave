@@ -29,7 +29,6 @@ import java.time.Duration
 class OrbNodeContainer(
     image: DockerImageName = DockerImageName.parse(System.getProperty("orb.image", IMAGE)),
 ) : GenericContainer<OrbNodeContainer>(image) {
-
     init {
         withExposedPorts(INTERNAL_PORT)
         // The external endpoint must match what we tell Orb about its own URL
@@ -38,21 +37,32 @@ class OrbNodeContainer(
         // in start() once we know it.
         withCommand(
             "start",
-            "--host-url", "0.0.0.0:$INTERNAL_PORT",
-            "--did-namespace", "did:orb",
-            "--database-type", "mem",
-            "--kms-secrets-database-type", "mem",
-            "--cas-type", "local",
-            "--kms-type", "local",
-            "--enable-dev-mode", "true",
-            "--enable-unpublished-operation-store", "true",
-            "--unpublished-operation-store-operation-types", "create,update,deactivate,recover",
-            "--include-unpublished-operations-in-metadata", "true",
+            "--host-url",
+            "0.0.0.0:$INTERNAL_PORT",
+            "--did-namespace",
+            "did:orb",
+            "--database-type",
+            "mem",
+            "--kms-secrets-database-type",
+            "mem",
+            "--cas-type",
+            "local",
+            "--kms-type",
+            "local",
+            "--enable-dev-mode",
+            "true",
+            "--enable-unpublished-operation-store",
+            "true",
+            "--unpublished-operation-store-operation-types",
+            "create,update,deactivate,recover",
+            "--include-unpublished-operations-in-metadata",
+            "true",
             // --external-endpoint, --anchor-credential-domain, --allowed-origins
             // are appended in start() once the host port is mapped.
         )
         waitingFor(
-            Wait.forHttp("/healthcheck")
+            Wait
+                .forHttp("/healthcheck")
                 .forPort(INTERNAL_PORT)
                 .forStatusCode(200)
                 .withStartupTimeout(Duration.ofMinutes(2)),
@@ -61,7 +71,7 @@ class OrbNodeContainer(
 
     /** Base URL the test JVM uses to reach this Orb node. Available after [start]. */
     val baseUrl: String
-        get() = "http://${host}:${getMappedPort(INTERNAL_PORT)}"
+        get() = "http://$host:${getMappedPort(INTERNAL_PORT)}"
 
     /**
      * `anchorOrigin` value to pass in [OrbDidConfig.anchorOrigin] when running
@@ -79,33 +89,51 @@ class OrbNodeContainer(
         val portPlaceholder = INTERNAL_PORT.toString()
         val externalUrlAtStart = "http://$mappedHost:$portPlaceholder"
         withCommand(
-            *(commandParts() + arrayOf(
-                "--external-endpoint", externalUrlAtStart,
-                "--anchor-credential-domain", externalUrlAtStart,
-                "--allowed-origins", externalUrlAtStart,
-                // Also accept localhost-style origins for callers running the test
-                // JVM directly on the host:
-                "--allowed-origins", "http://localhost:$portPlaceholder",
-            )),
+            *(
+                commandParts() +
+                    arrayOf(
+                        "--external-endpoint",
+                        externalUrlAtStart,
+                        "--anchor-credential-domain",
+                        externalUrlAtStart,
+                        "--allowed-origins",
+                        externalUrlAtStart,
+                        // Also accept localhost-style origins for callers running the test
+                        // JVM directly on the host:
+                        "--allowed-origins",
+                        "http://localhost:$portPlaceholder",
+                    )
+            ),
         )
         super.start()
     }
 
     private fun commandParts(): Array<String> = commandParts
 
-    private val commandParts: Array<String> = arrayOf(
-        "start",
-        "--host-url", "0.0.0.0:$INTERNAL_PORT",
-        "--did-namespace", "did:orb",
-        "--database-type", "mem",
-        "--kms-secrets-database-type", "mem",
-        "--cas-type", "local",
-        "--kms-type", "local",
-        "--enable-dev-mode", "true",
-        "--enable-unpublished-operation-store", "true",
-        "--unpublished-operation-store-operation-types", "create,update,deactivate,recover",
-        "--include-unpublished-operations-in-metadata", "true",
-    )
+    private val commandParts: Array<String> =
+        arrayOf(
+            "start",
+            "--host-url",
+            "0.0.0.0:$INTERNAL_PORT",
+            "--did-namespace",
+            "did:orb",
+            "--database-type",
+            "mem",
+            "--kms-secrets-database-type",
+            "mem",
+            "--cas-type",
+            "local",
+            "--kms-type",
+            "local",
+            "--enable-dev-mode",
+            "true",
+            "--enable-unpublished-operation-store",
+            "true",
+            "--unpublished-operation-store-operation-types",
+            "create,update,deactivate,recover",
+            "--include-unpublished-operations-in-metadata",
+            "true",
+        )
 
     companion object {
         /** Default image. Pin with `-Dorb.image=...` in CI if reproducibility matters. */

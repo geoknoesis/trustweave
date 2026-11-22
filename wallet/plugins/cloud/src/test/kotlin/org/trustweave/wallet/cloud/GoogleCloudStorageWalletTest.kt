@@ -19,7 +19,6 @@ import kotlin.test.assertTrue
  * any other invocation fails the test.
  */
 class GoogleCloudStorageWalletTest {
-
     private fun wallet(storage: Storage): GoogleCloudStorageWallet =
         GoogleCloudStorageWallet(
             walletId = "wallet-test",
@@ -27,14 +26,14 @@ class GoogleCloudStorageWalletTest {
             holderDid = "did:key:z6MkHolder",
             bucketName = "test-bucket",
             basePath = "wallets/wallet-test",
-            storage = storage
+            storage = storage,
         )
 
     /** [Storage] proxy that delegates every `delete` call to [onDelete]. */
     private fun storageWithDelete(onDelete: () -> Boolean): Storage =
         Proxy.newProxyInstance(
             Storage::class.java.classLoader,
-            arrayOf(Storage::class.java)
+            arrayOf(Storage::class.java),
         ) { _, method, _ ->
             when (method.name) {
                 "delete" -> onDelete()
@@ -46,12 +45,13 @@ class GoogleCloudStorageWalletTest {
     fun `delete returns true and cleans up sidecar objects when the blob exists`() {
         runBlocking {
             var deleteCalls = 0
-            val wallet = wallet(
-                storageWithDelete {
-                    deleteCalls++
-                    true
-                }
-            )
+            val wallet =
+                wallet(
+                    storageWithDelete {
+                        deleteCalls++
+                        true
+                    },
+                )
 
             assertTrue(wallet.delete("some-credential"))
             // credential + metadata + tags objects
@@ -63,12 +63,13 @@ class GoogleCloudStorageWalletTest {
     fun `delete maps a missing blob to false`() {
         runBlocking {
             var deleteCalls = 0
-            val wallet = wallet(
-                storageWithDelete {
-                    deleteCalls++
-                    false // Storage.delete returns false when the blob does not exist
-                }
-            )
+            val wallet =
+                wallet(
+                    storageWithDelete {
+                        deleteCalls++
+                        false // Storage.delete returns false when the blob does not exist
+                    },
+                )
 
             assertFalse(wallet.delete("missing-credential"))
             // No cleanup attempted when the credential object was not deleted
@@ -90,9 +91,10 @@ class GoogleCloudStorageWalletTest {
         runBlocking {
             val wallet = wallet(storageWithDelete { throw StorageException(403, "Forbidden") })
 
-            val exception = assertFailsWith<RuntimeException> {
-                wallet.delete("some-credential")
-            }
+            val exception =
+                assertFailsWith<RuntimeException> {
+                    wallet.delete("some-credential")
+                }
             assertTrue(exception.message!!.contains("Failed to delete from Google Cloud Storage"))
         }
     }
@@ -102,9 +104,10 @@ class GoogleCloudStorageWalletTest {
         runBlocking {
             val wallet = wallet(storageWithDelete { throw IllegalStateException("connection reset") })
 
-            val exception = assertFailsWith<RuntimeException> {
-                wallet.delete("some-credential")
-            }
+            val exception =
+                assertFailsWith<RuntimeException> {
+                    wallet.delete("some-credential")
+                }
             assertTrue(exception.message!!.contains("Failed to delete from Google Cloud Storage"))
         }
     }

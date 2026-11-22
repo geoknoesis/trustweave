@@ -4,8 +4,8 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 /**
  * Unit tests for [Pkcs11Config].
@@ -15,12 +15,12 @@ import org.junit.jupiter.api.Test
  * these MVP unit tests, which cover only configuration-level invariants and SPI behavior.
  */
 class Pkcs11ConfigTest {
-
     @Test
     fun `init rejects blank library path`() {
-        val ex = assertThrows<IllegalArgumentException> {
-            Pkcs11Config(libraryPath = "")
-        }
+        val ex =
+            assertThrows<IllegalArgumentException> {
+                Pkcs11Config(libraryPath = "")
+            }
         assert(ex.message!!.contains("libraryPath"))
     }
 
@@ -42,10 +42,11 @@ class Pkcs11ConfigTest {
 
     @Test
     fun `toString redacts PIN`() {
-        val cfg = Pkcs11Config(
-            libraryPath = "/lib/p11.so",
-            pin = charArrayOf('1', '2', '3', '4'),
-        )
+        val cfg =
+            Pkcs11Config(
+                libraryPath = "/lib/p11.so",
+                pin = charArrayOf('1', '2', '3', '4'),
+            )
         val s = cfg.toString()
         assertFalse(s.contains("1234"), "toString must not expose PIN; was: $s")
         assert(s.contains("***"))

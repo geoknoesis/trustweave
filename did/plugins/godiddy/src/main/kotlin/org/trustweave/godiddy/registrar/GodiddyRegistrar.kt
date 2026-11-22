@@ -1,23 +1,51 @@
 package org.trustweave.godiddy.registrar
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.double
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
+import kotlinx.serialization.json.longOrNull
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
+import kotlinx.serialization.json.putJsonObject
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
-import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.model.DidService
+import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.model.parseServiceTypesFromJson
 import org.trustweave.did.model.serviceEndpointFromJsonElement
-import org.trustweave.did.model.toServiceTypeJsonElement
-import org.trustweave.did.representation.DidDocumentJsonProducer
 import org.trustweave.did.registrar.DidRegistrar
-import org.trustweave.did.registrar.model.*
+import org.trustweave.did.registrar.model.CreateDidOptions
+import org.trustweave.did.registrar.model.DeactivateDidOptions
+import org.trustweave.did.registrar.model.DidRegistrationResponse
+import org.trustweave.did.registrar.model.DidState
+import org.trustweave.did.registrar.model.KeyManagementMode
+import org.trustweave.did.registrar.model.OperationState
+import org.trustweave.did.registrar.model.Secret
+import org.trustweave.did.registrar.model.UpdateDidOptions
+import org.trustweave.did.representation.DidDocumentJsonProducer
 import org.trustweave.godiddy.GodiddyClient
-import org.trustweave.godiddy.models.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.*
+import org.trustweave.godiddy.models.GodiddyCreateDidRequest
+import org.trustweave.godiddy.models.GodiddyCreateDidResponse
+import org.trustweave.godiddy.models.GodiddyDeactivateDidRequest
+import org.trustweave.godiddy.models.GodiddyOperationResponse
+import org.trustweave.godiddy.models.GodiddyUpdateDidRequest
 
 /**
  * Client for godiddy Universal Registrar service.
@@ -26,7 +54,7 @@ import kotlinx.serialization.json.*
  * via the Universal Registrar protocol according to the DID Registration specification.
  */
 class GodiddyRegistrar(
-    private val client: GodiddyClient
+    private val client: GodiddyClient,
 ) : DidRegistrar {
     /**
      * Creates a new DID using Universal Registrar according to DID Registration spec.
@@ -35,77 +63,84 @@ class GodiddyRegistrar(
      * @param options Creation options according to DID Registration spec
      * @return Registration response with jobId and didState
      */
-    override suspend fun createDid(method: String, options: CreateDidOptions): DidRegistrationResponse = withContext(Dispatchers.IO) {
-        try {
-            // Universal Registrar endpoint: POST /1.0/operations
-            val path = "/1.0/operations"
+    override suspend fun createDid(
+        method: String,
+        options: CreateDidOptions,
+    ): DidRegistrationResponse =
+        withContext(Dispatchers.IO) {
+            try {
+                // Universal Registrar endpoint: POST /1.0/operations
+                val path = "/1.0/operations"
 
-            // Convert CreateDidOptions to JsonElement map for Godiddy API
-            val jsonOptions = buildMap<String, JsonElement> {
-                put("keyManagementMode", JsonPrimitive(options.keyManagementMode.name.lowercase()))
-                if (options.keyManagementMode == KeyManagementMode.INTERNAL_SECRET) {
-                    put("storeSecrets", JsonPrimitive(options.storeSecrets))
-                    put("returnSecrets", JsonPrimitive(options.returnSecrets))
-                }
-                options.secret?.let { secret ->
-                    put("secret", convertSecretToJson(secret))
-                }
-                options.didDocument?.let { doc ->
-                    put("didDocument", convertDidDocumentToJson(doc))
-                }
-                options.methodSpecificOptions.forEach { (key, value) ->
-                    put(key, value)
-                }
+                // Convert CreateDidOptions to JsonElement map for Godiddy API
+                val jsonOptions =
+                    buildMap<String, JsonElement> {
+                        put("keyManagementMode", JsonPrimitive(options.keyManagementMode.name.lowercase()))
+                        if (options.keyManagementMode == KeyManagementMode.INTERNAL_SECRET) {
+                            put("storeSecrets", JsonPrimitive(options.storeSecrets))
+                            put("returnSecrets", JsonPrimitive(options.returnSecrets))
+                        }
+                        options.secret?.let { secret ->
+                            put("secret", convertSecretToJson(secret))
+                        }
+                        options.didDocument?.let { doc ->
+                            put("didDocument", convertDidDocumentToJson(doc))
+                        }
+                        options.methodSpecificOptions.forEach { (key, value) ->
+                            put(key, value)
+                        }
+                    }
+
+                val request =
+                    GodiddyCreateDidRequest(
+                        method = method,
+                        options = jsonOptions,
+                    )
+
+                val response: GodiddyCreateDidResponse = client.post(path, request)
+
+                // Convert Godiddy response to spec-compliant DidRegistrationResponse
+                val didState =
+                    if (response.did != null && response.didDocument != null) {
+                        val docJson = response.didDocument.jsonObject
+                        val didDocument = convertToDidDocument(docJson, response.did)
+                        DidState(
+                            state = OperationState.FINISHED,
+                            did = response.did,
+                            didDocument = didDocument,
+                        )
+                    } else if (response.jobId != null) {
+                        // Long-running operation
+                        DidState(
+                            state = OperationState.WAIT,
+                            did = null,
+                            didDocument = null,
+                        )
+                    } else {
+                        DidState(
+                            state = OperationState.FAILED,
+                            did = null,
+                            didDocument = null,
+                            reason = "DID creation failed",
+                        )
+                    }
+
+                DidRegistrationResponse(
+                    jobId = response.jobId,
+                    didState = didState,
+                )
+            } catch (e: TrustWeaveException) {
+                throw e
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (e: Exception) {
+                throw org.trustweave.core.exception.TrustWeaveException.Unknown(
+                    message = "Failed to create DID with method $method: ${e.message ?: "Unknown error"}",
+                    context = mapOf("method" to method),
+                    cause = e,
+                )
             }
-
-            val request = GodiddyCreateDidRequest(
-                method = method,
-                options = jsonOptions
-            )
-
-            val response: GodiddyCreateDidResponse = client.post(path, request)
-
-            // Convert Godiddy response to spec-compliant DidRegistrationResponse
-            val didState = if (response.did != null && response.didDocument != null) {
-                val docJson = response.didDocument.jsonObject
-                val didDocument = convertToDidDocument(docJson, response.did)
-                DidState(
-                    state = OperationState.FINISHED,
-                    did = response.did,
-                    didDocument = didDocument
-                )
-            } else if (response.jobId != null) {
-                // Long-running operation
-                DidState(
-                    state = OperationState.WAIT,
-                    did = null,
-                    didDocument = null
-                )
-            } else {
-                DidState(
-                    state = OperationState.FAILED,
-                    did = null,
-                    didDocument = null,
-                    reason = "DID creation failed"
-                )
-            }
-
-            DidRegistrationResponse(
-                jobId = response.jobId,
-                didState = didState
-            )
-        } catch (e: TrustWeaveException) {
-            throw e
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (e: Exception) {
-            throw org.trustweave.core.exception.TrustWeaveException.Unknown(
-                message = "Failed to create DID with method $method: ${e.message ?: "Unknown error"}",
-                context = mapOf("method" to method),
-                cause = e
-            )
         }
-    }
 
     /**
      * Updates a DID Document using Universal Registrar according to DID Registration spec.
@@ -118,72 +153,76 @@ class GodiddyRegistrar(
     override suspend fun updateDid(
         did: String,
         document: DidDocument,
-        options: UpdateDidOptions
-    ): DidRegistrationResponse = withContext(Dispatchers.IO) {
-        try {
-            // Universal Registrar endpoint: POST /1.0/operations (with update operation)
-            val path = "/1.0/operations"
+        options: UpdateDidOptions,
+    ): DidRegistrationResponse =
+        withContext(Dispatchers.IO) {
+            try {
+                // Universal Registrar endpoint: POST /1.0/operations (with update operation)
+                val path = "/1.0/operations"
 
-            // Convert DidDocument to JsonObject
-            val docJson = convertDidDocumentToJson(document)
+                // Convert DidDocument to JsonObject
+                val docJson = convertDidDocumentToJson(document)
 
-            // Convert UpdateDidOptions to JsonElement map
-            val jsonOptions = buildMap<String, JsonElement> {
-                options.secret?.let { secret ->
-                    put("secret", convertSecretToJson(secret))
-                }
-                options.methodSpecificOptions.forEach { (key, value) ->
-                    put(key, value)
-                }
+                // Convert UpdateDidOptions to JsonElement map
+                val jsonOptions =
+                    buildMap<String, JsonElement> {
+                        options.secret?.let { secret ->
+                            put("secret", convertSecretToJson(secret))
+                        }
+                        options.methodSpecificOptions.forEach { (key, value) ->
+                            put(key, value)
+                        }
+                    }
+
+                val request =
+                    GodiddyUpdateDidRequest(
+                        did = did,
+                        didDocument = docJson,
+                        options = jsonOptions,
+                    )
+
+                val response: GodiddyOperationResponse = client.post(path, request)
+
+                // Convert Godiddy response to spec-compliant DidRegistrationResponse
+                val didState =
+                    if (response.success && response.didDocument != null) {
+                        val updatedDocJson = response.didDocument.jsonObject
+                        val updatedDocument = convertToDidDocument(updatedDocJson, did)
+                        DidState(
+                            state = OperationState.FINISHED,
+                            did = did,
+                            didDocument = updatedDocument,
+                        )
+                    } else if (response.jobId != null) {
+                        DidState(
+                            state = OperationState.WAIT,
+                            did = did,
+                            didDocument = null,
+                        )
+                    } else {
+                        DidState(
+                            state = OperationState.FAILED,
+                            did = did,
+                            didDocument = null,
+                        )
+                    }
+
+                DidRegistrationResponse(
+                    jobId = response.jobId,
+                    didState = didState,
+                )
+            } catch (e: TrustWeaveException) {
+                throw e
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (e: Exception) {
+                throw org.trustweave.core.exception.TrustWeaveException.Unknown(
+                    message = "Failed to update DID $did: ${e.message ?: "Unknown error"}",
+                    context = mapOf("did" to did),
+                    cause = e,
+                )
             }
-
-            val request = GodiddyUpdateDidRequest(
-                did = did,
-                didDocument = docJson,
-                options = jsonOptions
-            )
-
-            val response: GodiddyOperationResponse = client.post(path, request)
-
-            // Convert Godiddy response to spec-compliant DidRegistrationResponse
-            val didState = if (response.success && response.didDocument != null) {
-                val updatedDocJson = response.didDocument.jsonObject
-                val updatedDocument = convertToDidDocument(updatedDocJson, did)
-                DidState(
-                    state = OperationState.FINISHED,
-                    did = did,
-                    didDocument = updatedDocument
-                )
-            } else if (response.jobId != null) {
-                DidState(
-                    state = OperationState.WAIT,
-                    did = did,
-                    didDocument = null
-                )
-            } else {
-                DidState(
-                    state = OperationState.FAILED,
-                    did = did,
-                    didDocument = null
-                )
-            }
-
-            DidRegistrationResponse(
-                jobId = response.jobId,
-                didState = didState
-            )
-        } catch (e: TrustWeaveException) {
-            throw e
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (e: Exception) {
-            throw org.trustweave.core.exception.TrustWeaveException.Unknown(
-                message = "Failed to update DID $did: ${e.message ?: "Unknown error"}",
-                context = mapOf("did" to did),
-                cause = e
-            )
         }
-    }
 
     /**
      * Deactivates a DID using Universal Registrar according to DID Registration spec.
@@ -194,88 +233,94 @@ class GodiddyRegistrar(
      */
     override suspend fun deactivateDid(
         did: String,
-        options: DeactivateDidOptions
-    ): DidRegistrationResponse = withContext(Dispatchers.IO) {
-        try {
-            // Universal Registrar endpoint: POST /1.0/operations (with deactivate operation)
-            val path = "/1.0/operations"
+        options: DeactivateDidOptions,
+    ): DidRegistrationResponse =
+        withContext(Dispatchers.IO) {
+            try {
+                // Universal Registrar endpoint: POST /1.0/operations (with deactivate operation)
+                val path = "/1.0/operations"
 
-            // Convert DeactivateDidOptions to JsonElement map
-            val jsonOptions = buildMap<String, JsonElement> {
-                options.secret?.let { secret ->
-                    put("secret", convertSecretToJson(secret))
-                }
-                options.methodSpecificOptions.forEach { (key, value) ->
-                    put(key, value)
-                }
+                // Convert DeactivateDidOptions to JsonElement map
+                val jsonOptions =
+                    buildMap<String, JsonElement> {
+                        options.secret?.let { secret ->
+                            put("secret", convertSecretToJson(secret))
+                        }
+                        options.methodSpecificOptions.forEach { (key, value) ->
+                            put(key, value)
+                        }
+                    }
+
+                val request =
+                    GodiddyDeactivateDidRequest(
+                        did = did,
+                        options = jsonOptions,
+                    )
+
+                val response: GodiddyOperationResponse = client.post(path, request)
+
+                // Convert Godiddy response to spec-compliant DidRegistrationResponse
+                val didState =
+                    if (response.success) {
+                        DidState(
+                            state = OperationState.FINISHED,
+                            did = did,
+                            didDocument = null,
+                        )
+                    } else if (response.jobId != null) {
+                        DidState(
+                            state = OperationState.WAIT,
+                            did = did,
+                            didDocument = null,
+                        )
+                    } else {
+                        DidState(
+                            state = OperationState.FAILED,
+                            did = did,
+                            didDocument = null,
+                        )
+                    }
+
+                DidRegistrationResponse(
+                    jobId = response.jobId,
+                    didState = didState,
+                )
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (e: Exception) {
+                throw org.trustweave.core.exception.TrustWeaveException.Unknown(
+                    message = "Failed to deactivate DID $did: ${e.message ?: "Unknown error"}",
+                    context = mapOf("did" to did),
+                    cause = e,
+                )
             }
-
-            val request = GodiddyDeactivateDidRequest(
-                did = did,
-                options = jsonOptions
-            )
-
-            val response: GodiddyOperationResponse = client.post(path, request)
-
-            // Convert Godiddy response to spec-compliant DidRegistrationResponse
-            val didState = if (response.success) {
-                DidState(
-                    state = OperationState.FINISHED,
-                    did = did,
-                    didDocument = null
-                )
-            } else if (response.jobId != null) {
-                DidState(
-                    state = OperationState.WAIT,
-                    did = did,
-                    didDocument = null
-                )
-            } else {
-                DidState(
-                    state = OperationState.FAILED,
-                    did = did,
-                    didDocument = null
-                )
-            }
-
-            DidRegistrationResponse(
-                jobId = response.jobId,
-                didState = didState
-            )
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (e: Exception) {
-            throw org.trustweave.core.exception.TrustWeaveException.Unknown(
-                message = "Failed to deactivate DID $did: ${e.message ?: "Unknown error"}",
-                context = mapOf("did" to did),
-                cause = e
-            )
         }
-    }
 
     /**
      * Converts Secret to JsonObject for API requests.
      */
-    private fun convertSecretToJson(secret: Secret): JsonObject {
-        return buildJsonObject {
+    private fun convertSecretToJson(secret: Secret): JsonObject =
+        buildJsonObject {
             secret.keys?.let { keys ->
                 putJsonArray("keys") {
                     keys.forEach { key ->
-                        add(buildJsonObject {
-                            key.id?.let { put("id", it) }
-                            key.type?.let { put("type", it) }
-                            key.privateKeyJwk?.let { jwk ->
-                                putJsonObject("privateKeyJwk") {
-                                    jwk.forEach { (k, v) ->
-                                        put(k, convertToJsonElement(v))
+                        add(
+                            buildJsonObject {
+                                key.id?.let { put("id", it) }
+                                key.type?.let { put("type", it) }
+                                key.privateKeyJwk?.let { jwk ->
+                                    putJsonObject("privateKeyJwk") {
+                                        jwk.forEach { (k, v) ->
+                                            put(k, convertToJsonElement(v))
+                                        }
                                     }
                                 }
-                            }
-                            key.privateKeyMultibase?.let { put("privateKeyMultibase", it) }
-                            key.additionalProperties?.forEach { (k, v) ->
-                                put(k, v)
-                            }
-                        })
+                                key.privateKeyMultibase?.let { put("privateKeyMultibase", it) }
+                                key.additionalProperties?.forEach { (k, v) ->
+                                    put(k, v)
+                                }
+                            },
+                        )
                     }
                 }
             }
@@ -285,110 +330,131 @@ class GodiddyRegistrar(
                 put(k, v)
             }
         }
-    }
 
     /**
      * Converts Any to JsonElement.
      */
-    private fun convertToJsonElement(value: Any?): JsonElement {
-        return when (value) {
+    private fun convertToJsonElement(value: Any?): JsonElement =
+        when (value) {
             null -> JsonNull
             is String -> JsonPrimitive(value)
             is Number -> JsonPrimitive(value.toDouble())
             is Boolean -> JsonPrimitive(value)
-            is Map<*, *> -> JsonObject(value.mapKeys { it.key.toString() }
-                .mapValues { convertToJsonElement(it.value) })
+            is Map<*, *> ->
+                JsonObject(
+                    value
+                        .mapKeys { it.key.toString() }
+                        .mapValues { convertToJsonElement(it.value) },
+                )
             is List<*> -> JsonArray(value.map { convertToJsonElement(it) })
             else -> JsonPrimitive(value.toString())
         }
-    }
 
     /**
      * Converts DidDocument to JsonObject (DID 1.1 conforming producer).
      */
-    private fun convertDidDocumentToJson(document: DidDocument): JsonObject {
-        return DidDocumentJsonProducer.toJsonObject(document, useV1_1Context = true)
-    }
+    private fun convertDidDocumentToJson(document: DidDocument): JsonObject =
+        DidDocumentJsonProducer.toJsonObject(document, useV1_1Context = true)
 
     /**
      * Converts JsonObject to DidDocument.
      */
-    private fun convertToDidDocument(json: JsonObject, did: String): DidDocument {
+    private fun convertToDidDocument(
+        json: JsonObject,
+        did: String,
+    ): DidDocument {
         val id = json["id"]?.jsonPrimitive?.content ?: did
 
         // Extract @context (can be string or array in JSON-LD)
-        val context = when {
-            json["@context"] != null -> {
-                when (val ctx = json["@context"]) {
-                    is JsonPrimitive -> listOf(ctx.content)
-                    is JsonArray -> ctx.mapNotNull { it.jsonPrimitive?.content }
-                    else -> listOf("https://www.w3.org/ns/did/v1")
+        val context =
+            when {
+                json["@context"] != null -> {
+                    when (val ctx = json["@context"]) {
+                        is JsonPrimitive -> listOf(ctx.content)
+                        is JsonArray -> ctx.mapNotNull { it.jsonPrimitive?.content }
+                        else -> listOf("https://www.w3.org/ns/did/v1")
+                    }
                 }
+                else -> listOf("https://www.w3.org/ns/did/v1")
             }
-            else -> listOf("https://www.w3.org/ns/did/v1")
-        }
 
-        val verificationMethod = json["verificationMethod"]?.jsonArray?.mapNotNull { vmJson ->
-            val vmObj = vmJson.jsonObject
-            val vmId = vmObj["id"]?.jsonPrimitive?.content
-            val vmType = vmObj["type"]?.jsonPrimitive?.content
-            val controller = vmObj["controller"]?.jsonPrimitive?.content ?: id
-            val publicKeyJwk = vmObj["publicKeyJwk"]?.jsonObject?.let { jwk ->
-                jwk.entries.associate { it.key to convertJsonElement(it.value) }
-            }
-            val publicKeyMultibase = vmObj["publicKeyMultibase"]?.jsonPrimitive?.content
+        val verificationMethod =
+            json["verificationMethod"]?.jsonArray?.mapNotNull { vmJson ->
+                val vmObj = vmJson.jsonObject
+                val vmId = vmObj["id"]?.jsonPrimitive?.content
+                val vmType = vmObj["type"]?.jsonPrimitive?.content
+                val controller = vmObj["controller"]?.jsonPrimitive?.content ?: id
+                val publicKeyJwk =
+                    vmObj["publicKeyJwk"]?.jsonObject?.let { jwk ->
+                        jwk.entries.associate { it.key to convertJsonElement(it.value) }
+                    }
+                val publicKeyMultibase = vmObj["publicKeyMultibase"]?.jsonPrimitive?.content
 
-            if (vmId != null && vmType != null) {
-                val didObj = Did(id)
-                VerificationMethod(
-                    id = VerificationMethodId.parse(vmId, didObj),
-                    type = vmType,
-                    controller = Did(controller),
-                    publicKeyJwk = publicKeyJwk,
-                    publicKeyMultibase = publicKeyMultibase
-                )
-            } else null
-        } ?: emptyList()
+                if (vmId != null && vmType != null) {
+                    val didObj = Did(id)
+                    VerificationMethod(
+                        id = VerificationMethodId.parse(vmId, didObj),
+                        type = vmType,
+                        controller = Did(controller),
+                        publicKeyJwk = publicKeyJwk,
+                        publicKeyMultibase = publicKeyMultibase,
+                    )
+                } else {
+                    null
+                }
+            } ?: emptyList()
 
-        val authentication = json["authentication"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
-            ?: json["authentication"]?.jsonPrimitive?.content?.let { listOf(it) }
-            ?: emptyList()
+        val authentication =
+            json["authentication"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
+                ?: json["authentication"]?.jsonPrimitive?.content?.let { listOf(it) }
+                ?: emptyList()
 
-        val assertionMethod = json["assertionMethod"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
-            ?: json["assertionMethod"]?.jsonPrimitive?.content?.let { listOf(it) }
-            ?: emptyList()
+        val assertionMethod =
+            json["assertionMethod"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
+                ?: json["assertionMethod"]?.jsonPrimitive?.content?.let { listOf(it) }
+                ?: emptyList()
 
-        val keyAgreement = json["keyAgreement"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
-            ?: json["keyAgreement"]?.jsonPrimitive?.content?.let { listOf(it) }
-            ?: emptyList()
+        val keyAgreement =
+            json["keyAgreement"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
+                ?: json["keyAgreement"]?.jsonPrimitive?.content?.let { listOf(it) }
+                ?: emptyList()
 
-        val capabilityInvocation = json["capabilityInvocation"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
-            ?: json["capabilityInvocation"]?.jsonPrimitive?.content?.let { listOf(it) }
-            ?: emptyList()
+        val capabilityInvocation =
+            json["capabilityInvocation"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
+                ?: json["capabilityInvocation"]?.jsonPrimitive?.content?.let { listOf(it) }
+                ?: emptyList()
 
-        val capabilityDelegation = json["capabilityDelegation"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
-            ?: json["capabilityDelegation"]?.jsonPrimitive?.content?.let { listOf(it) }
-            ?: emptyList()
+        val capabilityDelegation =
+            json["capabilityDelegation"]?.jsonArray?.mapNotNull { it.jsonPrimitive?.content }
+                ?: json["capabilityDelegation"]?.jsonPrimitive?.content?.let { listOf(it) }
+                ?: emptyList()
 
-        val service = json["service"]?.jsonArray?.mapNotNull { sJson ->
-            val sObj = sJson.jsonObject
-            val sId = sObj["id"]?.jsonPrimitive?.content
-            val sTypes = parseServiceTypesFromJson(sObj["type"])
-            val sEndpoint = sObj["serviceEndpoint"]
+        val service =
+            json["service"]?.jsonArray?.mapNotNull { sJson ->
+                val sObj = sJson.jsonObject
+                val sId = sObj["id"]?.jsonPrimitive?.content
+                val sTypes = parseServiceTypesFromJson(sObj["type"])
+                val sEndpoint = sObj["serviceEndpoint"]
 
-            if (sId != null && sTypes != null && sEndpoint != null) {
-                val endpoint = serviceEndpointFromJsonElement(sEndpoint) ?: return@mapNotNull null
-                DidService(
-                    id = sId,
-                    type = sTypes,
-                    serviceEndpoint = endpoint
-                )
-            } else null
-        } ?: emptyList()
+                if (sId != null && sTypes != null && sEndpoint != null) {
+                    val endpoint = serviceEndpointFromJsonElement(sEndpoint) ?: return@mapNotNull null
+                    DidService(
+                        id = sId,
+                        type = sTypes,
+                        serviceEndpoint = endpoint,
+                    )
+                } else {
+                    null
+                }
+            } ?: emptyList()
 
-        val alsoKnownAs = json["alsoKnownAs"]?.jsonArray?.mapNotNull { el ->
-            (el as? JsonPrimitive)?.content?.let { org.trustweave.did.model.DidOrUrl.tryParse(it) }
-        } ?: emptyList()
+        val alsoKnownAs =
+            json["alsoKnownAs"]?.jsonArray?.mapNotNull { el ->
+                (el as? JsonPrimitive)?.content?.let {
+                    org.trustweave.did.model.DidOrUrl
+                        .tryParse(it)
+                }
+            } ?: emptyList()
 
         val didObj = Did(id)
         return DidDocument(
@@ -401,15 +467,15 @@ class GodiddyRegistrar(
             keyAgreement = keyAgreement.map { VerificationMethodId.parse(it, didObj) },
             capabilityInvocation = capabilityInvocation.map { VerificationMethodId.parse(it, didObj) },
             capabilityDelegation = capabilityDelegation.map { VerificationMethodId.parse(it, didObj) },
-            service = service
+            service = service,
         )
     }
 
     /**
      * Converts JsonElement to Any.
      */
-    private fun convertJsonElement(element: JsonElement): Any? {
-        return when (element) {
+    private fun convertJsonElement(element: JsonElement): Any? =
+        when (element) {
             is JsonPrimitive -> {
                 when {
                     element.isString -> element.content
@@ -423,6 +489,4 @@ class GodiddyRegistrar(
             is JsonObject -> element.entries.associate { it.key to convertJsonElement(it.value) }
             is JsonNull -> null
         }
-    }
 }
-

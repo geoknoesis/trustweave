@@ -7,7 +7,6 @@ import org.trustweave.credential.spi.proof.ProofEngineProvider
 import org.trustweave.kms.KeyManagementService
 
 class MdocProofEngineProvider : ProofEngineProvider {
-
     override val name = "mso_mdoc"
 
     override val supportedFormatIds: List<ProofSuiteId> = listOf(ProofSuiteId.MDOC)

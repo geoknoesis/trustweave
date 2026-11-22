@@ -1,16 +1,13 @@
 package org.trustweave.googlekms
 
-import org.trustweave.kms.Algorithm
 import com.google.cloud.kms.v1.CryptoKeyVersion.CryptoKeyVersionAlgorithm
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.trustweave.kms.Algorithm
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class AlgorithmMappingTest {
-
     @Test
     fun `test Ed25519 algorithm mapping`() {
         val trustWeaveAlg = Algorithm.Ed25519
@@ -109,11 +106,13 @@ class AlgorithmMappingTest {
 
     @Test
     fun `test resolveKeyName with full resource name`() {
-        val config = GoogleKmsConfig.builder()
-            .projectId("test-project")
-            .location("us-east1")
-            .keyRing("test-key-ring")
-            .build()
+        val config =
+            GoogleKmsConfig
+                .builder()
+                .projectId("test-project")
+                .location("us-east1")
+                .keyRing("test-key-ring")
+                .build()
 
         val fullName = "projects/test-project/locations/us-east1/keyRings/test-key-ring/cryptoKeys/my-key"
         val resolved = AlgorithmMapping.resolveKeyName(fullName, config)
@@ -122,11 +121,13 @@ class AlgorithmMappingTest {
 
     @Test
     fun `test resolveKeyName with short name`() {
-        val config = GoogleKmsConfig.builder()
-            .projectId("test-project")
-            .location("us-east1")
-            .keyRing("test-key-ring")
-            .build()
+        val config =
+            GoogleKmsConfig
+                .builder()
+                .projectId("test-project")
+                .location("us-east1")
+                .keyRing("test-key-ring")
+                .build()
 
         val shortName = "my-key"
         val resolved = AlgorithmMapping.resolveKeyName(shortName, config)
@@ -135,10 +136,12 @@ class AlgorithmMappingTest {
 
     @Test
     fun `test resolveKeyName fails without key ring`() {
-        val config = GoogleKmsConfig.builder()
-            .projectId("test-project")
-            .location("us-east1")
-            .build()
+        val config =
+            GoogleKmsConfig
+                .builder()
+                .projectId("test-project")
+                .location("us-east1")
+                .build()
 
         assertThrows<IllegalArgumentException> {
             AlgorithmMapping.resolveKeyName("my-key", config)
@@ -159,4 +162,3 @@ class AlgorithmMappingTest {
         assertEquals("my-key", extracted)
     }
 }
-

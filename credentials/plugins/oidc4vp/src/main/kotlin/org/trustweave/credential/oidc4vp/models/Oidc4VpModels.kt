@@ -1,9 +1,10 @@
 package org.trustweave.credential.oidc4vp.models
 
-import org.trustweave.credential.model.vc.VerifiableCredential
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import org.trustweave.credential.model.vc.VerifiableCredential
 
 // ---------------------------------------------------------------------------
 // DCQL (Digital Credentials Query Language) — OID4VP v1.0 §6.4
@@ -84,16 +85,17 @@ enum class ClientIdScheme {
     ;
 
     companion object {
-        fun fromString(value: String): ClientIdScheme = when (value.lowercase()) {
-            "pre-registered" -> PRE_REGISTERED
-            "redirect_uri" -> REDIRECT_URI
-            "entity_id" -> ENTITY_ID
-            "did" -> DID
-            "x509_san_dns" -> X509_SAN_DNS
-            "x509_san_uri" -> X509_SAN_URI
-            "verifier_attestation" -> VERIFIER_ATTESTATION
-            else -> PRE_REGISTERED
-        }
+        fun fromString(value: String): ClientIdScheme =
+            when (value.lowercase()) {
+                "pre-registered" -> PRE_REGISTERED
+                "redirect_uri" -> REDIRECT_URI
+                "entity_id" -> ENTITY_ID
+                "did" -> DID
+                "x509_san_dns" -> X509_SAN_DNS
+                "x509_san_uri" -> X509_SAN_URI
+                "verifier_attestation" -> VERIFIER_ATTESTATION
+                else -> PRE_REGISTERED
+            }
     }
 }
 

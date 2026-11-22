@@ -2,17 +2,18 @@ package org.trustweave.kms.ibm
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import kotlin.test.*
+import kotlin.test.assertEquals
 
 class IbmKmsConfigTest {
-
     @Test
     fun `test builder creates valid config`() {
-        val config = IbmKmsConfig.builder()
-            .apiKey("test-api-key")
-            .instanceId("test-instance-id")
-            .region("us-south")
-            .build()
+        val config =
+            IbmKmsConfig
+                .builder()
+                .apiKey("test-api-key")
+                .instanceId("test-instance-id")
+                .region("us-south")
+                .build()
 
         assertEquals("test-api-key", config.apiKey)
         assertEquals("test-instance-id", config.instanceId)
@@ -22,7 +23,8 @@ class IbmKmsConfigTest {
     @Test
     fun `test builder without api key throws exception`() {
         assertThrows<IllegalArgumentException> {
-            IbmKmsConfig.builder()
+            IbmKmsConfig
+                .builder()
                 .instanceId("test-instance-id")
                 .build()
         }
@@ -31,7 +33,8 @@ class IbmKmsConfigTest {
     @Test
     fun `test builder without instance id throws exception`() {
         assertThrows<IllegalArgumentException> {
-            IbmKmsConfig.builder()
+            IbmKmsConfig
+                .builder()
                 .apiKey("test-api-key")
                 .build()
         }
@@ -39,11 +42,14 @@ class IbmKmsConfigTest {
 
     @Test
     fun `test from map creates valid config`() {
-        val config = IbmKmsConfig.fromMap(mapOf(
-            "apiKey" to "test-key",
-            "instanceId" to "test-instance",
-            "region" to "eu-gb"
-        ))
+        val config =
+            IbmKmsConfig.fromMap(
+                mapOf(
+                    "apiKey" to "test-key",
+                    "instanceId" to "test-instance",
+                    "region" to "eu-gb",
+                ),
+            )
 
         assertEquals("test-key", config.apiKey)
         assertEquals("test-instance", config.instanceId)
@@ -52,23 +58,28 @@ class IbmKmsConfigTest {
 
     @Test
     fun `test from map uses default region`() {
-        val config = IbmKmsConfig.fromMap(mapOf(
-            "apiKey" to "test-key",
-            "instanceId" to "test-instance"
-        ))
+        val config =
+            IbmKmsConfig.fromMap(
+                mapOf(
+                    "apiKey" to "test-key",
+                    "instanceId" to "test-instance",
+                ),
+            )
 
         assertEquals("us-south", config.region)
     }
 
     @Test
     fun `test from map with snake_case keys`() {
-        val config = IbmKmsConfig.fromMap(mapOf(
-            "api_key" to "test-key",
-            "instance_id" to "test-instance"
-        ))
+        val config =
+            IbmKmsConfig.fromMap(
+                mapOf(
+                    "api_key" to "test-key",
+                    "instance_id" to "test-instance",
+                ),
+            )
 
         assertEquals("test-key", config.apiKey)
         assertEquals("test-instance", config.instanceId)
     }
 }
-

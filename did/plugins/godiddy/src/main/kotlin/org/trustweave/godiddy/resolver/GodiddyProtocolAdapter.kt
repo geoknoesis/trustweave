@@ -1,9 +1,10 @@
 package org.trustweave.godiddy.resolver
 
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
 import org.trustweave.did.resolver.UniversalResolverProtocolAdapter
 import java.net.URLEncoder
 import java.net.http.HttpRequest
-import kotlinx.serialization.json.*
 
 /**
  * Protocol adapter for GoDiddy's Universal Resolver implementation.
@@ -25,17 +26,20 @@ import kotlinx.serialization.json.*
  * ```
  */
 class GodiddyProtocolAdapter : UniversalResolverProtocolAdapter {
-
-    override fun buildResolveUrl(baseUrl: String, did: String): String {
+    override fun buildResolveUrl(
+        baseUrl: String,
+        did: String,
+    ): String {
         val encodedDid = URLEncoder.encode(did, "UTF-8")
         return "$baseUrl/1.0.0/universal-resolver/identifiers/$encodedDid"
     }
 
-    override fun buildMethodsUrl(baseUrl: String): String? {
-        return "$baseUrl/1.0.0/methods"
-    }
+    override fun buildMethodsUrl(baseUrl: String): String? = "$baseUrl/1.0.0/methods"
 
-    override fun configureAuth(requestBuilder: HttpRequest.Builder, apiKey: String?) {
+    override fun configureAuth(
+        requestBuilder: HttpRequest.Builder,
+        apiKey: String?,
+    ) {
         apiKey?.let {
             requestBuilder.header("Authorization", "Bearer $it")
         }
@@ -55,10 +59,9 @@ class GodiddyProtocolAdapter : UniversalResolverProtocolAdapter {
         return jsonResponse["didDocumentMetadata"] as? JsonObject
     }
 
-    override fun extractResolutionMetadata(jsonResponse: JsonObject): JsonObject {
-        return (jsonResponse["didResolutionMetadata"] as? JsonObject) ?: buildJsonObject { }
-    }
+    override fun extractResolutionMetadata(jsonResponse: JsonObject): JsonObject =
+        (jsonResponse["didResolutionMetadata"] as? JsonObject) ?: buildJsonObject {
+        }
 
     override val providerName: String = "godiddy"
 }
-

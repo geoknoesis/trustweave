@@ -3,9 +3,7 @@ package org.trustweave.godiddy.models
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
-/**
- * Data models for godiddy API requests and responses.
- */
+// Data models for godiddy API requests and responses.
 
 /**
  * Universal Resolver response for DID resolution.
@@ -16,7 +14,7 @@ import kotlinx.serialization.json.JsonElement
 data class GodiddyResolutionResponse(
     val didDocument: JsonElement? = null,
     val didDocumentMetadata: Map<String, JsonElement>? = null,
-    val didResolutionMetadata: Map<String, JsonElement>? = null
+    val didResolutionMetadata: Map<String, JsonElement>? = null,
 )
 
 /**
@@ -25,7 +23,7 @@ data class GodiddyResolutionResponse(
 @Serializable
 data class GodiddyCreateDidRequest(
     val method: String,
-    val options: Map<String, JsonElement> = emptyMap()
+    val options: Map<String, JsonElement> = emptyMap(),
 )
 
 /**
@@ -35,7 +33,7 @@ data class GodiddyCreateDidRequest(
 data class GodiddyCreateDidResponse(
     val did: String? = null,
     val didDocument: JsonElement? = null,
-    val jobId: String? = null
+    val jobId: String? = null,
 )
 
 /**
@@ -45,7 +43,7 @@ data class GodiddyCreateDidResponse(
 data class GodiddyUpdateDidRequest(
     val did: String,
     val didDocument: JsonElement,
-    val options: Map<String, JsonElement> = emptyMap()
+    val options: Map<String, JsonElement> = emptyMap(),
 )
 
 /**
@@ -54,7 +52,7 @@ data class GodiddyUpdateDidRequest(
 @Serializable
 data class GodiddyDeactivateDidRequest(
     val did: String,
-    val options: Map<String, JsonElement> = emptyMap()
+    val options: Map<String, JsonElement> = emptyMap(),
 )
 
 /**
@@ -66,7 +64,7 @@ data class GodiddyOperationResponse(
     val did: String? = null,
     val didDocument: JsonElement? = null,
     val jobId: String? = null,
-    val error: String? = null
+    val error: String? = null,
 )
 
 /**
@@ -75,7 +73,7 @@ data class GodiddyOperationResponse(
 @Serializable
 data class GodiddyIssueCredentialRequest(
     val credential: JsonElement,
-    val options: Map<String, JsonElement> = emptyMap()
+    val options: Map<String, JsonElement> = emptyMap(),
 )
 
 /**
@@ -84,7 +82,7 @@ data class GodiddyIssueCredentialRequest(
 @Serializable
 data class GodiddyIssueCredentialResponse(
     val credential: JsonElement? = null,
-    val error: String? = null
+    val error: String? = null,
 )
 
 /**
@@ -93,7 +91,7 @@ data class GodiddyIssueCredentialResponse(
 @Serializable
 data class GodiddyVerifyCredentialRequest(
     val credential: JsonElement,
-    val options: Map<String, JsonElement> = emptyMap()
+    val options: Map<String, JsonElement> = emptyMap(),
 )
 
 /**
@@ -103,7 +101,7 @@ data class GodiddyVerifyCredentialRequest(
 data class GodiddyVerifyCredentialResponse(
     val verified: Boolean,
     val error: String? = null,
-    val checks: Map<String, Boolean>? = null
+    val checks: Map<String, Boolean>? = null,
 )
 
 /**
@@ -113,6 +111,5 @@ data class GodiddyVerifyCredentialResponse(
 data class GodiddyErrorResponse(
     val error: String,
     val message: String? = null,
-    val code: String? = null
+    val code: String? = null,
 )
-

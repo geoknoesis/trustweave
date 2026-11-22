@@ -14,4 +14,3 @@ class FortanixKeyManagementServiceProvider : KeyManagementServiceProvider {
         return FortanixKeyManagementService(config)
     }
 }
-

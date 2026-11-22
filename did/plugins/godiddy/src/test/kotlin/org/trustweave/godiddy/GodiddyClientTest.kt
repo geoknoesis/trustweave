@@ -1,13 +1,14 @@
 package org.trustweave.godiddy
 
 import org.junit.jupiter.api.Test
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 /**
  * Tests for GodiddyClient focusing on constructor and basic functionality.
  */
 class GodiddyClientTest {
-
     @Test
     fun `test GodiddyClient constructor with default config`() {
         val config = GodiddyConfig.default()
@@ -20,11 +21,12 @@ class GodiddyClientTest {
 
     @Test
     fun `test GodiddyClient constructor with custom config`() {
-        val config = GodiddyConfig(
-            baseUrl = "https://custom.example.com",
-            timeout = 30000,
-            apiKey = "test-key"
-        )
+        val config =
+            GodiddyConfig(
+                baseUrl = "https://custom.example.com",
+                timeout = 30000,
+                apiKey = "test-key",
+            )
         val client = GodiddyClient(config)
 
         assertNotNull(client)
@@ -36,11 +38,12 @@ class GodiddyClientTest {
 
     @Test
     fun `test GodiddyClient constructor with null API key`() {
-        val config = GodiddyConfig(
-            baseUrl = "https://example.com",
-            timeout = 10000,
-            apiKey = null
-        )
+        val config =
+            GodiddyConfig(
+                baseUrl = "https://example.com",
+                timeout = 10000,
+                apiKey = null,
+            )
         val client = GodiddyClient(config)
 
         assertNotNull(client)
@@ -67,4 +70,3 @@ class GodiddyClientTest {
         client.close()
     }
 }
-

@@ -26,7 +26,6 @@ import kotlinx.serialization.json.put
  * ```
  */
 object QrCodeGenerator {
-
     /**
      * Generates an OIDC4VCI credential offer URL (OID4VCI v1.0 §4.1).
      *
@@ -41,19 +40,21 @@ object QrCodeGenerator {
     fun generateCredentialOfferUrl(
         credentialIssuer: String,
         credentialConfigurationIds: List<String> = emptyList(),
-        credentialOfferUri: String? = null
+        credentialOfferUri: String? = null,
     ): String {
-        val param = if (credentialOfferUri != null) {
-            "credential_offer_uri=${encode(credentialOfferUri)}"
-        } else {
-            val offerJson = buildJsonObject {
-                put("credential_issuer", credentialIssuer)
-                if (credentialConfigurationIds.isNotEmpty()) {
-                    put("credential_configuration_ids", JsonArray(credentialConfigurationIds.map { JsonPrimitive(it) }))
-                }
+        val param =
+            if (credentialOfferUri != null) {
+                "credential_offer_uri=${encode(credentialOfferUri)}"
+            } else {
+                val offerJson =
+                    buildJsonObject {
+                        put("credential_issuer", credentialIssuer)
+                        if (credentialConfigurationIds.isNotEmpty()) {
+                            put("credential_configuration_ids", JsonArray(credentialConfigurationIds.map { JsonPrimitive(it) }))
+                        }
+                    }
+                "credential_offer=${encode(offerJson.toString())}"
             }
-            "credential_offer=${encode(offerJson.toString())}"
-        }
 
         return "openid-credential-offer://?$param"
     }
@@ -69,7 +70,7 @@ object QrCodeGenerator {
     fun generatePresentationRequestUrl(
         clientId: String? = null,
         requestUri: String? = null,
-        additionalParams: Map<String, String> = emptyMap()
+        additionalParams: Map<String, String> = emptyMap(),
     ): String {
         val params = mutableListOf<String>()
 

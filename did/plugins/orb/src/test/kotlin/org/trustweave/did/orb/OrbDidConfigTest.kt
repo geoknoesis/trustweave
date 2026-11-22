@@ -7,7 +7,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class OrbDidConfigTest {
-
     @Test
     fun `defaults match Sidetree REST paths`() {
         val cfg = OrbDidConfig(baseUrl = "https://orb.example.com")
@@ -40,17 +39,18 @@ class OrbDidConfigTest {
 
     @Test
     fun `fromMap reads baseUrl and optional fields`() {
-        val cfg = OrbDidConfig.fromMap(
-            mapOf(
-                "baseUrl" to "https://orb2.example.com",
-                "namespace" to "did:orb:abc",
-                "operationsPath" to "/v2/ops",
-                "identifiersPath" to "/v2/ids",
-                "authHeaderName" to "X-Token",
-                "authHeaderValue" to "secret",
-                "timeoutSeconds" to 60,
-            ),
-        )
+        val cfg =
+            OrbDidConfig.fromMap(
+                mapOf(
+                    "baseUrl" to "https://orb2.example.com",
+                    "namespace" to "did:orb:abc",
+                    "operationsPath" to "/v2/ops",
+                    "identifiersPath" to "/v2/ids",
+                    "authHeaderName" to "X-Token",
+                    "authHeaderValue" to "secret",
+                    "timeoutSeconds" to 60,
+                ),
+            )
         assertEquals("https://orb2.example.com", cfg.baseUrl)
         assertEquals("did:orb:abc", cfg.namespace)
         assertEquals("/v2/ops", cfg.operationsPath)
@@ -72,9 +72,10 @@ class OrbDidConfigTest {
 
     @Test
     fun `fromMap leaves authHeader null when only one of name or value is set`() {
-        val cfg = OrbDidConfig.fromMap(
-            mapOf("baseUrl" to "https://orb.example.com", "authHeaderName" to "X-Token"),
-        )
+        val cfg =
+            OrbDidConfig.fromMap(
+                mapOf("baseUrl" to "https://orb.example.com", "authHeaderName" to "X-Token"),
+            )
         assertNull(cfg.authHeader)
         assertNotNull(cfg.baseUrl)
     }

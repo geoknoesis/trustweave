@@ -14,7 +14,7 @@ import org.trustweave.kms.spi.KeyManagementServiceProvider
  * ```kotlin
  * import org.trustweave.kms.*
  * import org.trustweave.awskms.awsKmsOptions
- * 
+ *
  * val kms = KeyManagementServices.create("aws", awsKmsOptions {
  *     region = "us-east-1"
  * })
@@ -30,17 +30,19 @@ class AwsKeyManagementServiceProvider : KeyManagementServiceProvider {
      * At minimum, AWS_REGION or AWS_DEFAULT_REGION is required.
      * AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are optional if using IAM roles.
      */
-    override val requiredEnvironmentVariables: List<String> = listOf(
-        "AWS_REGION",  // or AWS_DEFAULT_REGION
-        "?AWS_ACCESS_KEY_ID",  // Optional if using IAM roles
-        "?AWS_SECRET_ACCESS_KEY"  // Optional if using IAM roles
-    )
+    override val requiredEnvironmentVariables: List<String> =
+        listOf(
+            "AWS_REGION", // or AWS_DEFAULT_REGION
+            "?AWS_ACCESS_KEY_ID", // Optional if using IAM roles
+            "?AWS_SECRET_ACCESS_KEY", // Optional if using IAM roles
+        )
 
     override fun hasRequiredEnvironmentVariables(): Boolean {
         // AWS_REGION or AWS_DEFAULT_REGION must be set
         // Credentials can come from env vars OR IAM roles OR credential files
-        val hasRegion = System.getenv("AWS_REGION") != null ||
-                       System.getenv("AWS_DEFAULT_REGION") != null
+        val hasRegion =
+            System.getenv("AWS_REGION") != null ||
+                System.getenv("AWS_DEFAULT_REGION") != null
 
         if (hasRegion) {
             return true
@@ -56,17 +58,18 @@ class AwsKeyManagementServiceProvider : KeyManagementServiceProvider {
     }
 
     override fun create(options: Map<String, Any?>): KeyManagementService {
-        val config = try {
-            AwsKmsConfig.fromMap(options)
-        } catch (e: Exception) {
-            // Try environment variables as fallback
-            AwsKmsConfig.fromEnvironment()
-                ?: throw IllegalArgumentException(
-                    "AWS KMS configuration requires 'region' in options or AWS_REGION environment variable. " +
-                    "Error: ${e.message}",
-                    e
-                )
-        }
+        val config =
+            try {
+                AwsKmsConfig.fromMap(options)
+            } catch (e: Exception) {
+                // Try environment variables as fallback
+                AwsKmsConfig.fromEnvironment()
+                    ?: throw IllegalArgumentException(
+                        "AWS KMS configuration requires 'region' in options or AWS_REGION environment variable. " +
+                            "Error: ${e.message}",
+                        e,
+                    )
+            }
 
         return AwsKeyManagementService(config)
     }
@@ -77,4 +80,3 @@ class AwsKeyManagementServiceProvider : KeyManagementServiceProvider {
         return create(optionsMap)
     }
 }
-

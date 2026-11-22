@@ -13,9 +13,16 @@ import org.trustweave.core.identifiers.KeyId
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.mdl.MdlNamespace
 import org.trustweave.credential.mdl.MdocException
-import org.trustweave.credential.mdl.model.*
+import org.trustweave.credential.mdl.model.DeviceKeyInfo
+import org.trustweave.credential.mdl.model.IssuerSigned
+import org.trustweave.credential.mdl.model.IssuerSignedItem
+import org.trustweave.credential.mdl.model.MobileDocument
+import org.trustweave.credential.mdl.model.MobileSecurityObject
+import org.trustweave.credential.mdl.model.ValidityInfo
 import org.trustweave.credential.model.CredentialType
-import org.trustweave.credential.model.vc.*
+import org.trustweave.credential.model.vc.CredentialProof
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.model.vc.VerifiablePresentation
 import org.trustweave.credential.requests.IssuanceRequest
 import org.trustweave.credential.requests.PresentationRequest
 import org.trustweave.credential.requests.VerificationOptions
@@ -91,7 +98,6 @@ class MdocProofEngine(
     private val statusChecker: CredentialStatusChecker? = null,
     private val config: ProofEngineConfig = ProofEngineConfig(),
 ) : ProofEngine {
-
     companion object {
         /**
          * `ProofEngineConfig.properties` key (Boolean) explicitly opting in to resolving the
@@ -131,13 +137,14 @@ class MdocProofEngine(
     override val format = ProofSuiteId.MDOC
     override val formatName = "ISO mDL/mDoc"
     override val formatVersion = "1.0"
-    override val capabilities = ProofEngineCapabilities(
-        selectiveDisclosure = true,
-        zeroKnowledge = false,
-        revocation = true,
-        presentation = true,
-        predicates = false
-    )
+    override val capabilities =
+        ProofEngineCapabilities(
+            selectiveDisclosure = true,
+            zeroKnowledge = false,
+            revocation = true,
+            presentation = true,
+            predicates = false,
+        )
 
     /**
      * Issue an ISO 18013-5 mDoc credential.
@@ -152,32 +159,38 @@ class MdocProofEngine(
     override suspend fun issue(request: IssuanceRequest): VerifiableCredential {
         val opts = request.proofOptions?.additionalOptions ?: emptyMap()
         val namespace = opts["namespace"] as? String ?: MdlNamespace.ISO_18013_5_1
-        val docType = opts["docType"] as? String
-            ?: request.type.firstOrNull { it.value != "VerifiableCredential" }?.value
-            ?: MdlNamespace.MDL_DOC_TYPE
+        val docType =
+            opts["docType"] as? String
+                ?: request.type.firstOrNull { it.value != "VerifiableCredential" }?.value
+                ?: MdlNamespace.MDL_DOC_TYPE
         val deviceKeyBytes = opts["deviceKey"] as? ByteArray ?: ByteArray(0)
         val algorithmName = opts["algorithm"] as? String ?: "P-256"
-        val algorithm = when (algorithmName.uppercase()) {
-            "P-256", "ES256" -> Algorithm.P256
-            "P-384", "ES384" -> Algorithm.P384
-            "P-521", "ES512" -> Algorithm.P521
-            "ED25519", "EDDSA" -> Algorithm.Ed25519
-            else -> Algorithm.P256
-        }
+        val algorithm =
+            when (algorithmName.uppercase()) {
+                "P-256", "ES256" -> Algorithm.P256
+                "P-384", "ES384" -> Algorithm.P384
+                "P-521", "ES512" -> Algorithm.P521
+                "ED25519", "EDDSA" -> Algorithm.Ed25519
+                else -> Algorithm.P256
+            }
 
-        val issuerKeyId = request.issuerKeyId?.keyId
-            ?: throw MdocException("MISSING_ISSUER_KEY", "issuerKeyId is required for mDoc issuance")
+        val issuerKeyId =
+            request.issuerKeyId?.keyId
+                ?: throw MdocException("MISSING_ISSUER_KEY", "issuerKeyId is required for mDoc issuance")
 
         val now = Clock.System.now()
         val validFrom = request.validFrom ?: now
-        val validUntil = request.validUntil ?: run {
-            val seconds = opts["validUntilSeconds"] as? Long ?: (365L * 24 * 3600)
-            Instant.fromEpochSeconds(now.epochSeconds + seconds)
-        }
+        val validUntil =
+            request.validUntil ?: run {
+                val seconds = opts["validUntilSeconds"] as? Long ?: (365L * 24 * 3600)
+                Instant.fromEpochSeconds(now.epochSeconds + seconds)
+            }
 
         // Build IssuerSignedItems from credential subject claims
         val claims = mutableMapOf<String, Any>()
-        request.credentialSubject.id?.value?.let { claims[SUBJECT_ID_ELEMENT] = it }
+        request.credentialSubject.id
+            ?.value
+            ?.let { claims[SUBJECT_ID_ELEMENT] = it }
         request.credentialSubject.claims.forEach { (key, jsonElement) ->
             claims[key] = jsonElementToAny(jsonElement)
         }
@@ -189,39 +202,44 @@ class MdocProofEngine(
                     digestId = index,
                     random = MdocCbor.generateSalt(),
                     elementIdentifier = key,
-                    elementValue = value
-                )
+                    elementValue = value,
+                ),
             )
         }
 
         // Build valueDigests: namespace → digestId → SHA-256(encodedItem)
-        val digests = items.associate { item ->
-            item.digestId to MdocCbor.digestItem(MdocCbor.encodeIssuerSignedItem(item))
-        }
+        val digests =
+            items.associate { item ->
+                item.digestId to MdocCbor.digestItem(MdocCbor.encodeIssuerSignedItem(item))
+            }
 
-        val mso = MobileSecurityObject(
-            version = "1.0",
-            digestAlgorithm = "SHA-256",
-            valueDigests = mapOf(namespace to digests),
-            deviceKeyInfo = DeviceKeyInfo(deviceKey = deviceKeyBytes),
-            docType = docType,
-            validityInfo = ValidityInfo(
-                signed = now,
-                validFrom = validFrom,
-                validUntil = validUntil
+        val mso =
+            MobileSecurityObject(
+                version = "1.0",
+                digestAlgorithm = "SHA-256",
+                valueDigests = mapOf(namespace to digests),
+                deviceKeyInfo = DeviceKeyInfo(deviceKey = deviceKeyBytes),
+                docType = docType,
+                validityInfo =
+                    ValidityInfo(
+                        signed = now,
+                        validFrom = validFrom,
+                        validUntil = validUntil,
+                    ),
             )
-        )
 
         val msoBytes = MdocCbor.encodeMso(mso)
         val issuerAuthBytes = MdocCoseSign.sign(msoBytes, issuerKeyId, kms, algorithm)
 
-        val mobileDoc = MobileDocument(
-            docType = docType,
-            issuerSigned = IssuerSigned(
-                nameSpaces = mapOf(namespace to items),
-                issuerAuth = issuerAuthBytes
+        val mobileDoc =
+            MobileDocument(
+                docType = docType,
+                issuerSigned =
+                    IssuerSigned(
+                        nameSpaces = mapOf(namespace to items),
+                        issuerAuth = issuerAuthBytes,
+                    ),
             )
-        )
 
         val deviceResponseBytes = MdocCbor.encodeMobileDocument(mobileDoc)
 
@@ -233,10 +251,11 @@ class MdocProofEngine(
             validFrom = validFrom,
             validUntil = validUntil,
             credentialSubject = request.credentialSubject,
-            proof = CredentialProof.MdocProof(
-                deviceResponse = deviceResponseBytes,
-                docType = docType
-            )
+            proof =
+                CredentialProof.MdocProof(
+                    deviceResponse = deviceResponseBytes,
+                    docType = docType,
+                ),
         )
     }
 
@@ -257,14 +276,15 @@ class MdocProofEngine(
      */
     override suspend fun verify(
         credential: VerifiableCredential,
-        options: VerificationOptions
+        options: VerificationOptions,
     ): VerificationResult {
-        val mdocProof = credential.proof as? CredentialProof.MdocProof
-            ?: return VerificationResult.Invalid.InvalidProof(
-                credential = credential,
-                reason = "Credential does not carry an MdocProof",
-                errors = listOf("Expected MdocProof, got ${credential.proof?.javaClass?.simpleName}")
-            )
+        val mdocProof =
+            credential.proof as? CredentialProof.MdocProof
+                ?: return VerificationResult.Invalid.InvalidProof(
+                    credential = credential,
+                    reason = "Credential does not carry an MdocProof",
+                    errors = listOf("Expected MdocProof, got ${credential.proof?.javaClass?.simpleName}"),
+                )
 
         return try {
             val doc = MdocCbor.decodeMobileDocument(mdocProof.deviceResponse)
@@ -279,7 +299,7 @@ class MdocProofEngine(
             if (mso.docType != doc.docType) {
                 return VerificationResult.Invalid.InvalidProof(
                     credential = credential,
-                    reason = "MSO docType '${mso.docType}' does not match document docType '${doc.docType}'"
+                    reason = "MSO docType '${mso.docType}' does not match document docType '${doc.docType}'",
                 )
             }
 
@@ -288,13 +308,13 @@ class MdocProofEngine(
             if (now < mso.validityInfo.validFrom) {
                 return VerificationResult.Invalid.NotYetValid(
                     credential = credential,
-                    validFrom = mso.validityInfo.validFrom
+                    validFrom = mso.validityInfo.validFrom,
                 )
             }
             if (now > mso.validityInfo.validUntil) {
                 return VerificationResult.Invalid.Expired(
                     credential = credential,
-                    expiredAt = mso.validityInfo.validUntil
+                    expiredAt = mso.validityInfo.validUntil,
                 )
             }
 
@@ -302,11 +322,13 @@ class MdocProofEngine(
             // for envelope reconciliation below.
             val verifiedItems = mutableListOf<IssuerSignedItem>()
             doc.issuerSigned.nameSpaces.forEach { (namespace, items) ->
-                val namespaceDigests = mso.valueDigests[namespace]
-                    ?: throw MdocException("UNKNOWN_NAMESPACE", "Namespace $namespace not found in MSO")
+                val namespaceDigests =
+                    mso.valueDigests[namespace]
+                        ?: throw MdocException("UNKNOWN_NAMESPACE", "Namespace $namespace not found in MSO")
                 items.forEach { item ->
-                    val expectedDigest = namespaceDigests[item.digestId]
-                        ?: throw MdocException.digestMismatch(namespace, item.digestId)
+                    val expectedDigest =
+                        namespaceDigests[item.digestId]
+                            ?: throw MdocException.digestMismatch(namespace, item.digestId)
                     val actualDigest = MdocCbor.digestItem(MdocCbor.encodeIssuerSignedItem(item))
                     if (!expectedDigest.contentEquals(actualDigest)) {
                         throw MdocException.digestMismatch(namespace, item.digestId)
@@ -354,7 +376,7 @@ class MdocProofEngine(
             VerificationResult.Invalid.InvalidProof(
                 credential = credential,
                 reason = e.message ?: "mDoc verification failed",
-                errors = listOf(e.message ?: "Unknown mDoc error")
+                errors = listOf(e.message ?: "Unknown mDoc error"),
             )
         } catch (cancelled: CancellationException) {
             throw cancelled
@@ -362,7 +384,7 @@ class MdocProofEngine(
             VerificationResult.Invalid.InvalidProof(
                 credential = credential,
                 reason = "mDoc verification failed: ${e.message}",
-                errors = listOf(e.message ?: "Unknown error")
+                errors = listOf(e.message ?: "Unknown error"),
             )
         }
     }
@@ -379,43 +401,48 @@ class MdocProofEngine(
      */
     override suspend fun createPresentation(
         credentials: List<VerifiableCredential>,
-        request: PresentationRequest
+        request: PresentationRequest,
     ): VerifiablePresentation {
         val disclosedClaims = request.disclosedClaims
 
-        val filteredCredentials = if (disclosedClaims == null) {
-            credentials
-        } else {
-            credentials.map { vc ->
-                val mdocProof = vc.proof as? CredentialProof.MdocProof ?: return@map vc
-                val doc = MdocCbor.decodeMobileDocument(mdocProof.deviceResponse)
-                val filteredNameSpaces = doc.issuerSigned.nameSpaces.mapValues { (_, items) ->
-                    items.filter { it.elementIdentifier in disclosedClaims }
-                }
-                val filteredDoc = doc.copy(
-                    issuerSigned = doc.issuerSigned.copy(nameSpaces = filteredNameSpaces)
-                )
-                vc.copy(
-                    // Selective disclosure must also filter the unsigned envelope: keeping
-                    // the full credentialSubject would leak every withheld claim to the
-                    // verifier (and fail envelope reconciliation on verification).
-                    credentialSubject = vc.credentialSubject.copy(
-                        claims = vc.credentialSubject.claims.filterKeys { it in disclosedClaims }
-                    ),
-                    proof = CredentialProof.MdocProof(
-                        deviceResponse = MdocCbor.encodeMobileDocument(filteredDoc),
-                        docType = mdocProof.docType
+        val filteredCredentials =
+            if (disclosedClaims == null) {
+                credentials
+            } else {
+                credentials.map { vc ->
+                    val mdocProof = vc.proof as? CredentialProof.MdocProof ?: return@map vc
+                    val doc = MdocCbor.decodeMobileDocument(mdocProof.deviceResponse)
+                    val filteredNameSpaces =
+                        doc.issuerSigned.nameSpaces.mapValues { (_, items) ->
+                            items.filter { it.elementIdentifier in disclosedClaims }
+                        }
+                    val filteredDoc =
+                        doc.copy(
+                            issuerSigned = doc.issuerSigned.copy(nameSpaces = filteredNameSpaces),
+                        )
+                    vc.copy(
+                        // Selective disclosure must also filter the unsigned envelope: keeping
+                        // the full credentialSubject would leak every withheld claim to the
+                        // verifier (and fail envelope reconciliation on verification).
+                        credentialSubject =
+                            vc.credentialSubject.copy(
+                                claims = vc.credentialSubject.claims.filterKeys { it in disclosedClaims },
+                            ),
+                        proof =
+                            CredentialProof.MdocProof(
+                                deviceResponse = MdocCbor.encodeMobileDocument(filteredDoc),
+                                docType = mdocProof.docType,
+                            ),
                     )
-                )
+                }
             }
-        }
 
         val holderId = credentials.firstOrNull()?.credentialSubject?.id ?: Iri("urn:unknown")
 
         return VerifiablePresentation(
             type = listOf(CredentialType.fromString("VerifiablePresentation")),
             holder = holderId,
-            verifiableCredential = filteredCredentials
+            verifiableCredential = filteredCredentials,
         )
     }
 
@@ -432,7 +459,10 @@ class MdocProofEngine(
      * 2. No x5chain → KMS lookup under the (attacker-chosen) issuer IRI, only when
      *    explicitly enabled via [OPTION_ALLOW_KMS_ISSUER_KEY_LOOKUP].
      */
-    private suspend fun verifyIssuerAuth(issuerAuthBytes: ByteArray, issuerId: String): ByteArray {
+    private suspend fun verifyIssuerAuth(
+        issuerAuthBytes: ByteArray,
+        issuerId: String,
+    ): ByteArray {
         val x5chain = extractX5Chain(issuerAuthBytes)
         if (x5chain != null) {
             val anchors = iacaTrustAnchors()
@@ -442,7 +472,7 @@ class MdocProofEngine(
                     "issuerAuth carries an x5chain certificate chain but no IACA trust anchors " +
                         "are configured; configure IACA trust anchors via " +
                         "ProofEngineConfig.properties[\"$OPTION_IACA_TRUST_ANCHORS\"] " +
-                        "(Collection<X509Certificate>) to verify certificate-based mdoc credentials"
+                        "(Collection<X509Certificate>) to verify certificate-based mdoc credentials",
                 )
             }
             val certs = parseCertificates(x5chain)
@@ -454,7 +484,7 @@ class MdocProofEngine(
             } catch (e: Exception) {
                 throw MdocException(
                     "ISSUER_CERT_EXPIRED",
-                    "Issuer (DocSigner) certificate from x5chain is not currently valid: ${e.message}"
+                    "Issuer (DocSigner) certificate from x5chain is not currently valid: ${e.message}",
                 )
             }
             val payload = verifyCoseSign1Signature(issuerAuthBytes, leaf.publicKey)
@@ -471,7 +501,7 @@ class MdocProofEngine(
                     "ProofEngineConfig.properties[\"$OPTION_IACA_TRUST_ANCHORS\"]), or — for tests " +
                     "and controlled deployments only — explicitly opt in to resolving the issuer " +
                     "key from the verifier's KMS via " +
-                    "ProofEngineConfig.properties[\"$OPTION_ALLOW_KMS_ISSUER_KEY_LOOKUP\"] = true"
+                    "ProofEngineConfig.properties[\"$OPTION_ALLOW_KMS_ISSUER_KEY_LOOKUP\"] = true",
             )
         }
         // Explicitly opted-in: the verifier's KMS is trusted to hold ONLY trusted issuer
@@ -497,11 +527,12 @@ class MdocProofEngine(
         }
         val label = CBORObject.FromObject(HEADER_X5CHAIN)
         val protectedBytes = coseSign1[0].GetByteString()
-        val protectedEntry = if (protectedBytes.isNotEmpty()) {
-            CBORObject.DecodeFromBytes(protectedBytes).takeIf { it.type == CBORType.Map }?.get(label)
-        } else {
-            null
-        }
+        val protectedEntry =
+            if (protectedBytes.isNotEmpty()) {
+                CBORObject.DecodeFromBytes(protectedBytes).takeIf { it.type == CBORType.Map }?.get(label)
+            } else {
+                null
+            }
         val unprotectedEntry = coseSign1[1].takeIf { it.type == CBORType.Map }?.get(label)
         val entry = protectedEntry ?: unprotectedEntry ?: return null
         return when (entry.type) {
@@ -514,7 +545,7 @@ class MdocProofEngine(
                     entry[i].takeIf { it.type == CBORType.ByteString }?.GetByteString()
                         ?: throw MdocException(
                             "INVALID_X5CHAIN",
-                            "x5chain element $i is not a certificate byte string"
+                            "x5chain element $i is not a certificate byte string",
                         )
                 }
             }
@@ -538,21 +569,25 @@ class MdocProofEngine(
      * validation (revocation checking disabled — CRL/OCSP distribution is deployment
      * specific and out of scope for this engine).
      */
-    private fun validateChainToAnchor(chain: List<X509Certificate>, anchors: List<X509Certificate>) {
+    private fun validateChainToAnchor(
+        chain: List<X509Certificate>,
+        anchors: List<X509Certificate>,
+    ) {
         // A leaf that IS a configured anchor is trusted directly (its validity was checked).
         val pathCerts = chain.filter { cert -> anchors.none { it == cert } }
         if (pathCerts.isEmpty()) return
         try {
             val cf = CertificateFactory.getInstance("X.509")
             val certPath = cf.generateCertPath(pathCerts)
-            val params = PKIXParameters(anchors.map { TrustAnchor(it, null) }.toSet()).apply {
-                isRevocationEnabled = false
-            }
+            val params =
+                PKIXParameters(anchors.map { TrustAnchor(it, null) }.toSet()).apply {
+                    isRevocationEnabled = false
+                }
             CertPathValidator.getInstance("PKIX").validate(certPath, params)
         } catch (e: Exception) {
             throw MdocException(
                 "UNTRUSTED_ISSUER_CERT",
-                "x5chain does not validate to a configured IACA trust anchor: ${e.message}"
+                "x5chain does not validate to a configured IACA trust anchor: ${e.message}",
             )
         }
     }
@@ -563,7 +598,10 @@ class MdocProofEngine(
      * Self-contained equivalent of [MdocCoseSign.verify] for the x5chain path, where the
      * key comes from the leaf certificate instead of the KMS.
      */
-    private fun verifyCoseSign1Signature(coseSign1Bytes: ByteArray, publicKey: PublicKey): ByteArray {
+    private fun verifyCoseSign1Signature(
+        coseSign1Bytes: ByteArray,
+        publicKey: PublicKey,
+    ): ByteArray {
         val coseSign1 = CBORObject.DecodeFromBytes(coseSign1Bytes)
         if (coseSign1.size() != 4) throw MdocException.invalidCoseSign1("Expected 4-element array")
 
@@ -572,8 +610,9 @@ class MdocProofEngine(
         val signature = coseSign1[3].GetByteString()
 
         val protectedHeaderMap = CBORObject.DecodeFromBytes(protectedHeaderBytes)
-        val coseAlg = protectedHeaderMap[CBORObject.FromObject(HEADER_ALG)]?.AsInt32()
-            ?: throw MdocException.invalidCoseSign1("Missing 'alg' in protected header")
+        val coseAlg =
+            protectedHeaderMap[CBORObject.FromObject(HEADER_ALG)]?.AsInt32()
+                ?: throw MdocException.invalidCoseSign1("Missing 'alg' in protected header")
 
         // Sig_structure = ["Signature1", protected-bstr, external-aad, payload]
         val sigStructure = CBORObject.NewArray()
@@ -583,22 +622,24 @@ class MdocProofEngine(
         sigStructure.Add(CBORObject.FromObject(payloadBytes))
         val toBeSigned = sigStructure.EncodeToBytes()
 
-        val (jcaAlgorithm, isEcdsa) = when (coseAlg) {
-            ALG_ES256 -> "SHA256withECDSA" to true
-            ALG_ES384 -> "SHA384withECDSA" to true
-            ALG_ES512 -> "SHA512withECDSA" to true
-            ALG_EDDSA -> "Ed25519" to false
-            else -> throw MdocException.invalidCoseSign1("Unsupported COSE algorithm: $coseAlg")
-        }
+        val (jcaAlgorithm, isEcdsa) =
+            when (coseAlg) {
+                ALG_ES256 -> "SHA256withECDSA" to true
+                ALG_ES384 -> "SHA384withECDSA" to true
+                ALG_ES512 -> "SHA512withECDSA" to true
+                ALG_EDDSA -> "Ed25519" to false
+                else -> throw MdocException.invalidCoseSign1("Unsupported COSE algorithm: $coseAlg")
+            }
 
-        val valid = try {
-            val verifier = Signature.getInstance(jcaAlgorithm)
-            verifier.initVerify(publicKey)
-            verifier.update(toBeSigned)
-            verifier.verify(if (isEcdsa) rawToDerSignature(signature) else signature)
-        } catch (e: Exception) {
-            false
-        }
+        val valid =
+            try {
+                val verifier = Signature.getInstance(jcaAlgorithm)
+                verifier.initVerify(publicKey)
+                verifier.update(toBeSigned)
+                verifier.verify(if (isEcdsa) rawToDerSignature(signature) else signature)
+            } catch (e: Exception) {
+                false
+            }
         if (!valid) {
             throw MdocException.invalidCoseSign1("Signature verification against x5chain leaf certificate failed")
         }
@@ -649,29 +690,34 @@ class MdocProofEngine(
         if (envelopeSubjectId != null && signedSubjectIds != null && envelopeSubjectId !in signedSubjectIds) {
             return VerificationResult.Invalid.InvalidProof(
                 credential = credential,
-                reason = "Envelope credentialSubject.id does not match the issuer-signed " +
-                    "'$SUBJECT_ID_ELEMENT' item (possible envelope tampering)",
-                errors = listOf(
-                    "Envelope subject '$envelopeSubjectId' != signed subject_id '$signedSubjectIds'"
-                ),
+                reason =
+                    "Envelope credentialSubject.id does not match the issuer-signed " +
+                        "'$SUBJECT_ID_ELEMENT' item (possible envelope tampering)",
+                errors =
+                    listOf(
+                        "Envelope subject '$envelopeSubjectId' != signed subject_id '$signedSubjectIds'",
+                    ),
             )
         }
 
         for ((name, envelopeValue) in credential.credentialSubject.claims) {
-            val signedValues = verifiedByName[name]
-                ?: return VerificationResult.Invalid.InvalidProof(
-                    credential = credential,
-                    reason = "Envelope claim '$name' is not backed by a verified issuer-signed item",
-                    errors = listOf("Unbacked envelope claim: $name"),
-                )
+            val signedValues =
+                verifiedByName[name]
+                    ?: return VerificationResult.Invalid.InvalidProof(
+                        credential = credential,
+                        reason = "Envelope claim '$name' is not backed by a verified issuer-signed item",
+                        errors = listOf("Unbacked envelope claim: $name"),
+                    )
             if (signedValues.none { cborValueMatchesJson(it, envelopeValue) }) {
                 return VerificationResult.Invalid.InvalidProof(
                     credential = credential,
-                    reason = "Envelope claim '$name' does not match the verified issuer-signed " +
-                        "value (possible envelope tampering)",
-                    errors = listOf(
-                        "Envelope claim '$name' value '$envelopeValue' does not match any verified item"
-                    ),
+                    reason =
+                        "Envelope claim '$name' does not match the verified issuer-signed " +
+                            "value (possible envelope tampering)",
+                    errors =
+                        listOf(
+                            "Envelope claim '$name' value '$envelopeValue' does not match any verified item",
+                        ),
                 )
             }
         }
@@ -700,7 +746,10 @@ class MdocProofEngine(
      * issue — and hence verify — as integer 42). This mirrors the issuance behavior and is
      * inherent to the signed representation, not the comparison.
      */
-    private fun cborValueMatchesJson(signed: Any, envelope: JsonElement): Boolean {
+    private fun cborValueMatchesJson(
+        signed: Any,
+        envelope: JsonElement,
+    ): Boolean {
         val normalized = jsonElementToAny(envelope)
         return when (signed) {
             is ByteArray -> false
@@ -748,8 +797,9 @@ class MdocProofEngine(
             if (sessionTranscript != null && presentationVerificationRequested) {
                 return VerificationResult.Invalid.InvalidProof(
                     credential = credential,
-                    reason = "Device authentication required (session transcript provided) but the " +
-                        "document carries no deviceSigned data",
+                    reason =
+                        "Device authentication required (session transcript provided) but the " +
+                            "document carries no deviceSigned data",
                     errors = listOf("Missing deviceSigned/deviceAuth in mdoc document"),
                 )
             }
@@ -760,11 +810,12 @@ class MdocProofEngine(
             if (presentationVerificationRequested) {
                 return VerificationResult.Invalid.InvalidProof(
                     credential = credential,
-                    reason = "Device authentication required but no session transcript was provided; " +
-                        "pass the CBOR SessionTranscript via VerificationOptions.additionalOptions" +
-                        "[\"$OPTION_SESSION_TRANSCRIPT\"], or explicitly disable presentation " +
-                        "verification (verifyPresentationProof=false, enforceHolderBinding=false) " +
-                        "for issuer-only verification",
+                    reason =
+                        "Device authentication required but no session transcript was provided; " +
+                            "pass the CBOR SessionTranscript via VerificationOptions.additionalOptions" +
+                            "[\"$OPTION_SESSION_TRANSCRIPT\"], or explicitly disable presentation " +
+                            "verification (verifyPresentationProof=false, enforceHolderBinding=false) " +
+                            "for issuer-only verification",
                     errors = listOf("Missing '$OPTION_SESSION_TRANSCRIPT' verification option"),
                 )
             }
@@ -772,21 +823,24 @@ class MdocProofEngine(
             return null
         }
 
-        val deviceSignature = deviceSigned.deviceAuth.deviceSignature
-            ?: return VerificationResult.Invalid.InvalidProof(
-                credential = credential,
-                reason = "Device authentication required but the document carries no COSE_Sign1 " +
-                    "device signature (COSE_Mac0 device auth is not supported)",
-                errors = listOf("Missing deviceAuth.deviceSignature"),
-            )
+        val deviceSignature =
+            deviceSigned.deviceAuth.deviceSignature
+                ?: return VerificationResult.Invalid.InvalidProof(
+                    credential = credential,
+                    reason =
+                        "Device authentication required but the document carries no COSE_Sign1 " +
+                            "device signature (COSE_Mac0 device auth is not supported)",
+                    errors = listOf("Missing deviceAuth.deviceSignature"),
+                )
 
-        val deviceAuthValid = MdocCoseSign.verifyDeviceAuth(
-            coseSign1Bytes = deviceSignature,
-            sessionTranscript = sessionTranscript,
-            docType = doc.docType,
-            deviceNameSpacesBytes = deviceSigned.nameSpaces,
-            deviceKeyBytes = mso.deviceKeyInfo.deviceKey,
-        )
+        val deviceAuthValid =
+            MdocCoseSign.verifyDeviceAuth(
+                coseSign1Bytes = deviceSignature,
+                sessionTranscript = sessionTranscript,
+                docType = doc.docType,
+                deviceNameSpacesBytes = deviceSigned.nameSpaces,
+                deviceKeyBytes = mso.deviceKeyInfo.deviceKey,
+            )
         if (!deviceAuthValid) {
             return VerificationResult.Invalid.InvalidProof(
                 credential = credential,
@@ -799,12 +853,13 @@ class MdocProofEngine(
 
     private fun jsonElementToAny(element: JsonElement): Any =
         when (element) {
-            is JsonPrimitive -> when {
-                element.booleanOrNull != null -> element.booleanOrNull!!
-                element.longOrNull != null -> element.longOrNull!!
-                element.doubleOrNull != null -> element.doubleOrNull!!
-                else -> element.content
-            }
+            is JsonPrimitive ->
+                when {
+                    element.booleanOrNull != null -> element.booleanOrNull!!
+                    element.longOrNull != null -> element.longOrNull!!
+                    element.doubleOrNull != null -> element.doubleOrNull!!
+                    else -> element.content
+                }
             else -> element.toString()
         }
 

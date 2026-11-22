@@ -1,7 +1,6 @@
 package org.trustweave.credential.oidc4vp.exchange
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.*
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.credential.exchange.ExchangeOperation
 import org.trustweave.credential.exchange.model.CredentialAttribute
@@ -16,19 +15,21 @@ import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.CredentialSubject
 import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.credential.model.vc.VerifiablePresentation
 import org.trustweave.credential.oidc4vp.Oidc4VpService
 import org.trustweave.did.identifiers.Did
 import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import kotlin.test.*
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlin.time.Clock
-import kotlin.time.Instant
 
 /**
  * Tests for OIDC4VP Exchange Protocol.
  */
 class Oidc4VpExchangeProtocolTest {
-
     private lateinit var service: Oidc4VpService
     private lateinit var protocol: Oidc4VpExchangeProtocol
 
@@ -55,84 +56,96 @@ class Oidc4VpExchangeProtocolTest {
     }
 
     @Test
-    fun `test offer throws InvalidOperation exception`() = runBlocking<Unit> {
-        val request = ExchangeRequest.Offer(
-            protocolName = ExchangeProtocolName.Oidc4Vp,
-            issuerDid = Did("did:key:issuer"),
-            holderDid = Did("did:key:holder"),
-            credentialPreview = CredentialPreview(
-                attributes = listOf(
-                    CredentialAttribute("name", "Test")
+    fun `test offer throws InvalidOperation exception`() =
+        runBlocking<Unit> {
+            val request =
+                ExchangeRequest.Offer(
+                    protocolName = ExchangeProtocolName.Oidc4Vp,
+                    issuerDid = Did("did:key:issuer"),
+                    holderDid = Did("did:key:holder"),
+                    credentialPreview =
+                        CredentialPreview(
+                            attributes =
+                                listOf(
+                                    CredentialAttribute("name", "Test"),
+                                ),
+                        ),
                 )
-            )
-        )
-        
-        assertFailsWith<TrustWeaveException.InvalidOperation> {
-            protocol.offer(request)
+
+            assertFailsWith<TrustWeaveException.InvalidOperation> {
+                protocol.offer(request)
+            }
         }
-    }
 
     @Test
-    fun `test request throws InvalidOperation exception`() = runBlocking<Unit> {
-        val request = ExchangeRequest.Request(
-            protocolName = ExchangeProtocolName.Oidc4Vp,
-            holderDid = Did("did:key:holder"),
-            issuerDid = Did("did:key:issuer"),
-            offerId = OfferId("offer-123")
-        )
-        
-        assertFailsWith<TrustWeaveException.InvalidOperation> {
-            protocol.request(request)
+    fun `test request throws InvalidOperation exception`() =
+        runBlocking<Unit> {
+            val request =
+                ExchangeRequest.Request(
+                    protocolName = ExchangeProtocolName.Oidc4Vp,
+                    holderDid = Did("did:key:holder"),
+                    issuerDid = Did("did:key:issuer"),
+                    offerId = OfferId("offer-123"),
+                )
+
+            assertFailsWith<TrustWeaveException.InvalidOperation> {
+                protocol.request(request)
+            }
         }
-    }
 
     @Test
-    fun `test issue throws InvalidOperation exception`() = runBlocking<Unit> {
-        val issuerDid = Did("did:key:issuer")
-        val holderDid = Did("did:key:holder")
-        val credential = VerifiableCredential(
-            type = listOf(CredentialType.VerifiableCredential),
-            issuer = Issuer.fromDid(issuerDid),
-            issuanceDate = Clock.System.now(),
-            credentialSubject = CredentialSubject.fromDid(holderDid)
-        )
-        
-        val request = ExchangeRequest.Issue(
-            protocolName = ExchangeProtocolName.Oidc4Vp,
-            issuerDid = issuerDid,
-            holderDid = holderDid,
-            credential = credential,
-            requestId = RequestId("request-123")
-        )
-        
-        assertFailsWith<TrustWeaveException.InvalidOperation> {
-            protocol.issue(request)
+    fun `test issue throws InvalidOperation exception`() =
+        runBlocking<Unit> {
+            val issuerDid = Did("did:key:issuer")
+            val holderDid = Did("did:key:holder")
+            val credential =
+                VerifiableCredential(
+                    type = listOf(CredentialType.VerifiableCredential),
+                    issuer = Issuer.fromDid(issuerDid),
+                    issuanceDate = Clock.System.now(),
+                    credentialSubject = CredentialSubject.fromDid(holderDid),
+                )
+
+            val request =
+                ExchangeRequest.Issue(
+                    protocolName = ExchangeProtocolName.Oidc4Vp,
+                    issuerDid = issuerDid,
+                    holderDid = holderDid,
+                    credential = credential,
+                    requestId = RequestId("request-123"),
+                )
+
+            assertFailsWith<TrustWeaveException.InvalidOperation> {
+                protocol.issue(request)
+            }
         }
-    }
 
     @Test
-    fun `test requestProof requires authorizationUrl in metadata`() = runBlocking<Unit> {
-        val request = ProofExchangeRequest.Request(
-            protocolName = ExchangeProtocolName.Oidc4Vp,
-            verifierDid = Did("did:key:verifier"),
-            proverDid = Did("did:key:prover"),
-            proofRequest = ProofRequest(
-                name = "Test Proof Request",
-                requestedAttributes = emptyMap()
-            ),
-            options = org.trustweave.credential.exchange.options.ExchangeOptions.Empty
-        )
-        
-        assertFailsWith<IllegalArgumentException> {
-            protocol.requestProof(request)
+    fun `test requestProof requires authorizationUrl in metadata`() =
+        runBlocking<Unit> {
+            val request =
+                ProofExchangeRequest.Request(
+                    protocolName = ExchangeProtocolName.Oidc4Vp,
+                    verifierDid = Did("did:key:verifier"),
+                    proverDid = Did("did:key:prover"),
+                    proofRequest =
+                        ProofRequest(
+                            name = "Test Proof Request",
+                            requestedAttributes = emptyMap(),
+                        ),
+                    options = org.trustweave.credential.exchange.options.ExchangeOptions.Empty,
+                )
+
+            assertFailsWith<IllegalArgumentException> {
+                protocol.requestProof(request)
+            }
         }
-    }
-    
+
     @Test
-    fun `test requestProof with valid authorizationUrl`() = runBlocking<Unit> {
-        // This test would require a mock Oidc4VpService with mocked HTTP responses
-        // For now, we just verify that the exception is thrown correctly when URL is missing
-        assertTrue(true, "Exception handling verified in test above")
-    }
+    fun `test requestProof with valid authorizationUrl`() =
+        runBlocking<Unit> {
+            // This test would require a mock Oidc4VpService with mocked HTTP responses
+            // For now, we just verify that the exception is thrown correctly when URL is missing
+            assertTrue(true, "Exception handling verified in test above")
+        }
 }
-

@@ -1,12 +1,12 @@
 package org.trustweave.credential.oidc4vp.exchange.spi
 
+import okhttp3.OkHttpClient
 import org.trustweave.credential.exchange.CredentialExchangeProtocol
-import org.trustweave.credential.spi.exchange.CredentialExchangeProtocolProvider
 import org.trustweave.credential.oidc4vp.Oidc4VpService
 import org.trustweave.credential.oidc4vp.exchange.Oidc4VpExchangeProtocol
+import org.trustweave.credential.spi.exchange.CredentialExchangeProtocolProvider
 import org.trustweave.did.resolver.DidResolver
 import org.trustweave.kms.KeyManagementService
-import okhttp3.OkHttpClient
 
 /**
  * SPI Provider for OIDC4VP exchange protocol.
@@ -26,27 +26,30 @@ class Oidc4VpExchangeProtocolProvider : CredentialExchangeProtocolProvider {
 
     override fun create(
         protocolName: String,
-        options: Map<String, Any?>
+        options: Map<String, Any?>,
     ): CredentialExchangeProtocol? {
         if (protocolName != "oidc4vp") return null
 
-        val kms = options["kms"] as? KeyManagementService
-            ?: throw IllegalArgumentException("Missing 'kms' in options")
+        val kms =
+            options["kms"] as? KeyManagementService
+                ?: throw IllegalArgumentException("Missing 'kms' in options")
 
-        val httpClient = options["httpClient"] as? OkHttpClient
-            ?: org.trustweave.core.net.ssrfGuardedOkHttpClient()
+        val httpClient =
+            options["httpClient"] as? OkHttpClient
+                ?: org.trustweave.core.net
+                    .ssrfGuardedOkHttpClient()
 
         // Optional: pins request-object signing keys to the verifier's DID document
         // for client_id_scheme=did (fail-closed without it for DID client_ids).
         val didResolver = options["didResolver"] as? DidResolver
 
-        val oidc4vpService = Oidc4VpService(
-            kms = kms,
-            httpClient = httpClient,
-            didResolver = didResolver
-        )
+        val oidc4vpService =
+            Oidc4VpService(
+                kms = kms,
+                httpClient = httpClient,
+                didResolver = didResolver,
+            )
 
         return Oidc4VpExchangeProtocol(oidc4vpService)
     }
 }
-

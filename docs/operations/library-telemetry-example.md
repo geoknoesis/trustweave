@@ -1,3 +1,10 @@
+---
+layout: default
+title: Executable library telemetry example
+parent: Operations
+nav_order: 35
+---
+
 # Executable library telemetry example
 
 This entire Kotlin file is compiled and run by `:observability:test`. It installs the bridge,

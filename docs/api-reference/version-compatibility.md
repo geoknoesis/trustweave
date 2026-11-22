@@ -36,16 +36,16 @@ This document provides version compatibility information for TrustWeave SDK and 
 **Why Java 21?**
 - Java 21 provides required language features (records, pattern matching, etc.)
 - Long-term support (LTS) release
-- Required by Kotlin 2.3.21 and the Gradle 9.5.0 build
+- Required by Kotlin 2.4.21 and the Gradle 9.8.1 build
 
 ### Kotlin
 
 | TrustWeave Version | Kotlin Version | Status |
 |-------------------|----------------|--------|
-| 0.7.0             | 2.3.21        | ✅ Built against |
-| Future            | 2.3.x         | ✅ Tracking latest stable |
+| 0.7.0             | 2.4.21        | ✅ Built against |
+| Future            | 2.4.x         | ✅ Tracking latest stable |
 
-**Why Kotlin 2.3.x?**
+**Why Kotlin 2.4.x?**
 - Required for DSL builders and type-safe configuration
 - Modern coroutine features
 - Improved type inference
@@ -54,7 +54,7 @@ This document provides version compatibility information for TrustWeave SDK and 
 
 | Build Tool | Minimum Version | Status |
 |------------|----------------|--------|
-| Gradle     | 9.2+           | ✅ Required (wrapper pinned to 9.2.0) |
+| Gradle     | 9.8.1          | ✅ Required (wrapper pinned to 9.8.1) |
 | Maven      | 3.8.0+         | ✅ Required |
 
 ## Dependency Compatibility
@@ -64,7 +64,7 @@ This document provides version compatibility information for TrustWeave SDK and 
 | Dependency | Version | Purpose |
 |------------|---------|---------|
 | `kotlinx-serialization-json` | 1.11.0 | JSON serialization |
-| `kotlinx-coroutines-core` | 1.10.2 | Coroutines support |
+| `kotlinx-coroutines-core` | 1.11.0 | Coroutines support |
 | `kotlinx-datetime` | 0.8.0 | Date/time handling |
 
 ### Optional Dependencies
@@ -115,9 +115,9 @@ org.trustweave:testkit:0.7.0
 
 | Version | Status | Breaking Changes |
 |---------|--------|------------------|
-| 0.7.0 | Current | None (initial version) |
-| Future 1.0.0 | Planned | None expected |
-| Future 1.1.0 | Planned | TBD |
+| 0.7.0 | Current | Pre-1.0 breaking & behaviour changes from 0.6.x: Kotlin 2.4.21 / Gradle 9.8.1 / Coroutines 1.11.0 toolchain bump; BOM `org.trustweave:distribution-bom:0.7.0` with 12 pure stubs removed from BOM & Maven Central; `distribution-all` now bundles `kms-plugins-inmemory`; sealed-result APIs (`revokeResult`, `trustResult`, `getKeyIdResult`); `KmsProviders.*` canonical SPI names; KMS signing/key-ID contract hardening; `DatabaseWallet` v2 composite-key schema & `CloudWalletFactory` per-wallet prefixes; SSRF/OID4VP/DIDComm/Entra security hardening. See [Migrating to 0.7.0](../how-to/migration/migrating-to-0.7.0.md). |
+| 0.6.x | Unsupported | Previous pre-1.0 line; upgrade to `0.7.0` for security fixes. |
+| Future 1.0.0 | Planned | First stable SemVer major release (not yet released). |
 
 **Note:** Breaking changes will be documented in [Migration Guides](../how-to/migration/README.md).
 
@@ -180,7 +180,7 @@ If you encounter version conflicts:
    }
    ```
 
-3. **Use BOM** (when available):
+3. **Use the TrustWeave BOM (`org.trustweave:distribution-bom:0.7.0`):**
    ```kotlin
    dependencies {
        implementation(platform("org.trustweave:distribution-bom:0.7.0"))

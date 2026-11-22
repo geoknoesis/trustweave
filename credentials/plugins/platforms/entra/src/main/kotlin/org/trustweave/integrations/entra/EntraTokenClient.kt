@@ -114,7 +114,9 @@ class EntraTokenClient(
     internal data class CachedToken(
         val accessToken: String,
         val expiresAt: Instant,
-    )
+    ) {
+        override fun toString(): String = "CachedToken(accessToken=[REDACTED], expiresAt=$expiresAt)"
+    }
 }
 
 /** The HTTP client the Entra clients use unless one is injected: SSRF-guarded (no internal/loopback hosts). */

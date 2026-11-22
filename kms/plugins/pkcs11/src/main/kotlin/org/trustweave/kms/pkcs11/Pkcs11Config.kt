@@ -36,6 +36,15 @@ data class Pkcs11Config(
         require(libraryPath.isNotBlank()) {
             "Pkcs11Config.libraryPath must not be blank"
         }
+        require(libraryPath.none { it == '\n' || it == '\r' || it == '\u0000' }) {
+            "Pkcs11Config.libraryPath must not contain line breaks or NUL characters"
+        }
+        require(providerName.isNotBlank()) {
+            "Pkcs11Config.providerName must not be blank"
+        }
+        require(providerName.none { it == '\n' || it == '\r' || it == '\u0000' }) {
+            "Pkcs11Config.providerName must not contain line breaks or NUL characters"
+        }
     }
 
     /**

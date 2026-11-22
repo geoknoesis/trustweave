@@ -13,7 +13,7 @@ import org.trustweave.did.util.XmlDateTimeSerializer
 import org.trustweave.did.util.toXmlDateTime
 import kotlin.time.Instant
 
-/**
+/*
  * Note: Did class has been moved to org.trustweave.did.identifiers.Did
  * This file now contains only DID document models.
  */

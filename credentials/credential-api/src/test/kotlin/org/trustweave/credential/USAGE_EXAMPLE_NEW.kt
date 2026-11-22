@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:filename")
+
 package org.trustweave.credential
 
 import kotlinx.serialization.json.JsonPrimitive

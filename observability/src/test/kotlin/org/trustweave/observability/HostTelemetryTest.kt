@@ -37,7 +37,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
-import java.nio.file.Path
 import java.sql.SQLException
 
 class HostTelemetryTest {

@@ -1,6 +1,11 @@
 package org.trustweave.credential.internal
 
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.put
 import org.trustweave.core.exception.SerializationException
 import kotlin.test.Test
 import kotlin.test.assertEquals

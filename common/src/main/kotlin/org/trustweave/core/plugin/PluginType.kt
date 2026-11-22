@@ -55,5 +55,5 @@ enum class PluginType {
     PRESENTATION_PROTOCOL,
 
     /** Query engine plugin */
-    QUERY_ENGINE
+    QUERY_ENGINE,
 }

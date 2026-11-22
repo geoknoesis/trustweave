@@ -32,24 +32,24 @@ open class TrustWeaveException(
      * were explicitly set to null vs. not provided).
      */
     open val context: Map<String, Any?> = emptyMap(),
-    override val cause: Throwable? = null
+    override val cause: Throwable? = null,
 ) : Exception(message, cause) {
-
     // ============================================================================
     // Digest-related exceptions
     // ============================================================================
 
     data class DigestFailed(
         val algorithm: String,
-        val reason: String
+        val reason: String,
     ) : TrustWeaveException(
-        code = "DIGEST_FAILED",
-        message = "Digest computation failed for algorithm '$algorithm': $reason",
-        context = mapOf(
-            "algorithm" to algorithm,
-            "reason" to reason
+            code = "DIGEST_FAILED",
+            message = "Digest computation failed for algorithm '$algorithm': $reason",
+            context =
+                mapOf(
+                    "algorithm" to algorithm,
+                    "reason" to reason,
+                ),
         )
-    )
 
     // ============================================================================
     // Encoding-related exceptions
@@ -57,15 +57,16 @@ open class TrustWeaveException(
 
     data class EncodeFailed(
         val operation: String,
-        val reason: String
+        val reason: String,
     ) : TrustWeaveException(
-        code = "ENCODE_FAILED",
-        message = "Encoding failed for operation '$operation': $reason",
-        context = mapOf(
-            "operation" to operation,
-            "reason" to reason
+            code = "ENCODE_FAILED",
+            message = "Encoding failed for operation '$operation': $reason",
+            context =
+                mapOf(
+                    "operation" to operation,
+                    "reason" to reason,
+                ),
         )
-    )
 
     // ============================================================================
     // Validation exceptions
@@ -74,16 +75,17 @@ open class TrustWeaveException(
     data class ValidationFailed(
         val field: String,
         val reason: String,
-        val value: Any? = null
+        val value: Any? = null,
     ) : TrustWeaveException(
-        code = "VALIDATION_FAILED",
-        message = "Validation failed for field '$field': $reason",
-        context = mapOf(
-            "field" to field,
-            "reason" to reason,
-            "value" to value
+            code = "VALIDATION_FAILED",
+            message = "Validation failed for field '$field': $reason",
+            context =
+                mapOf(
+                    "field" to field,
+                    "reason" to reason,
+                    "value" to value,
+                ),
         )
-    )
 
     // ============================================================================
     // Generic exceptions
@@ -93,30 +95,31 @@ open class TrustWeaveException(
         override val code: String = "INVALID_OPERATION",
         override val message: String,
         override val context: Map<String, Any?> = emptyMap(),
-        override val cause: Throwable? = null
+        override val cause: Throwable? = null,
     ) : TrustWeaveException(code, message, context, cause)
 
     data class InvalidState(
         override val code: String = "INVALID_STATE",
         override val message: String,
         override val context: Map<String, Any?> = emptyMap(),
-        override val cause: Throwable? = null
+        override val cause: Throwable? = null,
     ) : TrustWeaveException(code, message, context, cause)
 
     data class NotFound(
         val resource: String? = null,
         override val message: String = resource?.let { "Resource not found: $it" } ?: "Resource not found",
         private val baseContext: Map<String, Any?> = emptyMap(),
-        override val cause: Throwable? = null
+        override val cause: Throwable? = null,
     ) : TrustWeaveException(
-        code = "NOT_FOUND",
-        message = message,
-        context = buildMap {
-            putAll(baseContext)  // Preserve any custom context passed
-            resource?.let { put("resource", it) }  // Add resource if present
-        },
-        cause = cause
-    ) {
+            code = "NOT_FOUND",
+            message = message,
+            context =
+                buildMap {
+                    putAll(baseContext) // Preserve any custom context passed
+                    resource?.let { put("resource", it) } // Add resource if present
+                },
+            cause = cause,
+        ) {
         // Override context to return the computed value from parent
         override val context: Map<String, Any?>
             get() = super.context
@@ -124,21 +127,22 @@ open class TrustWeaveException(
 
     data class UnsupportedAlgorithm(
         val algorithm: String,
-        val supportedAlgorithms: List<String>
+        val supportedAlgorithms: List<String>,
     ) : TrustWeaveException(
-        code = "UNSUPPORTED_ALGORITHM",
-        message = "Algorithm '$algorithm' is not supported. Supported algorithms: ${supportedAlgorithms.joinToString(", ")}",
-        context = mapOf(
-            "algorithm" to algorithm,
-            "supportedAlgorithms" to supportedAlgorithms
+            code = "UNSUPPORTED_ALGORITHM",
+            message = "Algorithm '$algorithm' is not supported. Supported algorithms: ${supportedAlgorithms.joinToString(", ")}",
+            context =
+                mapOf(
+                    "algorithm" to algorithm,
+                    "supportedAlgorithms" to supportedAlgorithms,
+                ),
         )
-    )
 
     data class Unknown(
         override val code: String = "UNKNOWN_ERROR",
         override val message: String,
         override val context: Map<String, Any?> = emptyMap(),
-        override val cause: Throwable? = null
+        override val cause: Throwable? = null,
     ) : TrustWeaveException(code, message, context, cause)
 
     /**
@@ -156,16 +160,17 @@ open class TrustWeaveException(
     data class OperationTimedOut(
         val operation: String,
         val timeout: String,
-        override val cause: Throwable? = null
+        override val cause: Throwable? = null,
     ) : TrustWeaveException(
-        code = "OPERATION_TIMED_OUT",
-        message = "Operation '$operation' timed out after $timeout; its outcome is unknown",
-        context = mapOf(
-            "operation" to operation,
-            "timeout" to timeout
-        ),
-        cause = cause
-    )
+            code = "OPERATION_TIMED_OUT",
+            message = "Operation '$operation' timed out after $timeout; its outcome is unknown",
+            context =
+                mapOf(
+                    "operation" to operation,
+                    "timeout" to timeout,
+                ),
+            cause = cause,
+        )
 }
 
 /**
@@ -174,27 +179,31 @@ open class TrustWeaveException(
  * This function provides automatic conversion of standard exceptions
  * to structured TrustWeaveException types for consistent error handling.
  */
-fun Throwable.toTrustWeaveException(): TrustWeaveException = when (this) {
-    is TrustWeaveException -> this
-    is IllegalArgumentException -> TrustWeaveException.InvalidOperation(
-        code = "INVALID_ARGUMENT",
-        message = message ?: "Invalid argument",
-        context = emptyMap(),
-        cause = this
-    )
-    is IllegalStateException -> TrustWeaveException.InvalidState(
-        code = "INVALID_STATE",
-        message = message ?: "Invalid state",
-        context = emptyMap(),
-        cause = this
-    )
-    else -> TrustWeaveException.Unknown(
-        code = "UNKNOWN_ERROR",
-        message = message ?: "Unknown error: ${this::class.simpleName}",
-        context = emptyMap(),
-        cause = this
-    )
-}
+fun Throwable.toTrustWeaveException(): TrustWeaveException =
+    when (this) {
+        is TrustWeaveException -> this
+        is IllegalArgumentException ->
+            TrustWeaveException.InvalidOperation(
+                code = "INVALID_ARGUMENT",
+                message = message ?: "Invalid argument",
+                context = emptyMap(),
+                cause = this,
+            )
+        is IllegalStateException ->
+            TrustWeaveException.InvalidState(
+                code = "INVALID_STATE",
+                message = message ?: "Invalid state",
+                context = emptyMap(),
+                cause = this,
+            )
+        else ->
+            TrustWeaveException.Unknown(
+                code = "UNKNOWN_ERROR",
+                message = message ?: "Unknown error: ${this::class.simpleName}",
+                context = emptyMap(),
+                cause = this,
+            )
+    }
 
 /**
  * Helper function to create a TrustWeaveException from a simple message.
@@ -206,13 +215,15 @@ fun Throwable.toTrustWeaveException(): TrustWeaveException = when (this) {
  * @param cause Optional underlying exception
  * @return TrustWeaveException.Unknown with the provided message
  */
-fun trustWeaveException(message: String, cause: Throwable? = null): TrustWeaveException {
-    return TrustWeaveException.Unknown(
+fun trustWeaveException(
+    message: String,
+    cause: Throwable? = null,
+): TrustWeaveException =
+    TrustWeaveException.Unknown(
         message = message,
         context = emptyMap(),
-        cause = cause
+        cause = cause,
     )
-}
 
 /**
  * Checks if the exception is plugin-related (i.e., an instance of [PluginException]).

@@ -2,9 +2,8 @@ package org.trustweave.contract.models
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
-import kotlin.time.Instant
 
-/**
+/*
  * Core SmartContract models for trustweave.
  *
  * These models provide a domain-agnostic abstraction for executable contracts
@@ -16,14 +15,14 @@ import kotlin.time.Instant
  */
 @Serializable
 enum class ContractStatus {
-    DRAFT,          // Being created/negotiated
-    PENDING,        // Awaiting signatures/approval
-    ACTIVE,         // In effect and executable
-    SUSPENDED,      // Temporarily paused
-    EXECUTED,       // Conditions met, executed
-    EXPIRED,        // Past expiration date
-    CANCELLED,      // Cancelled by parties
-    TERMINATED      // Terminated by breach or agreement
+    DRAFT, // Being created/negotiated
+    PENDING, // Awaiting signatures/approval
+    ACTIVE, // In effect and executable
+    SUSPENDED, // Temporarily paused
+    EXECUTED, // Conditions met, executed
+    EXPIRED, // Past expiration date
+    CANCELLED, // Cancelled by parties
+    TERMINATED, // Terminated by breach or agreement
 }
 
 /**
@@ -47,7 +46,10 @@ sealed class ContractType {
     object SupplyChain : ContractType()
 
     @Serializable
-    data class Custom(val name: String, val domain: String) : ContractType()
+    data class Custom(
+        val name: String,
+        val domain: String,
+    ) : ContractType()
 }
 
 /**
@@ -63,7 +65,7 @@ sealed class ExecutionModel {
         val triggerType: TriggerType,
         val evaluationEngine: String, // e.g., "parametric-insurance", "weather-derivative"
         val engineVersion: String? = null, // Engine version for compatibility checks
-        val engineHash: String? = null // Engine implementation hash for tamper detection
+        val engineHash: String? = null, // Engine implementation hash for tamper detection
     ) : ExecutionModel()
 
     /**
@@ -74,7 +76,7 @@ sealed class ExecutionModel {
         val conditions: List<ContractCondition>,
         val evaluationEngine: String, // e.g., "rule-engine", "smart-contract-vm"
         val engineVersion: String? = null, // Engine version for compatibility checks
-        val engineHash: String? = null // Engine implementation hash for tamper detection
+        val engineHash: String? = null, // Engine implementation hash for tamper detection
     ) : ExecutionModel()
 
     /**
@@ -85,7 +87,7 @@ sealed class ExecutionModel {
         val schedule: ScheduleDefinition,
         val evaluationEngine: String,
         val engineVersion: String? = null, // Engine version for compatibility checks
-        val engineHash: String? = null // Engine implementation hash for tamper detection
+        val engineHash: String? = null, // Engine implementation hash for tamper detection
     ) : ExecutionModel()
 
     /**
@@ -96,7 +98,7 @@ sealed class ExecutionModel {
         val eventTypes: List<String>,
         val evaluationEngine: String,
         val engineVersion: String? = null, // Engine version for compatibility checks
-        val engineHash: String? = null // Engine implementation hash for tamper detection
+        val engineHash: String? = null, // Engine implementation hash for tamper detection
     ) : ExecutionModel()
 
     /**
@@ -115,19 +117,21 @@ sealed class TriggerType {
     object EarthObservation : TriggerType() // EO data triggers
 
     @Serializable
-    object Weather : TriggerType()           // Weather data
+    object Weather : TriggerType() // Weather data
 
     @Serializable
-    object Financial : TriggerType()         // Market data
+    object Financial : TriggerType() // Market data
 
     @Serializable
-    object IoT : TriggerType()               // IoT sensor data
+    object IoT : TriggerType() // IoT sensor data
 
     @Serializable
-    object API : TriggerType()               // External API data
+    object API : TriggerType() // External API data
 
     @Serializable
-    data class Custom(val name: String) : TriggerType()
+    data class Custom(
+        val name: String,
+    ) : TriggerType()
 }
 
 /**
@@ -139,7 +143,7 @@ data class ContractCondition(
     val description: String,
     val conditionType: ConditionType,
     val expression: String, // e.g., JSONPath, CEL, or domain-specific DSL
-    val evaluationContext: JsonElement? = null
+    val evaluationContext: JsonElement? = null,
 )
 
 /**
@@ -147,11 +151,11 @@ data class ContractCondition(
  */
 @Serializable
 enum class ConditionType {
-    THRESHOLD,      // Value exceeds threshold
-    RANGE,          // Value within range
-    COMPARISON,     // Compare two values
-    TEMPORAL,       // Time-based condition
-    COMPOSITE       // Multiple conditions combined
+    THRESHOLD, // Value exceeds threshold
+    RANGE, // Value within range
+    COMPARISON, // Compare two values
+    TEMPORAL, // Time-based condition
+    COMPOSITE, // Multiple conditions combined
 }
 
 /**
@@ -161,7 +165,7 @@ enum class ConditionType {
 data class ScheduleDefinition(
     val cronExpression: String? = null,
     val interval: String? = null, // ISO 8601 duration
-    val timezone: String? = null
+    val timezone: String? = null,
 )
 
 /**
@@ -169,9 +173,9 @@ data class ScheduleDefinition(
  */
 @Serializable
 data class ContractParties(
-    val primaryPartyDid: String,      // Main party (e.g., insurer, service provider)
-    val counterpartyDid: String,      // Other party (e.g., insured, client)
-    val additionalParties: Map<String, String> = emptyMap() // Role -> DID
+    val primaryPartyDid: String, // Main party (e.g., insurer, service provider)
+    val counterpartyDid: String, // Other party (e.g., insured, client)
+    val additionalParties: Map<String, String> = emptyMap(), // Role -> DID
 )
 
 /**
@@ -185,7 +189,7 @@ data class ContractTerms(
     val rewards: List<Reward>? = null,
     val jurisdiction: String? = null,
     val governingLaw: String? = null,
-    val disputeResolution: DisputeResolution? = null
+    val disputeResolution: DisputeResolution? = null,
 )
 
 /**
@@ -198,7 +202,7 @@ data class Obligation(
     val description: String,
     val obligationType: ObligationType,
     val deadline: String? = null, // ISO 8601 timestamp
-    val metadata: JsonElement? = null
+    val metadata: JsonElement? = null,
 )
 
 /**
@@ -210,7 +214,7 @@ enum class ObligationType {
     DELIVERY,
     PERFORMANCE,
     NOTIFICATION,
-    CUSTOM
+    CUSTOM,
 }
 
 /**
@@ -222,7 +226,7 @@ data class Penalty(
     val description: String,
     val penaltyType: PenaltyType,
     val amount: MonetaryAmount? = null,
-    val metadata: JsonElement? = null
+    val metadata: JsonElement? = null,
 )
 
 /**
@@ -233,7 +237,7 @@ enum class PenaltyType {
     MONETARY,
     TERMINATION,
     SUSPENSION,
-    CUSTOM
+    CUSTOM,
 }
 
 /**
@@ -245,7 +249,7 @@ data class Reward(
     val description: String,
     val rewardType: RewardType,
     val amount: MonetaryAmount? = null,
-    val metadata: JsonElement? = null
+    val metadata: JsonElement? = null,
 )
 
 /**
@@ -256,7 +260,7 @@ enum class RewardType {
     MONETARY,
     DISCOUNT,
     BONUS,
-    CUSTOM
+    CUSTOM,
 }
 
 /**
@@ -265,7 +269,7 @@ enum class RewardType {
 @Serializable
 data class MonetaryAmount(
     val amount: Double,
-    val currency: String = "USD"
+    val currency: String = "USD",
 )
 
 /**
@@ -275,7 +279,7 @@ data class MonetaryAmount(
 data class DisputeResolution(
     val method: String, // e.g., "arbitration", "mediation", "court"
     val jurisdiction: String? = null,
-    val rules: String? = null // e.g., "UNCITRAL", "AAA"
+    val rules: String? = null, // e.g., "UNCITRAL", "AAA"
 )
 
 /**
@@ -300,12 +304,9 @@ data class SmartContract(
     val expirationDate: String? = null, // ISO 8601 timestamp
     val createdAt: String,
     val updatedAt: String,
-
     // TrustWeave integration
     val credentialId: String? = null, // Verifiable Credential ID
     val anchorRef: AnchorRefData? = null, // Blockchain anchor reference
-
     // Contract-specific data (domain-specific)
-    val contractData: JsonElement
+    val contractData: JsonElement,
 )
-

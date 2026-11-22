@@ -174,6 +174,12 @@ class TrustWeaveProductionApiContractTest {
             }
         }
 
+    @Test
+    fun `requireKms returns configured KMS without nullable unwrap`() {
+        val tw = trustWeaveWithoutCredentialService()
+        assertEquals(tw.getKms(), tw.requireKms())
+    }
+
     private fun trustWeaveWithoutCredentialService(): TrustWeave {
         val config =
             TrustWeaveConfig(

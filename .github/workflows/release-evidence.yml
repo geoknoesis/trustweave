@@ -258,7 +258,7 @@ jobs:
 
       - name: Generate POMs and verify they satisfy Maven Central
         run: |
-          ./gradlew generatePomFileForMavenPublication --no-daemon --stacktrace
+          ./gradlew generatePomFileForMavenPublication generatePomFileForJvmPublication generatePomFileForKotlinMultiplatformPublication --no-daemon --stacktrace
           python scripts/check-publication.py
 
       - name: Build and sign the release into the staging repository
@@ -293,8 +293,11 @@ jobs:
           cp build/reports/cyclonedx/bom.json "build/release-staging/trustweave-${GITHUB_REF_NAME#v}-sbom.cdx.json"
 
       - name: Checksum the staged files
+        id: checksums
         # Every file Gradle staged (jars, POMs, module metadata, per-module CycloneDX SBOMs, .asc signatures)
         # plus the aggregate SBOM. Gradle's own .md5/.sha* sidecars and maven-metadata are excluded.
+        # actions/attest-build-provenance caps subjects at 1024 per attestation, so split SHA256SUMS into
+        # chunks of <= 1000 subjects under $RUNNER_TEMP/attestation-chunks (outside build/release-staging).
         run: |
           set -euo pipefail
           cd build/release-staging
@@ -304,9 +307,20 @@ jobs:
           count="$(wc -l < SHA256SUMS)"
           echo "Checksummed $count files"
           test "$count" -gt 0
-          # actions/attest-build-provenance accepts at most 1024 subjects per attestation.
-          test "$count" -le 1024 || { echo "Too many subjects ($count) for one attestation; split them" >&2; exit 1; }
           sha256sum --check --strict SHA256SUMS
+          chunk_dir="$RUNNER_TEMP/attestation-chunks"
+          rm -rf "$chunk_dir"
+          mkdir -p "$chunk_dir"
+          if [ "$count" -le 1000 ]; then
+            cp SHA256SUMS "$chunk_dir/SHA256SUMS.001"
+          else
+            split -l 1000 --numeric-suffixes=1 --suffix-length=3 SHA256SUMS "$chunk_dir/SHA256SUMS."
+          fi
+          chunk_count="$(find "$chunk_dir" -maxdepth 1 -type f -name 'SHA256SUMS.*' | wc -l)"
+          echo "Prepared $chunk_count attestation chunk(s) (<= 1000 subjects each)"
+          test "$chunk_count" -ge 1
+          test "$chunk_count" -le 5 || { echo "Too many attestation chunks ($chunk_count > 5); add more attestation steps" >&2; exit 1; }
+          echo "chunk_count=$chunk_count" >> "$GITHUB_OUTPUT"
 
       - name: Import the release public key
         # Optional until a maintainer configures it: set the repository VARIABLE TRUSTWEAVE_SIGNING_PUBLIC_KEY to the
@@ -337,10 +351,34 @@ jobs:
           if [ "$VERIFY_SIGNATURES" = "true" ]; then flags+=(--verify-signatures); fi
           python scripts/upload-to-central.py --staging build/release-staging --name "trustweave-${GITHUB_REF_NAME#v}" --dry-run "${flags[@]}"
 
-      - name: Attest SLSA build provenance for every staged file
+      - name: Attest SLSA build provenance for staged files (chunk 1)
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
-          subject-checksums: build/release-staging/SHA256SUMS
+          subject-checksums: ${{ runner.temp }}/attestation-chunks/SHA256SUMS.001
+
+      - name: Attest SLSA build provenance for staged files (chunk 2)
+        if: fromJSON(steps.checksums.outputs.chunk_count) >= 2
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-checksums: ${{ runner.temp }}/attestation-chunks/SHA256SUMS.002
+
+      - name: Attest SLSA build provenance for staged files (chunk 3)
+        if: fromJSON(steps.checksums.outputs.chunk_count) >= 3
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-checksums: ${{ runner.temp }}/attestation-chunks/SHA256SUMS.003
+
+      - name: Attest SLSA build provenance for staged files (chunk 4)
+        if: fromJSON(steps.checksums.outputs.chunk_count) >= 4
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-checksums: ${{ runner.temp }}/attestation-chunks/SHA256SUMS.004
+
+      - name: Attest SLSA build provenance for staged files (chunk 5)
+        if: fromJSON(steps.checksums.outputs.chunk_count) >= 5
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-checksums: ${{ runner.temp }}/attestation-chunks/SHA256SUMS.005
 
       - name: Attest the checksum file itself
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2

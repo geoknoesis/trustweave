@@ -158,7 +158,7 @@ fun Throwable.toDidException(): DidException =
             } catch (e: IllegalArgumentException) {
                 DidException.InvalidDidFormat(
                     did = didString,
-                    reason = message ?: "Unknown error: ${this::class.simpleName}",
+                    reason = message,
                 )
             }
         }

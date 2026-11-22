@@ -60,4 +60,23 @@ class Pkcs11ConfigTest {
         assertEquals(a.hashCode(), b.hashCode())
         assertNotEquals(a, c)
     }
+
+    @Test
+    fun `init rejects newline or carriage return in libraryPath or providerName`() {
+        assertThrows<IllegalArgumentException> {
+            Pkcs11Config(libraryPath = "/lib/p11.so\nslot=99")
+        }
+        assertThrows<IllegalArgumentException> {
+            Pkcs11Config(libraryPath = "/lib/p11.so\rslot=99")
+        }
+        assertThrows<IllegalArgumentException> {
+            Pkcs11Config(libraryPath = "/lib/p11.so", providerName = "bad\nname")
+        }
+        assertThrows<IllegalArgumentException> {
+            Pkcs11Config(libraryPath = "/lib/p11.so", providerName = "bad\rname")
+        }
+        assertThrows<IllegalArgumentException> {
+            Pkcs11Config(libraryPath = "/lib/p11.so", providerName = "   ")
+        }
+    }
 }

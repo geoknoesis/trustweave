@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:filename")
+
 package org.trustweave.trust.dsl.wallet
 
 import kotlinx.coroutines.Dispatchers
@@ -5,9 +7,9 @@ import kotlinx.coroutines.withContext
 import org.trustweave.did.identifiers.Did
 import org.trustweave.trust.context.WalletDslContext
 import org.trustweave.wallet.Wallet
-import org.trustweave.wallet.telemetry.withTelemetry
 import org.trustweave.wallet.exception.WalletException
 import org.trustweave.wallet.services.WalletCreationOptionsBuilder
+import org.trustweave.wallet.telemetry.withTelemetry
 
 /**
  * Wallet Builder DSL.
@@ -137,7 +139,14 @@ class WalletBuilder(
             // Use WalletFactory from provider
             val walletFactory =
                 walletContext.getWalletFactory()
-                    ?: throw WalletException.WalletFactoryNotConfigured()
+                    ?: throw WalletException.WalletFactoryNotConfigured(
+                        reason =
+                            "Wallet factory not configured for wallet provider '$provider'. " +
+                                "Configure a WalletFactory in TrustWeave.build:\n" +
+                                "TrustWeave.build {\n" +
+                                "    factories(walletFactory = myWalletFactory)\n" +
+                                "}",
+                    )
 
             // Instrument on the way out, so any host-supplied factory's wallet is covered rather
             // than only the ones that remembered to wrap themselves. withTelemetry is idempotent

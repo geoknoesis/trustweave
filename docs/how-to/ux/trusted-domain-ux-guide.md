@@ -2,7 +2,7 @@
 title: Trusted Domain UX Guide - Complete User Experience Documentation
 redirect_from:
   - /ux/trusted-domain-ux-guide/
-parent: UX
+parent: UX Documentation
 grand_parent: How-To Guides
 ---
 

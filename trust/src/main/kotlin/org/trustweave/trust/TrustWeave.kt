@@ -292,7 +292,7 @@ class TrustWeave internal constructor(
      * Get a DID method by name.
      */
     override fun getDidMethod(name: String): DidMethod? {
-        val method = config.didRegistry.get(name) as? DidMethod
+        val method = config.didRegistry.get(name)
         logger.debug("Getting DID method: name={}, found={}", name, method != null)
         return method
     }
@@ -370,6 +370,14 @@ class TrustWeave internal constructor(
      * configured KMS is always non-null.
      */
     fun getKms(): KeyManagementService? = config.kms
+
+    /**
+     * Returns the configured [KeyManagementService] as a non-null reference.
+     *
+     * Prefer this over [getKms] in new code to avoid `!!` when registering custom DID methods
+     * or interacting with the underlying KMS directly.
+     */
+    fun requireKms(): KeyManagementService = config.kms
 
     /**
      * Get the schema registry.

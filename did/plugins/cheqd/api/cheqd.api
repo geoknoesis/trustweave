@@ -47,8 +47,10 @@ public final class org/trustweave/cheqddid/CheqdDidConfig$Companion {
 	public static synthetic fun testnet$default (Lorg/trustweave/cheqddid/CheqdDidConfig$Companion;Ljava/lang/String;ILjava/lang/Object;)Lorg/trustweave/cheqddid/CheqdDidConfig;
 }
 
-public final class org/trustweave/cheqddid/CheqdDidMethod : org/trustweave/did/base/AbstractBlockchainDidMethod {
+public final class org/trustweave/cheqddid/CheqdDidMethod : org/trustweave/did/base/AbstractBlockchainDidMethod, java/lang/AutoCloseable {
 	public fun <init> (Lorg/trustweave/kms/KeyManagementService;Lorg/trustweave/anchor/BlockchainAnchorClient;Lorg/trustweave/cheqddid/CheqdDidConfig;)V
+	public fun <init> (Lorg/trustweave/kms/KeyManagementService;Lorg/trustweave/anchor/BlockchainAnchorClient;Lorg/trustweave/cheqddid/CheqdDidConfig;Lokhttp3/OkHttpClient;)V
+	public fun close ()V
 	public fun createDid (Lorg/trustweave/did/DidCreationOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun deactivateDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun resolveDid (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

@@ -21,6 +21,9 @@ dependencies {
     api(project(":did:plugins:base"))
     api(project(":did:plugins:key"))
 
+    // Built-in in-memory KMS so TrustWeave.quickStart() works out of the box without :testkit.
+    api(project(":kms:plugins:inmemory"))
+
     // NOTE: :testkit is intentionally NOT included — it is a test-support module and must
     // never leak onto consumers' production classpath. Add it as a testImplementation
     // dependency in your own build if you want the in-memory test doubles.

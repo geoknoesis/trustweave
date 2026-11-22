@@ -1,7 +1,6 @@
 ---
 title: Frequently Asked Questions
-nav_order: 2
-parent: Reference
+nav_order: 95
 keywords:
   - faq
   - frequently asked questions

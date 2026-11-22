@@ -1,3 +1,10 @@
+---
+layout: default
+title: "Migrating to DID Resolution 1.0 (CR 2026-08-06)"
+parent: Releases
+nav_order: 10
+---
+
 # Migrating to DID Resolution 1.0 (CR 2026-08-06)
 
 TrustWeave's DID resolution layer now targets

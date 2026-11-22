@@ -1,18 +1,23 @@
 package org.trustweave.kms
 
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Tests for Algorithm class, including equality and parsing.
  */
 class AlgorithmTest {
-
     @Test
     fun `test Algorithm equality - standard algorithms`() {
         assertEquals(Algorithm.Ed25519, Algorithm.Ed25519)
         assertEquals(Algorithm.Secp256k1, Algorithm.Secp256k1)
         assertEquals(Algorithm.P256, Algorithm.P256)
-        
+
         // Case-insensitive comparison
         val parsed = Algorithm.parse("ed25519")
         assertEquals(Algorithm.Ed25519, parsed)
@@ -23,7 +28,7 @@ class AlgorithmTest {
         // CRITICAL: Custom("Ed25519") should NOT equal Algorithm.Ed25519
         val custom: Algorithm = Algorithm.Custom("Ed25519")
         val standard: Algorithm = Algorithm.Ed25519
-        
+
         assertNotEquals(custom, standard, "Custom algorithms must not equal standard algorithms")
         assertNotEquals(standard, custom, "Standard algorithms must not equal custom algorithms")
     }
@@ -32,7 +37,7 @@ class AlgorithmTest {
     fun `test Algorithm equality - Custom algorithms with same name`() {
         val custom1 = Algorithm.Custom("MyCustomAlg")
         val custom2 = Algorithm.Custom("MyCustomAlg")
-        
+
         assertEquals(custom1, custom2, "Custom algorithms with same name should be equal")
     }
 
@@ -40,7 +45,7 @@ class AlgorithmTest {
     fun `test Algorithm equality - Custom algorithms with different names`() {
         val custom1 = Algorithm.Custom("Alg1")
         val custom2 = Algorithm.Custom("Alg2")
-        
+
         assertNotEquals(custom1, custom2, "Custom algorithms with different names should not be equal")
     }
 
@@ -82,11 +87,11 @@ class AlgorithmTest {
         assertEquals(Algorithm.Ed25519, Algorithm.parse("ed25519"))
         assertEquals(Algorithm.Ed25519, Algorithm.parse("ED25519"))
         assertEquals(Algorithm.Secp256k1, Algorithm.parse("secp256k1"))
-        
-        // The validation prevents creating Custom("Ed25519"), but parsing "Ed25519" 
+
+        // The validation prevents creating Custom("Ed25519"), but parsing "Ed25519"
         // should return Algorithm.Ed25519, not null
     }
-    
+
     @Test
     fun `test Algorithm parse - cannot create custom with standard name`() {
         // When trying to create a custom algorithm, if the name matches a standard name,
@@ -102,7 +107,7 @@ class AlgorithmTest {
         // Empty or blank names
         assertNull(Algorithm.parse(""))
         assertNull(Algorithm.parse("   "))
-        
+
         // Names with invalid characters
         assertNull(Algorithm.parse("alg with spaces"))
         assertNull(Algorithm.parse("alg@special"))
@@ -113,9 +118,12 @@ class AlgorithmTest {
     fun `test Algorithm hashCode - custom and standard have different hash codes`() {
         val custom = Algorithm.Custom("Ed25519")
         val standard = Algorithm.Ed25519
-        
-        assertNotEquals(custom.hashCode(), standard.hashCode(), 
-            "Custom and standard algorithms must have different hash codes")
+
+        assertNotEquals(
+            custom.hashCode(),
+            standard.hashCode(),
+            "Custom and standard algorithms must have different hash codes",
+        )
     }
 
     @Test
@@ -166,4 +174,3 @@ class AlgorithmTest {
         assertFalse(Algorithm.RSA.RSA_2048.isCompatibleWith(Algorithm.Ed25519))
     }
 }
-

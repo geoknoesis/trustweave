@@ -147,7 +147,7 @@ Draft, tracking VI spec v0.1 — **Experimental** (see the
 
 Run the suite: `./gradlew :credentials:plugins:verifiable-intent:test`
 
-See the [module conformance profile](../../../credentials/plugins/verifiable-intent/CONFORMANCE.md)
+See the [module conformance profile](https://github.com/geoknoesis/trustweave/blob/main/credentials/plugins/verifiable-intent/CONFORMANCE.md)
 for exact supported cases. Stateless APIs reject stateful constraints. The ledger path requires
 shared PostgreSQL and trusted verifier challenges. Reconciliation requires authenticated external
 payment evidence; unknown outcomes must not release authority. No full conformance certification

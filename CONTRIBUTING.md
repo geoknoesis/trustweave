@@ -25,8 +25,8 @@ TrustWeave is committed to providing a welcoming and inclusive environment for a
 ### Prerequisites
 
 - **Java 21+** - Required for compilation and runtime
-- **Kotlin 2.3.21** - Included via Gradle plugin
-- **Gradle 9.5.0** - Automatically downloaded via Gradle Wrapper
+- **Kotlin 2.4.21** - Included via Gradle plugin
+- **Gradle 9.8.1** - Automatically downloaded via Gradle Wrapper
 - **Git** - For version control
 - **Docker** (optional) - Required for some integration tests using TestContainers
 
@@ -194,7 +194,7 @@ TrustWeave follows Kotlin coding conventions with automated formatting via ktlin
 
 - **Naming**: Use camelCase for functions/variables, PascalCase for classes
 - **Documentation**: Document all public APIs with KDoc comments
-- **Error Handling**: Use `Result<T>` for operations that can fail
+- **Error Handling**: Use TrustWeave's sealed result types (e.g., `IssuanceResult`, `VerificationResult`, `DidCreationResult`, `RevocationResult`, `SignResult`) for domain operations that can fail rather than `kotlin.Result<T>` — see [Result Types Guide](docs/api-reference/result-types-guide.md)
 - **Immutability**: Prefer immutable data classes
 - **Null Safety**: Leverage Kotlin's null safety features
 
@@ -403,7 +403,7 @@ For detailed testing guidelines, see [Testing Guidelines](docs/contributing/test
 - **Tone**: Conversational but professional
 - **Formatting**: Use Markdown with ATX headings
 - **Code Samples**: Every code block should be bracketed by prose explaining what it does
-- **Terminology**: Refer to modules in inline code (e.g., `trustweave-did`)
+- **Terminology**: Refer to modules in inline code (e.g., `did:did-core`, `org.trustweave:did-did-core`)
 
 ### Documentation Verification
 
@@ -452,14 +452,13 @@ Include:
 
 ### Issue Templates
 
-We provide issue templates for:
-- Bug reports
-- Feature requests
-- Plugin requests
-- Documentation improvements
-- Questions
+We provide GitHub issue templates in `.github/ISSUE_TEMPLATE/` for:
+- **Bug reports** (`bug_report.yml`)
+- **Feature requests** (`feature_request.yml`)
+- **Documentation improvements** (`doc_improvement.yml`)
+- **Security vulnerability pointer** (`security_pointer.yml`, which directs private reports to [SECURITY.md](SECURITY.md))
 
-Use the appropriate template when creating an issue.
+Use the appropriate template when creating an issue. See [SUPPORT.md](SUPPORT.md) for general questions, [MAINTAINERS.md](MAINTAINERS.md) for project stewardship, and [ROADMAP.md](ROADMAP.md) for planned milestones.
 
 ## License
 

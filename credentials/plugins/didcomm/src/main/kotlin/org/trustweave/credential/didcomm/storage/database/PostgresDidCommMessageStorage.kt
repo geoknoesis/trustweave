@@ -423,93 +423,95 @@ class PostgresDidCommMessageStorage(
     private fun createTables() {
         dataSource.connection.use { conn ->
             // Main messages table
-            conn.createStatement().execute(
-                """
-                CREATE TABLE IF NOT EXISTS didcomm_messages (
-                    id VARCHAR(255) PRIMARY KEY,
-                    type VARCHAR(255) NOT NULL,
-                    from_did VARCHAR(255),
-                    to_dids VARCHAR(255)[],
-                    body JSONB,
-                    created_time VARCHAR(255),
-                    expires_time VARCHAR(255),
-                    thid VARCHAR(255),
-                    pthid VARCHAR(255),
-                    message_json JSONB NOT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """,
-            )
-
-            // Index for DID lookups
-            conn.createStatement().execute(
-                """
-                CREATE TABLE IF NOT EXISTS didcomm_message_dids (
-                    message_id VARCHAR(255) REFERENCES didcomm_messages(id) ON DELETE CASCADE,
-                    did VARCHAR(255) NOT NULL,
-                    role VARCHAR(10) NOT NULL CHECK (role IN ('from', 'to')),
-                    PRIMARY KEY (message_id, did, role)
-                )
-            """,
-            )
-
-            // Index for thread lookups
-            conn.createStatement().execute(
-                """
-                CREATE TABLE IF NOT EXISTS didcomm_message_threads (
-                    message_id VARCHAR(255) REFERENCES didcomm_messages(id) ON DELETE CASCADE,
-                    thid VARCHAR(255) NOT NULL,
-                    PRIMARY KEY (message_id, thid)
-                )
-            """,
-            )
-
-            // Add encryption columns if they don't exist
-            try {
-                conn.createStatement().execute(
+            conn.createStatement().use { stmt ->
+                stmt.execute(
                     """
-                    ALTER TABLE didcomm_messages
-                    ADD COLUMN IF NOT EXISTS encrypted_data BYTEA,
-                    ADD COLUMN IF NOT EXISTS key_version INT,
-                    ADD COLUMN IF NOT EXISTS iv BYTEA,
-                    ADD COLUMN IF NOT EXISTS is_encrypted BOOLEAN DEFAULT FALSE
+                    CREATE TABLE IF NOT EXISTS didcomm_messages (
+                        id VARCHAR(255) PRIMARY KEY,
+                        type VARCHAR(255) NOT NULL,
+                        from_did VARCHAR(255),
+                        to_dids VARCHAR(255)[],
+                        body JSONB,
+                        created_time VARCHAR(255),
+                        expires_time VARCHAR(255),
+                        thid VARCHAR(255),
+                        pthid VARCHAR(255),
+                        message_json JSONB NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
                 """,
                 )
-            } catch (e: SQLException) {
-                // Columns may already exist, ignore
-            }
 
-            // Add archive columns if they don't exist
-            try {
-                conn.createStatement().execute(
+                // Index for DID lookups
+                stmt.execute(
                     """
-                    ALTER TABLE didcomm_messages
-                    ADD COLUMN IF NOT EXISTS archived BOOLEAN DEFAULT FALSE,
-                    ADD COLUMN IF NOT EXISTS archive_id VARCHAR(255),
-                    ADD COLUMN IF NOT EXISTS archived_at TIMESTAMP
+                    CREATE TABLE IF NOT EXISTS didcomm_message_dids (
+                        message_id VARCHAR(255) REFERENCES didcomm_messages(id) ON DELETE CASCADE,
+                        did VARCHAR(255) NOT NULL,
+                        role VARCHAR(10) NOT NULL CHECK (role IN ('from', 'to')),
+                        PRIMARY KEY (message_id, did, role)
+                    )
                 """,
                 )
-            } catch (e: SQLException) {
-                // Columns may already exist, ignore
-            }
 
-            // Create archive index
-            try {
-                conn.createStatement().execute("CREATE INDEX IF NOT EXISTS idx_messages_archived ON didcomm_messages(archived)")
-                conn.createStatement().execute("CREATE INDEX IF NOT EXISTS idx_messages_archive_id ON didcomm_messages(archive_id)")
-            } catch (e: SQLException) {
-                // Index may already exist
-            }
+                // Index for thread lookups
+                stmt.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS didcomm_message_threads (
+                        message_id VARCHAR(255) REFERENCES didcomm_messages(id) ON DELETE CASCADE,
+                        thid VARCHAR(255) NOT NULL,
+                        PRIMARY KEY (message_id, thid)
+                    )
+                """,
+                )
 
-            // Create indexes for performance
-            conn.createStatement().execute("CREATE INDEX IF NOT EXISTS idx_messages_from_did ON didcomm_messages(from_did)")
-            conn.createStatement().execute("CREATE INDEX IF NOT EXISTS idx_messages_thid ON didcomm_messages(thid)")
-            conn.createStatement().execute("CREATE INDEX IF NOT EXISTS idx_messages_created ON didcomm_messages(created_time)")
-            conn.createStatement().execute("CREATE INDEX IF NOT EXISTS idx_messages_type ON didcomm_messages(type)")
-            conn.createStatement().execute("CREATE INDEX IF NOT EXISTS idx_messages_key_version ON didcomm_messages(key_version)")
-            conn.createStatement().execute("CREATE INDEX IF NOT EXISTS idx_messages_is_encrypted ON didcomm_messages(is_encrypted)")
-            conn.createStatement().execute("CREATE INDEX IF NOT EXISTS idx_message_dids_did ON didcomm_message_dids(did)")
-            conn.createStatement().execute("CREATE INDEX IF NOT EXISTS idx_message_threads_thid ON didcomm_message_threads(thid)")
+                // Add encryption columns if they don't exist
+                try {
+                    stmt.execute(
+                        """
+                        ALTER TABLE didcomm_messages
+                        ADD COLUMN IF NOT EXISTS encrypted_data BYTEA,
+                        ADD COLUMN IF NOT EXISTS key_version INT,
+                        ADD COLUMN IF NOT EXISTS iv BYTEA,
+                        ADD COLUMN IF NOT EXISTS is_encrypted BOOLEAN DEFAULT FALSE
+                    """,
+                    )
+                } catch (e: SQLException) {
+                    // Columns may already exist, ignore
+                }
+
+                // Add archive columns if they don't exist
+                try {
+                    stmt.execute(
+                        """
+                        ALTER TABLE didcomm_messages
+                        ADD COLUMN IF NOT EXISTS archived BOOLEAN DEFAULT FALSE,
+                        ADD COLUMN IF NOT EXISTS archive_id VARCHAR(255),
+                        ADD COLUMN IF NOT EXISTS archived_at TIMESTAMP
+                    """,
+                    )
+                } catch (e: SQLException) {
+                    // Columns may already exist, ignore
+                }
+
+                // Create archive index
+                try {
+                    stmt.execute("CREATE INDEX IF NOT EXISTS idx_messages_archived ON didcomm_messages(archived)")
+                    stmt.execute("CREATE INDEX IF NOT EXISTS idx_messages_archive_id ON didcomm_messages(archive_id)")
+                } catch (e: SQLException) {
+                    // Index may already exist
+                }
+
+                // Create indexes for performance
+                stmt.execute("CREATE INDEX IF NOT EXISTS idx_messages_from_did ON didcomm_messages(from_did)")
+                stmt.execute("CREATE INDEX IF NOT EXISTS idx_messages_thid ON didcomm_messages(thid)")
+                stmt.execute("CREATE INDEX IF NOT EXISTS idx_messages_created ON didcomm_messages(created_time)")
+                stmt.execute("CREATE INDEX IF NOT EXISTS idx_messages_type ON didcomm_messages(type)")
+                stmt.execute("CREATE INDEX IF NOT EXISTS idx_messages_key_version ON didcomm_messages(key_version)")
+                stmt.execute("CREATE INDEX IF NOT EXISTS idx_messages_is_encrypted ON didcomm_messages(is_encrypted)")
+                stmt.execute("CREATE INDEX IF NOT EXISTS idx_message_dids_did ON didcomm_message_dids(did)")
+                stmt.execute("CREATE INDEX IF NOT EXISTS idx_message_threads_thid ON didcomm_message_threads(thid)")
+            }
         }
     }
 

@@ -420,4 +420,98 @@ class VcLdProofEngineSecurityTest {
                 "A rewritten proof.challenge on a captured presentation must fail verification",
             )
         }
+
+    @Test
+    fun `createPresentation with proofOptions produces a verifiable LinkedDataProof bound to challenge and domain`() =
+        runBlocking {
+            val rig = TestRig()
+            val service =
+                org.trustweave.credential.CredentialServices.createCredentialService(
+                    kms = rig.kms,
+                    didResolver = rig.didResolver,
+                    formats = listOf(ProofSuiteId.VC_LD),
+                )
+
+            val issued =
+                service.issue(
+                    IssuanceRequest(
+                        format = ProofSuiteId.VC_LD,
+                        issuer = Issuer.fromDid(rig.issuerDocument.id),
+                        issuerKeyId =
+                            rig.issuerDocument.verificationMethod
+                                .first()
+                                .id,
+                        credentialSubject =
+                            CredentialSubject.fromDid(
+                                rig.holderDocument.id,
+                                claims = mapOf("name" to JsonPrimitive("Alice")),
+                            ),
+                        type = listOf(CredentialType.VerifiableCredential),
+                        issuedAt = Clock.System.now(),
+                        proofOptions =
+                            proofOptions {
+                                option(JsonLdDocumentBuilder.CONTEXTS_OPTION, listOf(TEST_CONTEXT_URL))
+                            },
+                    ),
+                )
+            val vc = (issued as org.trustweave.credential.results.IssuanceResult.Success).credential
+
+            val holderVm =
+                rig.holderDocument.verificationMethod
+                    .first()
+                    .id.value
+            val vp =
+                service.createPresentation(
+                    credentials = listOf(vc),
+                    request =
+                        org.trustweave.credential.requests.PresentationRequest(
+                            proofOptions =
+                                proofOptions {
+                                    purpose = org.trustweave.credential.proof.ProofPurpose.Authentication
+                                    challenge = "nonce-roundtrip-42"
+                                    domain = "verifier.trustweave.example"
+                                    verificationMethod = holderVm
+                                },
+                        ),
+                )
+
+            val ldProof = vp.proof as? CredentialProof.LinkedDataProof
+            assertTrue(ldProof != null, "Presentation created with proofOptions must carry a LinkedDataProof")
+            assertTrue(
+                ldProof.additionalProperties["challenge"] == JsonPrimitive("nonce-roundtrip-42"),
+                "Challenge must be bound inside LinkedDataProof.additionalProperties",
+            )
+            assertTrue(
+                ldProof.additionalProperties["domain"] == JsonPrimitive("verifier.trustweave.example"),
+                "Domain must be bound inside LinkedDataProof.additionalProperties",
+            )
+
+            val verified =
+                service.verifyPresentation(
+                    presentation = vp,
+                    options =
+                        VerificationOptions(
+                            verifyPresentationProof = true,
+                            enforceHolderBinding = true,
+                            verifyChallenge = true,
+                            expectedChallenge = "nonce-roundtrip-42",
+                            verifyDomain = true,
+                            expectedDomain = "verifier.trustweave.example",
+                        ),
+                )
+            assertTrue(verified is VerificationResult.Valid, "Signed VP must verify end-to-end, got: $verified")
+
+            val wrongChallenge =
+                service.verifyPresentation(
+                    presentation = vp,
+                    options =
+                        VerificationOptions(
+                            verifyPresentationProof = true,
+                            enforceHolderBinding = true,
+                            verifyChallenge = true,
+                            expectedChallenge = "wrong-nonce",
+                        ),
+                )
+            assertTrue(wrongChallenge is VerificationResult.Invalid, "Mismatched expectedChallenge must be rejected")
+        }
 }

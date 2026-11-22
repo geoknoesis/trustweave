@@ -6,7 +6,7 @@ import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.VerificationMethod
 import org.trustweave.did.validation.DidValidator
 
-/**
+/*
  * Utility functions for DID operations.
  *
  * This module provides helper functions for common DID-related operations

@@ -36,16 +36,19 @@ sealed class ChainId {
     sealed class Algorand : ChainId() {
         object Mainnet : Algorand() {
             override fun toString() = "algorand:mainnet"
+
             override fun getNamespace() = "algorand"
         }
 
         object Testnet : Algorand() {
             override fun toString() = "algorand:testnet"
+
             override fun getNamespace() = "algorand"
         }
 
         object Betanet : Algorand() {
             override fun toString() = "algorand:betanet"
+
             override fun getNamespace() = "algorand"
         }
 
@@ -57,14 +60,13 @@ sealed class ChainId {
              * @return The corresponding ChainId, or null if invalid
              */
             @JvmStatic
-            fun fromString(chainId: String): Algorand? {
-                return when (chainId) {
+            fun fromString(chainId: String): Algorand? =
+                when (chainId) {
                     "algorand:mainnet" -> Mainnet
                     "algorand:testnet" -> Testnet
                     "algorand:betanet" -> Betanet
                     else -> null
                 }
-            }
         }
     }
 
@@ -77,7 +79,9 @@ sealed class ChainId {
      * Note: Mumbai (80001) was decommissioned in 2024 and has been replaced by
      * [AmoyTestnet] (80002).
      */
-    sealed class Eip155(val chainNumber: Int) : ChainId() {
+    sealed class Eip155(
+        val chainNumber: Int,
+    ) : ChainId() {
         final override fun toString() = "eip155:$chainNumber"
 
         final override fun getNamespace() = "eip155"
@@ -113,21 +117,22 @@ sealed class ChainId {
              * All predefined EIP-155 chain IDs (one per chain shipped as an anchor plugin).
              */
             @JvmStatic
-            val all: List<Eip155> = listOf(
-                EthereumMainnet,
-                SepoliaTestnet,
-                OptimismMainnet,
-                OptimismSepoliaTestnet,
-                PolygonMainnet,
-                AmoyTestnet,
-                ZkSyncEraMainnet,
-                ZkSyncEraSepoliaTestnet,
-                BaseMainnet,
-                BaseSepoliaTestnet,
-                ArbitrumOneMainnet,
-                ArbitrumSepoliaTestnet,
-                GanacheLocal
-            )
+            val all: List<Eip155> =
+                listOf(
+                    EthereumMainnet,
+                    SepoliaTestnet,
+                    OptimismMainnet,
+                    OptimismSepoliaTestnet,
+                    PolygonMainnet,
+                    AmoyTestnet,
+                    ZkSyncEraMainnet,
+                    ZkSyncEraSepoliaTestnet,
+                    BaseMainnet,
+                    BaseSepoliaTestnet,
+                    ArbitrumOneMainnet,
+                    ArbitrumSepoliaTestnet,
+                    GanacheLocal,
+                )
 
             private val byChainNumber: Map<Int, Eip155> = all.associateBy { it.chainNumber }
 
@@ -157,16 +162,19 @@ sealed class ChainId {
     sealed class Indy : ChainId() {
         object SovrinMainnet : Indy() {
             override fun toString() = "indy:mainnet:sovrin"
+
             override fun getNamespace() = "indy"
         }
 
         object SovrinStaging : Indy() {
             override fun toString() = "indy:testnet:sovrin-staging"
+
             override fun getNamespace() = "indy"
         }
 
         object BCovrinTestnet : Indy() {
             override fun toString() = "indy:testnet:bcovrin"
+
             override fun getNamespace() = "indy"
         }
 
@@ -178,14 +186,13 @@ sealed class ChainId {
              * @return The corresponding ChainId, or null if invalid
              */
             @JvmStatic
-            fun fromString(chainId: String): Indy? {
-                return when (chainId) {
+            fun fromString(chainId: String): Indy? =
+                when (chainId) {
                     "indy:mainnet:sovrin" -> SovrinMainnet
                     "indy:testnet:sovrin-staging" -> SovrinStaging
                     "indy:testnet:bcovrin" -> BCovrinTestnet
                     else -> null
                 }
-            }
         }
     }
 
@@ -197,7 +204,7 @@ sealed class ChainId {
      */
     data class Custom(
         private val chainId: String,
-        private val namespace: String
+        private val namespace: String,
     ) : ChainId() {
         init {
             require(chainId.matches(Regex("^[a-z0-9]+:[a-z0-9-]+(:[a-z0-9-]+)*$"))) {
@@ -206,6 +213,7 @@ sealed class ChainId {
         }
 
         override fun toString() = chainId
+
         override fun getNamespace() = namespace
 
         companion object {
@@ -239,14 +247,13 @@ sealed class ChainId {
          * @return The corresponding ChainId, or null if invalid
          */
         @JvmStatic
-        fun parse(chainId: String): ChainId? {
-            return when {
+        fun parse(chainId: String): ChainId? =
+            when {
                 chainId.startsWith("algorand:") -> Algorand.fromString(chainId)
                 chainId.startsWith("eip155:") -> Eip155.fromString(chainId)
                 chainId.startsWith("indy:") -> Indy.fromString(chainId)
                 else -> Custom.fromString(chainId)
             }
-        }
 
         /**
          * Validates that a chain ID string follows CAIP-2 format.
@@ -255,9 +262,6 @@ sealed class ChainId {
          * @return true if valid, false otherwise
          */
         @JvmStatic
-        fun isValid(chainId: String): Boolean {
-            return parse(chainId) != null
-        }
+        fun isValid(chainId: String): Boolean = parse(chainId) != null
     }
 }
-

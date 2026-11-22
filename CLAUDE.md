@@ -82,7 +82,8 @@ Type-safe builders are the primary configuration API: `DidBuilder`, `DidDocument
 - **`trust`** — main facade (`TrustWeave.kt`), integration tests
 - **`testkit`** — test doubles and in-memory implementations (use in tests instead of mocks)
 - **`contract`** — smart contract interfaces
-- **`distribution:all`** — all-in-one BOM for consumers
+- **`distribution:all`** — all-in-one runtime bundle (core modules, `did:plugins:key`, and `kms:plugins:inmemory` for quickstart)
+- **`distribution:bom`** — Bill of Materials (`org.trustweave:distribution-bom`) aligning versions of all published modules
 - **`distribution:examples`** — runnable usage examples per scenario
 
 DID method plugins follow naming: `did:plugins:<method>` (e.g., `did:plugins:key`, `did:plugins:web`, `did:plugins:ethr`).
@@ -105,10 +106,10 @@ Blockchain plugins: `anchors:plugins:<chain>` (e.g., `anchors:plugins:ethereum`,
 
 ## Tech Stack
 
-- **Language**: Kotlin 2.3.21, JVM target 21 (enforced via toolchain)
-- **Build**: Gradle 9.5.0
+- **Language**: Kotlin 2.4.21, JVM target 21 (enforced via toolchain)
+- **Build**: Gradle 9.8.1
 - **Testing**: JUnit 6 + Kotest assertions; TestContainers for DB/Docker tests
-- **HTTP**: Ktor 3.4.x (internal servers), OkHttp 4 (client; 5.x is deferred)
+- **HTTP**: Ktor 3.6.0 (internal servers), OkHttp 4 (client; 5.x is deferred)
 - **Security**: Bouncy Castle 1.86, Nimbus JOSE JWT
 - **Blockchain**: Web3j 6, Algorand SDK, Bitcoin-j 0.17
 - **Spring Boot**: 4.1.x (`did:registrar-server-spring` only; a library module, so its `bootJar` is disabled on purpose)

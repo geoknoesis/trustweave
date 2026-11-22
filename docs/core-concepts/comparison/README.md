@@ -1,6 +1,7 @@
 ---
-title: Comparison Documentation
-nav_exclude: true
+title: Comparison
+parent: Core Concepts
+has_children: true
 redirect_from:
   - /comparison/README/
 nav_order: 220

@@ -69,4 +69,31 @@ class StatusMutationTest {
             assertFalse(manager.checkStatusByIndex(id, 0).revoked)
             assertEquals(1, manager.assignCredentialIndex("replacement", id))
         }
+
+    @Test
+    fun `getStatusListStatistics reports exact declared size column as totalCapacity`() =
+        runBlocking<Unit> {
+            val manager = DatabaseStatusListManager(source())
+            val id = manager.createStatusList("did:key:issuer", StatusPurpose.REVOCATION, 10, null)
+            manager.revokeCredential("cred-1", id)
+            val stats = manager.getStatusListStatistics(id)!!
+            assertEquals(10, stats.totalCapacity)
+            assertEquals(1, stats.usedIndices)
+            assertEquals(9, stats.availableIndices)
+            assertEquals(1, stats.revokedCount)
+        }
+
+    @Test
+    fun `revokeCredentials propagates database errors instead of swallowing them`() =
+        runBlocking<Unit> {
+            val ds = source()
+            val manager = DatabaseStatusListManager(ds)
+            val id = manager.createStatusList("did:key:issuer", StatusPurpose.REVOCATION, 10, null)
+            ds.connection.use { conn ->
+                conn.prepareStatement("DROP TABLE status_lists CASCADE").use { it.execute() }
+            }
+            assertFailsWith<java.sql.SQLException> {
+                manager.revokeCredentials(listOf("cred-1"), id)
+            }
+        }
 }

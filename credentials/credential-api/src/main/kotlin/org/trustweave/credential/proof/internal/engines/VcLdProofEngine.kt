@@ -4,13 +4,16 @@ import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.JWSHeader
 import com.nimbusds.jose.util.Base64URL
 import kotlinx.coroutines.CancellationException
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 import org.slf4j.LoggerFactory
 import org.trustweave.core.identifiers.Iri
 import org.trustweave.core.identifiers.KeyId
+import org.trustweave.core.serialization.SerializationModule
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.identifiers.CredentialId
 import org.trustweave.credential.internal.CredentialConstants
@@ -23,6 +26,7 @@ import org.trustweave.credential.model.vc.CredentialProof
 import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.model.vc.VerifiablePresentation
+import org.trustweave.credential.proof.ProofPurpose
 import org.trustweave.credential.requests.IssuanceRequest
 import org.trustweave.credential.requests.PresentationRequest
 import org.trustweave.credential.requests.VerificationOptions
@@ -71,6 +75,11 @@ internal class VcLdProofEngine(
 
     private val logger = LoggerFactory.getLogger(VcLdProofEngine::class.java)
 
+    private val vpJson =
+        Json {
+            serializersModule = SerializationModule.default
+        }
+
     override val format = ProofSuiteId.VC_LD
     override val formatName = "Verifiable Credentials (Linked Data)"
 
@@ -82,11 +91,11 @@ internal class VcLdProofEngine(
 
     override val capabilities =
         ProofEngineCapabilities(
-            selectiveDisclosure = true,
+            selectiveDisclosure = false,
             zeroKnowledge = false,
             revocation = true,
             presentation = true,
-            predicates = true,
+            predicates = false,
         )
 
     override suspend fun issue(request: IssuanceRequest): VerifiableCredential {
@@ -302,7 +311,7 @@ internal class VcLdProofEngine(
                 statusChecker
                     ?: (config.properties["statusChecker"] as? CredentialStatusChecker)
             val statusWarnings = mutableListOf<String>()
-            if (effectiveChecker != null && credential.credentialStatus != null) {
+            if (options.checkRevocation && effectiveChecker != null && credential.credentialStatus != null) {
                 // An undeterminable status follows options.revocationFailurePolicy (fail closed by default).
                 val outcome =
                     RevocationChecker.checkWithStatusChecker(credential, effectiveChecker, options.revocationFailurePolicy)
@@ -447,34 +456,159 @@ internal class VcLdProofEngine(
             throw IllegalArgumentException("At least one credential is required for presentation")
         }
 
-        // Handle selective disclosure if disclosedClaims is specified.
-        // Copy to a local before checking + using — cross-module smart cast on a public
-        // property declared in :credentials:credential-models-mp is not possible.
+        // VC-LD signatures (Ed25519Signature2020 / JsonWebSignature2020) cover the entire
+        // canonicalized credential document: removing claims from a signed credential would
+        // invalidate its issuer signature. Refuse non-empty disclosedClaims rather than mutating
+        // signed credentials; use SD-JWT-VC or BBS+ for selective disclosure.
         val disclosedClaims = request.disclosedClaims
-        val credentialsToInclude =
-            if (disclosedClaims != null && disclosedClaims.isNotEmpty()) {
-                credentials.map { credential ->
-                    SelectiveDisclosureFilter.filter(credential, disclosedClaims)
-                }
-            } else {
-                credentials
-            }
+        if (!disclosedClaims.isNullOrEmpty()) {
+            throw UnsupportedOperationException(
+                "VC-LD proof suites do not support selective disclosure on already-signed credentials; " +
+                    "use SD-JWT-VC (ProofSuiteId.SD_JWT_VC) for selective disclosure.",
+            )
+        }
 
         // Get holder from first credential's subject
         val holder =
-            credentialsToInclude.first().credentialSubject.id
+            credentials.first().credentialSubject.id
                 ?: throw IllegalArgumentException("Cannot create presentation: credential subject has no id")
 
-        // Create VerifiablePresentation
-        // Note: VC-LD presentations may need a proof on the presentation itself
-        return VerifiablePresentation(
-            type = listOf(CredentialType.Custom("VerifiablePresentation")),
-            holder = holder,
-            verifiableCredential = credentialsToInclude,
-            proof = null, // Presentation-level proof would be added here if required by the protocol
-            challenge = request.proofOptions?.challenge,
-            domain = request.proofOptions?.domain,
-        )
+        val proofOptions =
+            request.proofOptions
+                ?: return VerifiablePresentation(
+                    type = listOf(CredentialType.Custom("VerifiablePresentation")),
+                    holder = holder,
+                    verifiableCredential = credentials,
+                    proof = null,
+                )
+
+        // When proofOptions is supplied, callers explicitly requested a presentation proof
+        // (e.g., challenge/domain binding). Never silently return proof = null: require a
+        // verificationMethod and a configured signer/KMS to produce a real LinkedDataProof.
+        val verificationMethodIdString =
+            proofOptions.verificationMethod?.takeIf { it.isNotBlank() }
+                ?: throw IllegalArgumentException(
+                    "proofOptions.verificationMethod is required to sign a VC-LD presentation; " +
+                        "omit proofOptions to create an unsigned presentation.",
+                )
+
+        val keyId =
+            ProofEngineUtils.extractKeyId(verificationMethodIdString)
+                ?: throw IllegalArgumentException(
+                    "Could not extract keyId from proofOptions.verificationMethod: '$verificationMethodIdString'",
+                )
+
+        val verificationMethod =
+            if (verificationMethodIdString.contains("#") && verificationMethodIdString.startsWith("did:")) {
+                verificationMethodIdString
+            } else {
+                vmResolver.buildVerificationMethodId(holder.value, verificationMethodIdString)
+            }
+
+        val requestedSuite =
+            proofOptions.additionalOptions["proofType"]
+                ?.toString()
+                ?.removeSurrounding("\"")
+                ?: CredentialConstants.ProofTypes.ED25519_SIGNATURE_2020
+
+        val proofSuiteContext =
+            if (requestedSuite == CredentialConstants.ProofTypes.JSON_WEB_SIGNATURE_2020) {
+                CredentialConstants.SecuritySuites.JSON_WEB_SIGNATURE_2020_V1
+            } else {
+                CredentialConstants.SecuritySuites.ED25519_2020_V1
+            }
+
+        val contexts =
+            buildList {
+                add(CredentialConstants.VcContexts.VC_1_1)
+                val extraContexts =
+                    (proofOptions.additionalOptions[JsonLdDocumentBuilder.CONTEXTS_OPTION] as? Collection<*>)
+                        ?.mapNotNull { it?.toString()?.takeIf(String::isNotBlank) }
+                        .orEmpty()
+                extraContexts.forEach { if (it !in this) add(it) }
+                if (proofSuiteContext !in this) add(proofSuiteContext)
+            }
+
+        // Presentations authenticate the holder; default ProofOptions.purpose (AssertionMethod)
+        // maps to authentication for presentation proofs unless another purpose was explicitly chosen.
+        val proofPurpose =
+            if (proofOptions.purpose == ProofPurpose.AssertionMethod) {
+                CredentialConstants.ProofPurposes.AUTHENTICATION
+            } else {
+                proofOptions.purpose.standardValue
+            }
+
+        val challenge =
+            proofOptions.challenge
+                ?: proofOptions.additionalOptions["challenge"]?.toString()?.removeSurrounding("\"")
+        val domain =
+            proofOptions.domain
+                ?: proofOptions.additionalOptions["domain"]?.toString()?.removeSurrounding("\"")
+
+        val additionalProperties =
+            buildMap<String, JsonElement> {
+                challenge?.let { put("challenge", JsonPrimitive(it)) }
+                domain?.let { put("domain", JsonPrimitive(it)) }
+            }
+
+        // Per W3C VP Data Integrity spec, challenge and domain live inside proof options
+        // (not as undefined top-level VP fields) so the JSON-LD document canonicalizes cleanly
+        // and the signature binds challenge/domain.
+        val unsignedPresentation =
+            VerifiablePresentation(
+                context = contexts,
+                type = listOf(CredentialType.Custom("VerifiablePresentation")),
+                holder = holder,
+                verifiableCredential = credentials,
+                proof = null,
+            )
+
+        val vpFullJson = vpJson.encodeToJsonElement(VerifiablePresentation.serializer(), unsignedPresentation).jsonObject
+        val vpDocument =
+            buildJsonObject {
+                vpFullJson.entries.forEach { (k, v) ->
+                    if (k != "proof") put(k, v)
+                }
+            }
+
+        val canonicalVp = canonicalizationPort.canonicalize(vpDocument)
+        val proofCreated = Clock.System.now()
+        val proofOptionsDocument =
+            ProofEngineUtils.buildProofOptionsDocument(
+                context = contexts,
+                proofType = requestedSuite,
+                created = proofCreated.toString(),
+                verificationMethod = verificationMethod,
+                proofPurpose = proofPurpose,
+                additionalProperties = additionalProperties,
+            )
+        val canonicalProofOptions = canonicalizationPort.canonicalize(proofOptionsDocument)
+        val signingPayload = ProofEngineUtils.composeDataIntegrityPayload(canonicalProofOptions, canonicalVp)
+
+        val finalSignature =
+            if (requestedSuite == CredentialConstants.ProofTypes.JSON_WEB_SIGNATURE_2020) {
+                signPayloadAsJws(
+                    signingPayload,
+                    keyId,
+                    proofOptions.additionalOptions["jwsAlgorithm"]
+                        ?.toString()
+                        ?.removeSurrounding("\"") ?: "EdDSA",
+                )
+            } else {
+                signPayload(signingPayload, keyId)
+            }
+
+        val linkedDataProof =
+            CredentialProof.LinkedDataProof(
+                type = requestedSuite,
+                created = proofCreated,
+                verificationMethod = verificationMethod,
+                proofPurpose = proofPurpose,
+                proofValue = finalSignature,
+                additionalProperties = additionalProperties,
+            )
+
+        return unsignedPresentation.copy(proof = linkedDataProof)
     }
 
     override suspend fun initialize(config: ProofEngineConfig) {

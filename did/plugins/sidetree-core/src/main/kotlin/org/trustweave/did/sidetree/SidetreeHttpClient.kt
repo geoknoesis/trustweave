@@ -8,6 +8,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -26,7 +27,12 @@ class SidetreeHttpClient(
     private val baseUrl: String,
     private val methodSpec: SidetreeMethodSpec,
     private val authHeader: Pair<String, String>? = null,
-) {
+) : AutoCloseable {
+    override fun close() {
+        httpClient.dispatcher.executorService.shutdown()
+        httpClient.connectionPool.evictAll()
+        httpClient.cache?.close()
+    }
 
     data class OperationResponse(
         val did: String?,
@@ -89,8 +95,14 @@ class SidetreeHttpClient(
     }
 
     suspend fun resolveDid(did: String): ResolutionResponse = withContext(Dispatchers.IO) {
+        val resolveUrl =
+            "${baseUrl.trimEnd('/')}${methodSpec.identifiersPath}"
+                .toHttpUrl()
+                .newBuilder()
+                .addPathSegment(did)
+                .build()
         val builder = Request.Builder()
-            .url("${baseUrl.trimEnd('/')}${methodSpec.identifiersPath}/$did")
+            .url(resolveUrl)
             .get()
             .addHeader("Accept", "application/json")
         authHeader?.let { (name, value) -> builder.addHeader(name, value) }

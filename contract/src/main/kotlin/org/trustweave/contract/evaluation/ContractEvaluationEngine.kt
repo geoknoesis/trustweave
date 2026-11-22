@@ -1,8 +1,8 @@
 package org.trustweave.contract.evaluation
 
+import kotlinx.serialization.json.JsonElement
 import org.trustweave.contract.models.ContractCondition
 import org.trustweave.contract.models.ExecutionModel
-import kotlinx.serialization.json.JsonElement
 
 /**
  * Pluggable contract condition evaluation engine.
@@ -67,7 +67,7 @@ interface ContractEvaluationEngine {
     suspend fun evaluateCondition(
         condition: ContractCondition,
         inputData: JsonElement,
-        context: EvaluationContext
+        context: EvaluationContext,
     ): Boolean
 
     /**
@@ -81,7 +81,7 @@ interface ContractEvaluationEngine {
     suspend fun evaluateConditions(
         conditions: List<ContractCondition>,
         inputData: JsonElement,
-        context: EvaluationContext
+        context: EvaluationContext,
     ): Map<String, Boolean>
 }
 
@@ -93,20 +93,16 @@ data class EvaluationContext(
      * Contract ID being evaluated.
      */
     val contractId: String,
-
     /**
      * Execution model of the contract.
      */
     val executionModel: ExecutionModel,
-
     /**
      * Contract-specific data (domain-specific).
      */
     val contractData: JsonElement? = null,
-
     /**
      * Additional metadata for evaluation.
      */
-    val metadata: Map<String, Any?> = emptyMap()
+    val metadata: Map<String, Any?> = emptyMap(),
 )
-

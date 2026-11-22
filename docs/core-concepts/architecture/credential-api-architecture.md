@@ -1,4 +1,5 @@
 ---
+title: Credential API Architecture
 redirect_from:
   - /architecture/credential-api-architecture/
 parent: Architecture

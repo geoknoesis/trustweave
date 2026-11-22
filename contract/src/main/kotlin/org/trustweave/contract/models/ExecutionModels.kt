@@ -3,7 +3,6 @@ package org.trustweave.contract.models
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import org.trustweave.anchor.AnchorRef
-import kotlin.time.Instant
 
 /**
  * Execution context for contract execution.
@@ -13,10 +12,10 @@ import kotlin.time.Instant
  */
 @Serializable
 data class ExecutionContext(
-    val triggerData: JsonElement? = null,      // For parametric execution
-    val eventData: JsonElement? = null,        // For event-driven execution
-    val timeContext: String? = null,          // ISO 8601 timestamp for time-based execution
-    val additionalContext: JsonElement? = null
+    val triggerData: JsonElement? = null, // For parametric execution
+    val eventData: JsonElement? = null, // For event-driven execution
+    val timeContext: String? = null, // ISO 8601 timestamp for time-based execution
+    val additionalContext: JsonElement? = null,
 )
 
 /**
@@ -39,9 +38,7 @@ fun parametricContext(vararg data: Pair<String, Any?>): ExecutionContext =
  *
  * See [parametricContext] for accepted value types.
  */
-fun eventContext(vararg data: Pair<String, Any?>): ExecutionContext =
-    executionContext { event { data.forEach { (k, v) -> k to v } } }
-
+fun eventContext(vararg data: Pair<String, Any?>): ExecutionContext = executionContext { event { data.forEach { (k, v) -> k to v } } }
 
 /**
  * Execution result.
@@ -53,7 +50,7 @@ data class ExecutionResult(
     val executionType: ExecutionType,
     val outcomes: List<ContractOutcome>,
     val evidence: List<String>? = null, // Verifiable Credential IDs
-    val timestamp: String // ISO 8601 timestamp
+    val timestamp: String, // ISO 8601 timestamp
 )
 
 /**
@@ -65,7 +62,7 @@ enum class ExecutionType {
     CONDITIONAL_EVALUATION,
     SCHEDULED_ACTION,
     EVENT_RESPONSE,
-    MANUAL_ACTION
+    MANUAL_ACTION,
 }
 
 /**
@@ -77,7 +74,7 @@ data class ContractOutcome(
     val description: String,
     val monetaryImpact: MonetaryAmount? = null,
     val obligationTriggered: String? = null,
-    val metadata: JsonElement? = null
+    val metadata: JsonElement? = null,
 )
 
 /**
@@ -89,7 +86,7 @@ enum class OutcomeType {
     PENALTY,
     NOTIFICATION,
     STATUS_CHANGE,
-    CUSTOM
+    CUSTOM,
 }
 
 /**
@@ -100,7 +97,7 @@ data class ConditionEvaluation(
     val contractId: String,
     val conditions: List<ConditionResult>,
     val overallResult: Boolean,
-    val timestamp: String // ISO 8601 timestamp
+    val timestamp: String, // ISO 8601 timestamp
 )
 
 /**
@@ -111,7 +108,7 @@ data class ConditionResult(
     val conditionId: String,
     val satisfied: Boolean,
     val evaluatedValue: JsonElement? = null,
-    val error: String? = null
+    val error: String? = null,
 )
 
 /**
@@ -121,11 +118,10 @@ data class ConditionResult(
 data class BoundContract(
     val contract: SmartContract,
     val credentialId: String,
-    val anchorRef: AnchorRefData
+    val anchorRef: AnchorRefData,
 ) {
     /**
      * Gets the AnchorRef (non-serializable) for API compatibility.
      */
     fun getAnchorRef(): AnchorRef = anchorRef.toAnchorRef()
 }
-

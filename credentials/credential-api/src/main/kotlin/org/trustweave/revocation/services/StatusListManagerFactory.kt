@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:filename")
+
 package org.trustweave.revocation.services
 
 import org.trustweave.credential.revocation.CredentialRevocationManager
@@ -18,4 +20,3 @@ interface StatusListRegistryFactory {
      */
     suspend fun create(providerName: String): CredentialRevocationManager
 }
-

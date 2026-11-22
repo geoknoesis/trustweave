@@ -1,3 +1,11 @@
+---
+layout: default
+title: Ledger reliability and scale qualification
+parent: Verifiable Intent Operations
+grand_parent: Operations
+nav_order: 10
+---
+
 # Ledger reliability and scale qualification
 
 The SDK's PostgreSQL ledger uses a transactional occurrence counter to keep admission

@@ -1,10 +1,10 @@
 package org.trustweave.contract.models
 
+import kotlinx.serialization.json.JsonObject
 import org.trustweave.contract.ContractDraftRequest
 import org.trustweave.core.json.JsonDataBuilder
 import org.trustweave.core.json.JsonDataDsl
 import org.trustweave.core.json.jsonData
-import kotlinx.serialization.json.JsonObject
 
 /**
  * Builder for [ExecutionContext].
@@ -43,12 +43,13 @@ class ExecutionContextBuilder {
         additionalContext = jsonData(block)
     }
 
-    fun build(): ExecutionContext = ExecutionContext(
-        triggerData = triggerData,
-        eventData = eventData,
-        timeContext = timeContext,
-        additionalContext = additionalContext
-    )
+    fun build(): ExecutionContext =
+        ExecutionContext(
+            triggerData = triggerData,
+            eventData = eventData,
+            timeContext = timeContext,
+            additionalContext = additionalContext,
+        )
 }
 
 /**
@@ -60,8 +61,7 @@ class ExecutionContextBuilder {
  * }
  * ```
  */
-fun executionContext(block: ExecutionContextBuilder.() -> Unit): ExecutionContext =
-    ExecutionContextBuilder().apply(block).build()
+fun executionContext(block: ExecutionContextBuilder.() -> Unit): ExecutionContext = ExecutionContextBuilder().apply(block).build()
 
 /**
  * Builder for [ContractDraftRequest].
@@ -102,9 +102,10 @@ class ContractDraftBuilder {
         val party = requireNotNull(parties) { "parties is required" }
         val termsValue = requireNotNull(terms) { "terms is required" }
         val effective = requireNotNull(effectiveDate) { "effectiveDate is required" }
-        val data = requireNotNull(contractData) {
-            "contractData { } block is required"
-        }
+        val data =
+            requireNotNull(contractData) {
+                "contractData { } block is required"
+            }
         return ContractDraftRequest(
             contractType = type,
             executionModel = model,
@@ -112,7 +113,7 @@ class ContractDraftBuilder {
             terms = termsValue,
             effectiveDate = effective,
             expirationDate = expirationDate,
-            contractData = data
+            contractData = data,
         )
     }
 }
@@ -120,5 +121,4 @@ class ContractDraftBuilder {
 /**
  * Build a [ContractDraftRequest] using the DSL.
  */
-fun contractDraft(block: ContractDraftBuilder.() -> Unit): ContractDraftRequest =
-    ContractDraftBuilder().apply(block).build()
+fun contractDraft(block: ContractDraftBuilder.() -> Unit): ContractDraftRequest = ContractDraftBuilder().apply(block).build()

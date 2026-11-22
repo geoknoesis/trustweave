@@ -8,7 +8,7 @@ nav_order: 18
 
 This walkthrough explains how TrustWeave supports **trust registries**, **delegation**, **issuance**, and **verification** in a web-of-trust style workflow.
 
-**Runnable reference:** [`WebOfTrustExample.kt`](../../distribution/examples/src/main/kotlin/org/trustweave/examples/trust/WebOfTrustExample.kt) in **`distribution/examples`** — keep that file as the source of truth; the snippets below are abbreviated.
+**Runnable reference:** [`WebOfTrustExample.kt`](https://github.com/geoknoesis/trustweave/blob/main/distribution/examples/src/main/kotlin/org/trustweave/examples/trust/WebOfTrustExample.kt) in **`distribution/examples`** — keep that file as the source of truth; the snippets below are abbreviated.
 
 ```kotlin
 dependencies {

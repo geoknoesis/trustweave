@@ -1,4 +1,5 @@
 ---
+title: DID 1.1 Implementation Report (TrustWeave)
 redirect_from:
   - /conformance/did-1-1-implementation-report/
 parent: Conformance

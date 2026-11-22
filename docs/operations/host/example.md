@@ -1,3 +1,11 @@
+---
+layout: default
+title: Executable host observability example
+parent: Host Operations
+grand_parent: Operations
+nav_order: 10
+---
+
 # Executable host observability example
 
 This entire Kotlin file is compiled and run by `:observability:test`. It configures a

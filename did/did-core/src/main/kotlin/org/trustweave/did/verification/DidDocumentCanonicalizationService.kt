@@ -76,6 +76,13 @@ interface DidDocumentCanonicalizationService {
  * For production use, consider integrating with a full JSON-LD library.
  */
 class JsonLdCanonicalizationService : DidDocumentCanonicalizationService {
+    private val canonicalJson =
+        kotlinx.serialization.json.Json {
+            prettyPrint = false
+            encodeDefaults = false
+            ignoreUnknownKeys = false
+        }
+
     /**
      * Not URDNA2015-conformant: this implementation uses deterministic JSON serialization,
      * not the RDF Dataset Normalisation algorithm. A conformant implementation would set
@@ -92,16 +99,11 @@ class JsonLdCanonicalizationService : DidDocumentCanonicalizationService {
 
         // Serialize to JSON with deterministic ordering
         // In production, use a proper JSON-LD canonicalization library
-        return kotlinx.serialization.json
-            .Json {
-                prettyPrint = false
-                encodeDefaults = false
-                ignoreUnknownKeys = false
-            }.encodeToString(
-                org.trustweave.did.model.DidDocument
-                    .serializer(),
-                normalized,
-            )
+        return canonicalJson.encodeToString(
+            org.trustweave.did.model.DidDocument
+                .serializer(),
+            normalized,
+        )
     }
 
     override suspend fun computeDigest(document: DidDocument): String {

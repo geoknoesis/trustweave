@@ -42,11 +42,11 @@ class VcLdProofEngineTest {
         assertEquals(ProofSuiteId.VC_LD, engine.format)
         assertEquals("Verifiable Credentials (Linked Data)", engine.formatName)
         assertEquals("1.1, 2.0", engine.formatVersion)
-        assertTrue(engine.capabilities.selectiveDisclosure)
+        assertFalse(engine.capabilities.selectiveDisclosure)
         assertFalse(engine.capabilities.zeroKnowledge)
         assertTrue(engine.capabilities.revocation)
         assertTrue(engine.capabilities.presentation)
-        assertTrue(engine.capabilities.predicates)
+        assertFalse(engine.capabilities.predicates)
     }
 
     @Test
@@ -254,7 +254,7 @@ class VcLdProofEngineTest {
         }
 
     @Test
-    fun `test createPresentation with selective disclosure`() =
+    fun `test createPresentation refuses non-empty disclosedClaims`() =
         runBlocking<Unit> {
             val credentials = listOf(createValidCredential())
             val request =
@@ -262,12 +262,61 @@ class VcLdProofEngineTest {
                     disclosedClaims = setOf("name", "email"),
                 )
 
-            // VC-LD supports presentations and createPresentation is implemented
-            val presentation = engine.createPresentation(credentials, request)
+            // Mutating signed VC-LD credentials would invalidate issuer signatures; refuse cleanly.
+            assertThrows<UnsupportedOperationException> {
+                engine.createPresentation(credentials, request)
+            }
+        }
 
-            assertNotNull(presentation)
-            assertEquals(credentials.size, presentation.verifiableCredential.size)
-            // Note: Full selective disclosure filtering may not be implemented, but presentation is created
+    @Test
+    fun `test createPresentation rejects proofOptions without verificationMethod`() =
+        runBlocking<Unit> {
+            val credentials = listOf(createValidCredential())
+            val request =
+                PresentationRequest(
+                    proofOptions =
+                        proofOptions {
+                            purpose = ProofPurpose.Authentication
+                            challenge = "challenge-123"
+                            domain = "verifier.example"
+                        },
+                )
+
+            val exception =
+                assertThrows<IllegalArgumentException> {
+                    engine.createPresentation(credentials, request)
+                }
+            assertTrue(exception.message?.contains("verificationMethod") == true)
+        }
+
+    @Test
+    fun `test createPresentation rejects proofOptions when KMS and signer are missing`() =
+        runBlocking<Unit> {
+            val credentials =
+                listOf(
+                    createValidCredential().copy(
+                        credentialSubject =
+                            CredentialSubject.fromDid(
+                                Did("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"),
+                            ),
+                    ),
+                )
+            val request =
+                PresentationRequest(
+                    proofOptions =
+                        proofOptions {
+                            purpose = ProofPurpose.Authentication
+                            challenge = "challenge-123"
+                            domain = "verifier.example"
+                            verificationMethod = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK#key-1"
+                        },
+                )
+
+            val exception =
+                assertThrows<IllegalStateException> {
+                    engine.createPresentation(credentials, request)
+                }
+            assertTrue(exception.message?.contains("KMS not configured") == true)
         }
 
     @Test

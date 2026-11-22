@@ -74,7 +74,14 @@ abstract class AbstractWebDidMethod(
     method: String,
     kms: KeyManagementService,
     protected val httpClient: OkHttpClient,
-) : AbstractDidMethod(method, kms) {
+) : AbstractDidMethod(method, kms),
+    AutoCloseable {
+    override fun close() {
+        httpClient.dispatcher.executorService.shutdown()
+        httpClient.connectionPool.evictAll()
+        httpClient.cache?.close()
+    }
+
     /**
      * Gets the HTTP URL for a DID document.
      *

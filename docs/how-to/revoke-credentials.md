@@ -1,4 +1,5 @@
 ---
+title: How to Revoke Credentials
 parent: How-To Guides
 nav_order: 90
 ---
@@ -22,14 +23,15 @@ Revocation is essential for credential lifecycle management. It allows issuers t
 
 ## Prerequisites
 
-- **Kotlin**: 2.3.21+ or higher
+- **Kotlin**: 2.4.21+
 - **Java**: 21 or higher
-- **TrustWeave SDK**: Latest version
-- **Dependencies**: `distribution-all` with revocation support
+- **TrustWeave SDK**: 0.7.0
+- **Dependencies**: `distribution-all` (or `trust` + `credentials-credential-api` + a persistent status list plugin such as `credentials-plugins-status-list-bitstring` or `credentials-plugins-status-list-token`)
 
 **Required imports:**
 ```kotlin
 import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.RevocationResult
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.model.StatusPurpose
 import org.trustweave.credential.revocation.RevocationStatus
@@ -66,10 +68,17 @@ val credential = trustWeave.issue {
     withRevocation()  // Auto-creates status list
 }
 
-// 3. Revoke credential when needed
-trustWeave.revoke {
+// 3. Revoke credential when needed (sealed result)
+when (val result = trustWeave.revokeResult {
     credential(credential.id)
     statusList(statusListId)
+}) {
+    is RevocationResult.Revoked -> println("Revoked")
+    is RevocationResult.NotRevoked -> println("Already revoked or entry unchanged")
+    is RevocationResult.TimedOut -> println("Timed out — re-check status before retrying")
+    is RevocationResult.NotConfigured -> println("Revocation manager not configured: ${result.reason}")
+    is RevocationResult.InvalidRequest -> println("Invalid request: ${result.reason}")
+    is RevocationResult.Failure -> println("Failed: ${result.reason}")
 }
 
 // 4. Check revocation status
@@ -114,7 +123,7 @@ val trustWeave = TrustWeave.build {
 - Enables revocation operations in TrustWeave
 - Sets up the infrastructure for status list management
 
-> **Note:** For production, use a persistent provider (database-backed) instead of `inMemory`.
+> **Note:** `TrustWeave.build { revocation { provider(...) } }` supports `"inMemory"` for development and testing. For production, construct a persistent status list manager from `credentials:plugins:status-list:bitstring` or `credentials:plugins:status-list:token` and wire it programmatically (see [Choosing a Status List Manager](#choosing-a-status-list-manager) below).
 
 ---
 
@@ -190,18 +199,21 @@ The `credentialStatus` field will look like:
 
 ### Step 4: Revoke a Credential
 
-Revoke a credential when it's no longer valid:
+Revoke a credential when it's no longer valid using `revokeResult { }` (which returns a sealed `RevocationResult` instead of throwing on configuration, validation, or timeout errors):
 
 ```kotlin
-val revoked = trustWeave.revoke {
-    credential(credential.id ?: throw IllegalStateException("Credential must have ID"))
-    statusList(statusList.id)
-}
+import org.trustweave.trust.types.RevocationResult
 
-if (revoked) {
-    println("✅ Credential revoked successfully")
-} else {
-    println("⚠️ Credential was already revoked")
+when (val result = trustWeave.revokeResult {
+    credential(credential.id?.value ?: throw IllegalStateException("Credential must have ID"))
+    statusList(statusList.value)
+}) {
+    is RevocationResult.Revoked -> println("✅ Credential revoked successfully")
+    is RevocationResult.NotRevoked -> println("⚠️ Credential entry unchanged (already revoked or unknown index)")
+    is RevocationResult.TimedOut -> println("⏱️ Revocation timed out after ${result.timeout} — re-check status before retrying")
+    is RevocationResult.NotConfigured -> println("❌ Revocation manager not configured: ${result.reason}")
+    is RevocationResult.InvalidRequest -> println("❌ Invalid revocation request: ${result.reason}")
+    is RevocationResult.Failure -> println("❌ Revocation failed: ${result.reason}")
 }
 ```
 
@@ -209,7 +221,7 @@ if (revoked) {
 - Computes the credential's index in the status list (from credential ID hash)
 - Sets the corresponding bit in the status list bitstring
 - Updates the status list credential
-- Returns `true` if revocation succeeded, `false` if already revoked
+- Returns a sealed `RevocationResult` (`Revoked`, `NotRevoked`, `NotConfigured`, `InvalidRequest`, `TimedOut`, or `Failure`)
 
 **What happens internally:**
 1. Hash the credential ID to get index
@@ -256,6 +268,7 @@ Here's a complete, runnable example:
 
 ```kotlin
 import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.RevocationResult
 import org.trustweave.credential.model.ProofType
 import org.trustweave.trust.dsl.credential.KmsProviders
 import org.trustweave.trust.dsl.credential.RevocationProviders
@@ -337,14 +350,14 @@ fun main() = runBlocking {
         else -> println("Status: $initialStatus")
     }
     
-    // Step 6: Revoke credential
-    val revoked = trustWeave.revoke {
-        credential(credential.id ?: throw IllegalStateException("Credential must have ID"))
+    // Step 6: Revoke credential using revokeResult
+    when (val result = trustWeave.revokeResult {
+        credential(credential.id?.value ?: throw IllegalStateException("Credential must have ID"))
         statusList(statusListId)
-    }
-    
-    if (revoked) {
-        println("✅ Credential revoked successfully")
+    }) {
+        is RevocationResult.Revoked -> println("✅ Credential revoked successfully")
+        is RevocationResult.NotRevoked -> println("⚠️ Credential entry unchanged")
+        else -> println("❌ Revocation did not complete: $result")
     }
     
     // Step 7: Verify revocation
@@ -466,14 +479,14 @@ val trustWeave = TrustWeave.build {
 
 **Solution:**
 ```kotlin
-// ❌ Missing status list ID
-trustWeave.revoke {
+// ❌ Missing status list ID (returns RevocationResult.InvalidRequest)
+trustWeave.revokeResult {
     credential(credentialId)
     // Missing: statusList(statusListId)
 }
 
 // ✅ Correct
-trustWeave.revoke {
+trustWeave.revokeResult {
     credential(credentialId)
     statusList(statusListId)  // Required
 }
@@ -549,15 +562,11 @@ Revoke multiple credentials at once:
 ```kotlin
 val credentialIds = listOf("cred-1", "cred-2", "cred-3")
 val results = credentialIds.map { credId ->
-    try {
-        val revoked = trustWeave.revoke {
-            credential(credId)
-            statusList(statusListId)
-        }
-        credId to revoked
-    } catch (error: Exception) {
-        credId to false
+    val result = trustWeave.revokeResult {
+        credential(credId)
+        statusList(statusListId)
     }
+    credId to (result is RevocationResult.Revoked)
 }
 
 val successCount = results.count { it.second }
@@ -579,8 +588,8 @@ val suspensionList = trustWeave.revocation {
 
 // Suspend credential
 trustWeave.revocation {
-    credential(credential.id ?: throw IllegalStateException("Credential must have ID"))
-    statusList(suspensionList.id)
+    credential(credential.id?.value ?: throw IllegalStateException("Credential must have ID"))
+    statusList(suspensionList.value)
 }.suspend()
 ```
 
@@ -592,12 +601,12 @@ Revoke and immediately verify:
 
 ```kotlin
 // Revoke
-val revoked = trustWeave.revoke {
-    credential(credential.id ?: throw IllegalStateException("Credential must have ID"))
+val result = trustWeave.revokeResult {
+    credential(credential.id?.value ?: throw IllegalStateException("Credential must have ID"))
     statusList(statusListId)
 }
 
-if (revoked) {
+if (result is RevocationResult.Revoked) {
     // Immediately verify revocation
     val status = trustWeave.revocation {
         statusList(statusListId)
@@ -618,33 +627,22 @@ if (revoked) {
 
 ## Choosing a Status List Manager
 
-The `revocation { provider(IN_MEMORY) }` block in the examples above is fine for tests, but production deployments should pick a concrete status-list format and a persistent backend. Two interoperable formats ship as plugins, each auto-discovered via SPI under a registered provider name.
+The `revocation { provider(IN_MEMORY) }` block in the examples above is intended for development and tests. In `TrustWeave.build { ... }`, `revocation { provider(...) }` only resolves the built-in `"inMemory"` provider — passing another name throws `ConfigException.UnsupportedValue`.
+
+For production deployments, choose one of the two persistent status-list plugins (`credentials:plugins:status-list:bitstring` or `credentials:plugins:status-list:token`), construct its manager directly using a JDBC `DataSource` and your KMS/signing configuration, and wire that `CredentialRevocationManager` programmatically into `CredentialServices.createCredentialService(..., revocationManager = manager)` (then pass it via `credentialService(...)` in `TrustWeave.build { ... }`) or invoke the manager directly from your issuer/verifier services.
 
 ### W3C Bitstring Status List
 
 The default W3C format. Status lists are themselves Verifiable Credentials containing a gzipped, base64url-encoded bitstring. Best for VC-LD / VC-JWT credentials.
 
-- **Module**: [credentials/plugins/status-list/bitstring](https://github.com/geoknoesis/trustweave/tree/main/credentials/plugins/status-list/bitstring) — see the plugin [README](https://github.com/geoknoesis/trustweave/blob/main/credentials/plugins/status-list/bitstring/README.md)
-- **Provider name**: `"bitstring"`
+- **Module**: `credentials:plugins:status-list:bitstring` ([credentials/plugins/status-list/bitstring](https://github.com/geoknoesis/trustweave/tree/main/credentials/plugins/status-list/bitstring)) — see the plugin [README](https://github.com/geoknoesis/trustweave/blob/main/credentials/plugins/status-list/bitstring/README.md)
+- **Artifact**: `org.trustweave:credentials-plugins-status-list-bitstring:0.7.0`
 - **Spec**: [W3C Bitstring Status List v1.0](https://www.w3.org/TR/vc-bitstring-status-list/)
 - **Use when**: issuing W3C VCs (`vc-ld`, `vc-jwt`).
 
-**Option A — SPI-driven (configure via system properties):**
-
 ```kotlin
-// On the JVM, set these before TrustWeave.build:
-//   -Dtrustweave.statuslist.jdbc.url=jdbc:postgresql://...
-//   -Dtrustweave.statuslist.jdbc.username=...
-//   -Dtrustweave.statuslist.jdbc.password=...
-//   -Dtrustweave.statuslist.issuer.did=did:web:issuer.example.com
-val trustWeave = TrustWeave.build {
-    revocation { provider("bitstring") }
-}
-```
-
-**Option B — construct the manager directly for full control:**
-
-```kotlin
+import org.trustweave.credential.CredentialServices
+import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.revocation.bitstring.BitstringStatusListManagerFactory
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
@@ -659,27 +657,31 @@ val manager = BitstringStatusListManagerFactory.create(
     dataSource = dataSource,
     kms = kms,
     issuerDid = "did:web:issuer.example.com",
-    bitsPerEntry = 1
+    bitsPerEntry = 1,
+    proofEngine = vcLdProofEngine, // required to sign status list VCs
+    issuerKeyId = VerificationMethodId.parse("did:web:issuer.example.com#key-1"),
+    baseUrl = "https://issuer.example.com/statuslists",
 )
-// Wire `manager` into your own services as a CredentialRevocationManager.
+
+// Wire into CredentialService and pass into TrustWeave.build { credentialService(...) }
+val credentialService = CredentialServices.createCredentialService(
+    kms = kms,
+    didResolver = didResolver,
+    revocationManager = manager,
+)
 ```
 
 ### IETF Token Status List
 
 JWT/CWT-based status list designed for SD-JWT VC and ISO mdoc. Status is encoded as a signed token rather than a VC, so it fits the SD-JWT VC `status` claim and mdoc flows naturally.
 
-- **Module**: [credentials/plugins/status-list/token](https://github.com/geoknoesis/trustweave/tree/main/credentials/plugins/status-list/token) — see the plugin [README](https://github.com/geoknoesis/trustweave/blob/main/credentials/plugins/status-list/token/README.md)
-- **Provider name**: `"token"`
+- **Module**: `credentials:plugins:status-list:token` ([credentials/plugins/status-list/token](https://github.com/geoknoesis/trustweave/tree/main/credentials/plugins/status-list/token)) — see the plugin [README](https://github.com/geoknoesis/trustweave/blob/main/credentials/plugins/status-list/token/README.md)
+- **Artifact**: `org.trustweave:credentials-plugins-status-list-token:0.7.0`
 - **Spec**: [IETF Token Status List](https://datatracker.ietf.org/doc/draft-ietf-oauth-status-list/)
 - **Use when**: issuing SD-JWT VCs or mdocs.
 
 ```kotlin
-// SPI route — additionally honors -Dtrustweave.statuslist.token.uri
-val trustWeave = TrustWeave.build {
-    revocation { provider("token") }
-}
-
-// Or build directly:
+import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.revocation.token.TokenStatusListManagerFactory
 
 val manager = TokenStatusListManagerFactory.create(
@@ -687,11 +689,14 @@ val manager = TokenStatusListManagerFactory.create(
     kms = kms,
     issuerDid = "did:web:issuer.example.com",
     statusListUri = "https://issuer.example.com/statuslists/1",
-    bitsPerEntry = 1
+    bitsPerEntry = 1,
+    issuerKeyId = VerificationMethodId.parse("did:web:issuer.example.com#key-1"), // Ed25519 or P-256 key in kms
 )
+// Wire `manager` into CredentialServices.createCredentialService(..., revocationManager = manager)
+// or use it directly as a CredentialRevocationManager.
 ```
 
-> **Note:** Both SPI providers require a `KeyManagementService` to be injected before the framework calls `create()`. The TrustWeave `revocation { provider("bitstring") }` DSL handles this when KMS is configured in the same `TrustWeave.build { keys { ... } }` block.
+> **Note:** Both `BitstringStatusListManager` and `TokenStatusListManager` persist state in PostgreSQL/H2 via the supplied `DataSource`. Provide `proofEngine` + `issuerKeyId` (Bitstring) or `issuerKeyId` (Token) so published status lists are cryptographically signed with your KMS key.
 
 ---
 
@@ -849,12 +854,12 @@ fun handleRevocation(credentialId: String) {
 }
 
 // Revoke with notification
-val revoked = trustWeave.revoke {
+val result = trustWeave.revokeResult {
     credential(credentialId)
     statusList(statusListId)
 }
 
-if (revoked) {
+if (result is RevocationResult.Revoked) {
     handleRevocation(credentialId)
 }
 ```

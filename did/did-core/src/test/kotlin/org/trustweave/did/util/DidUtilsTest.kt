@@ -7,7 +7,11 @@ import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidService
 import org.trustweave.did.model.ServiceEndpoint
 import org.trustweave.did.model.VerificationMethod
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Tests for DidUtils utility functions.

@@ -179,7 +179,7 @@ class DefaultDidEventBus : DidEventBus {
     override fun <T : DidEvent> subscribe(eventType: Class<T>): Flow<T> =
         events
             .filter { eventType.isInstance(it) }
-            .map { it as T }
+            .map { eventType.cast(it) }
 }
 
 /**

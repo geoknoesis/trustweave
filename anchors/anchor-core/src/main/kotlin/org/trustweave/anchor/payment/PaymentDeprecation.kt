@@ -16,17 +16,17 @@ import java.util.concurrent.ConcurrentHashMap
  * deprecation is visible without breaking existing deployments.
  */
 object PaymentDeprecation {
-
     private val logger: Logger = LoggerFactory.getLogger(PaymentDeprecation::class.java)
 
-    private val RAW_CRED_KEYS = setOf(
-        "privateKey",
-        "mnemonic",
-        "secretKey",
-        "sk",
-        "wif",
-        "seed",
-    )
+    private val RAW_CRED_KEYS =
+        setOf(
+            "privateKey",
+            "mnemonic",
+            "secretKey",
+            "sk",
+            "wif",
+            "seed",
+        )
 
     private val warned = ConcurrentHashMap.newKeySet<Int>()
 
@@ -50,16 +50,18 @@ object PaymentDeprecation {
         log: Logger = logger,
     ) {
         if (options.isEmpty()) return
-        val matched = options.keys
-            .filter { key -> RAW_CRED_KEYS.any { it.equals(key, ignoreCase = true) } }
-            .toSortedSet()
+        val matched =
+            options.keys
+                .filter { key -> RAW_CRED_KEYS.any { it.equals(key, ignoreCase = true) } }
+                .toSortedSet()
         if (matched.isEmpty()) return
 
-        val fingerprint = listOf(
-            chainId,
-            System.identityHashCode(providerInstance),
-            matched,
-        ).hashCode()
+        val fingerprint =
+            listOf(
+                chainId,
+                System.identityHashCode(providerInstance),
+                matched,
+            ).hashCode()
         if (!warned.add(fingerprint)) return
 
         log.warn(

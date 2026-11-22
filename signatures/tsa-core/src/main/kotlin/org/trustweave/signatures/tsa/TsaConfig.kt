@@ -59,4 +59,13 @@ data class TsaConfig(
             "username and password must be supplied together (or both omitted)"
         }
     }
+
+    override fun toString(): String =
+        "TsaConfig(endpointUrl='$endpointUrl', requestTimeoutMs=$requestTimeoutMs, " +
+            "username=${if (username != null) "[REDACTED]" else "null"}, " +
+            "password=${if (password != null) "[REDACTED]" else "null"}, " +
+            "expectedPolicyOid=$expectedPolicyOid, " +
+            "trustedSignerCertificatesCount=${trustedSignerCertificates.size}, " +
+            "includeNonce=$includeNonce, trustAnchorsCount=${trustAnchors.size}, " +
+            "allowUnanchored=$allowUnanchored)"
 }

@@ -12,9 +12,10 @@ import org.trustweave.core.exception.TrustWeaveException
 fun ValidationResult.toException(): TrustWeaveException.ValidationFailed? =
     when (this) {
         is ValidationResult.Valid -> null
-        is ValidationResult.Invalid -> TrustWeaveException.ValidationFailed(
-            field = field,
-            reason = message,
-            value = value
-        )
+        is ValidationResult.Invalid ->
+            TrustWeaveException.ValidationFailed(
+                field = field,
+                reason = message,
+                value = value,
+            )
     }

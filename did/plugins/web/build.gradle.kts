@@ -19,4 +19,3 @@ dependencies {
     // Test dependencies
     testImplementation(project(":testkit"))
 }
-

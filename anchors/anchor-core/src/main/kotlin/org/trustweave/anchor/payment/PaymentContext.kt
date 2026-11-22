@@ -20,9 +20,13 @@ sealed interface FeeStrategy {
 
     object SelfPay : FeeStrategy
 
-    data class Sponsored(val sponsorDid: String) : FeeStrategy
+    data class Sponsored(
+        val sponsorDid: String,
+    ) : FeeStrategy
 
-    data class Escrowed(val escrowRef: String) : FeeStrategy
+    data class Escrowed(
+        val escrowRef: String,
+    ) : FeeStrategy
 }
 
 /**
@@ -91,12 +95,13 @@ data class PaymentContext(
          * shim. Plugins that recognise this context fall back to their
          * embedded account credentials and do not call into the treasury.
          */
-        fun unmanaged(chainId: String): PaymentContext = PaymentContext(
-            domainId = UNMANAGED_DOMAIN,
-            payerDid = UNMANAGED_DOMAIN,
-            chainId = chainId,
-            feeStrategy = FeeStrategy.SelfPay,
-        )
+        fun unmanaged(chainId: String): PaymentContext =
+            PaymentContext(
+                domainId = UNMANAGED_DOMAIN,
+                payerDid = UNMANAGED_DOMAIN,
+                chainId = chainId,
+                feeStrategy = FeeStrategy.SelfPay,
+            )
 
         const val UNMANAGED_DOMAIN: String = "unmanaged"
     }

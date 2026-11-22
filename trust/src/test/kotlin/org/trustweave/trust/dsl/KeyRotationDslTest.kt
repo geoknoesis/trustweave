@@ -9,7 +9,9 @@ import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.inMemory
 import org.trustweave.trust.types.DidResult
 import org.trustweave.trust.types.getOrThrowDid
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 /**
  * Unit tests for KeyRotationDsl.kt

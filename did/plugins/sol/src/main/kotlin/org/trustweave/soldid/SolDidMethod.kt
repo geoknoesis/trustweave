@@ -7,6 +7,7 @@ import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.core.net.ssrfGuardedOkHttpClient
 import org.trustweave.core.util.decodeBase58
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.KeyPurpose
@@ -49,24 +50,55 @@ import org.trustweave.kms.KeyManagementService
  * its document into the account. Configure [SolDidConfig.programId] so that only accounts owned by that
  * program are accepted.
  */
-class SolDidMethod(
+class SolDidMethod private constructor(
     kms: KeyManagementService,
     private val anchorClient: BlockchainAnchorClient,
     private val config: SolDidConfig,
-) : AbstractBlockchainDidMethod("sol", kms) {
-    private val httpClient: OkHttpClient
-    private val solanaClient: SolanaClient
-
-    init {
+    private val httpClient: OkHttpClient,
+    private val ownsHttpClient: Boolean,
+) : AbstractBlockchainDidMethod("sol", kms),
+    AutoCloseable {
+    constructor(
+        kms: KeyManagementService,
+        anchorClient: BlockchainAnchorClient,
+        config: SolDidConfig,
+    ) : this(
+        kms = kms,
+        anchorClient = anchorClient,
+        config = config,
         httpClient =
-            OkHttpClient
-                .Builder()
+            ssrfGuardedOkHttpClient()
+                .newBuilder()
                 .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
                 .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
                 .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
-                .build()
+                .followRedirects(false)
+                .followSslRedirects(false)
+                .build(),
+        ownsHttpClient = true,
+    )
 
-        solanaClient = SolanaClient(httpClient, config)
+    constructor(
+        kms: KeyManagementService,
+        anchorClient: BlockchainAnchorClient,
+        config: SolDidConfig,
+        httpClient: OkHttpClient,
+    ) : this(
+        kms = kms,
+        anchorClient = anchorClient,
+        config = config,
+        httpClient = httpClient,
+        ownsHttpClient = false,
+    )
+
+    private val solanaClient: SolanaClient = SolanaClient(httpClient, config)
+
+    override fun close() {
+        if (ownsHttpClient) {
+            httpClient.dispatcher.executorService.shutdown()
+            httpClient.connectionPool.evictAll()
+            httpClient.cache?.close()
+        }
     }
 
     override fun getBlockchainAnchorClient(): BlockchainAnchorClient = anchorClient

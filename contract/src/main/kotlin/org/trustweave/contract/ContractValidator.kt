@@ -1,6 +1,9 @@
 package org.trustweave.contract
 
-import org.trustweave.contract.models.*
+import org.trustweave.contract.models.ContractParties
+import org.trustweave.contract.models.ContractStatus
+import org.trustweave.contract.models.ContractTerms
+import org.trustweave.contract.models.SmartContract
 import org.trustweave.core.util.ValidationResult
 import org.trustweave.did.validation.DidValidator
 import kotlin.time.Clock
@@ -10,7 +13,6 @@ import kotlin.time.Instant
  * Validates contract-related data.
  */
 object ContractValidator {
-
     /**
      * Validates a contract draft request.
      */
@@ -47,7 +49,7 @@ object ContractValidator {
                 code = "INVALID_PRIMARY_PARTY_DID",
                 message = "Primary party DID is invalid: ${primaryResult.errorMessage()}",
                 field = "parties.primaryPartyDid",
-                value = parties.primaryPartyDid
+                value = parties.primaryPartyDid,
             )
         }
 
@@ -58,7 +60,7 @@ object ContractValidator {
                 code = "INVALID_COUNTERPARTY_DID",
                 message = "Counterparty DID is invalid: ${counterpartyResult.errorMessage()}",
                 field = "parties.counterpartyDid",
-                value = parties.counterpartyDid
+                value = parties.counterpartyDid,
             )
         }
 
@@ -68,7 +70,7 @@ object ContractValidator {
                 code = "DUPLICATE_PARTIES",
                 message = "Primary party and counterparty must be different",
                 field = "parties",
-                value = parties.primaryPartyDid
+                value = parties.primaryPartyDid,
             )
         }
 
@@ -80,7 +82,7 @@ object ContractValidator {
                     code = "INVALID_ADDITIONAL_PARTY_DID",
                     message = "Additional party DID for role '$role' is invalid: ${result.errorMessage()}",
                     field = "parties.additionalParties.$role",
-                    value = did
+                    value = did,
                 )
             }
         }
@@ -91,40 +93,45 @@ object ContractValidator {
     /**
      * Validates date fields.
      */
-    fun validateDates(effectiveDate: String, expirationDate: String?): ValidationResult {
+    fun validateDates(
+        effectiveDate: String,
+        expirationDate: String?,
+    ): ValidationResult {
         if (effectiveDate.isBlank()) {
             return ValidationResult.Invalid(
                 code = "EMPTY_EFFECTIVE_DATE",
                 message = "Effective date is required",
                 field = "effectiveDate",
-                value = effectiveDate
+                value = effectiveDate,
             )
         }
 
         // Validate effective date format
-        val effective = try {
-            Instant.parse(effectiveDate)
-        } catch (e: Exception) {
-            return ValidationResult.Invalid(
-                code = "INVALID_EFFECTIVE_DATE_FORMAT",
-                message = "Effective date must be in ISO 8601 format: ${e.message}",
-                field = "effectiveDate",
-                value = effectiveDate
-            )
-        }
+        val effective =
+            try {
+                Instant.parse(effectiveDate)
+            } catch (e: Exception) {
+                return ValidationResult.Invalid(
+                    code = "INVALID_EFFECTIVE_DATE_FORMAT",
+                    message = "Effective date must be in ISO 8601 format: ${e.message}",
+                    field = "effectiveDate",
+                    value = effectiveDate,
+                )
+            }
 
         // Validate expiration date if provided
         if (expirationDate != null && expirationDate.isNotBlank()) {
-            val expiration = try {
-                Instant.parse(expirationDate)
-            } catch (e: Exception) {
-                return ValidationResult.Invalid(
-                    code = "INVALID_EXPIRATION_DATE_FORMAT",
-                    message = "Expiration date must be in ISO 8601 format: ${e.message}",
-                    field = "expirationDate",
-                    value = expirationDate
-                )
-            }
+            val expiration =
+                try {
+                    Instant.parse(expirationDate)
+                } catch (e: Exception) {
+                    return ValidationResult.Invalid(
+                        code = "INVALID_EXPIRATION_DATE_FORMAT",
+                        message = "Expiration date must be in ISO 8601 format: ${e.message}",
+                        field = "expirationDate",
+                        value = expirationDate,
+                    )
+                }
 
             // Ensure expiration is after effective date
             if (!(expiration > effective)) {
@@ -132,7 +139,7 @@ object ContractValidator {
                     code = "INVALID_DATE_RANGE",
                     message = "Expiration date must be after effective date",
                     field = "expirationDate",
-                    value = expirationDate
+                    value = expirationDate,
                 )
             }
         }
@@ -151,7 +158,7 @@ object ContractValidator {
                 code = "DUPLICATE_OBLIGATION_IDS",
                 message = "Obligation IDs must be unique",
                 field = "terms.obligations",
-                value = obligationIds.toString()
+                value = obligationIds.toString(),
             )
         }
 
@@ -162,7 +169,7 @@ object ContractValidator {
                 code = "DUPLICATE_CONDITION_IDS",
                 message = "Condition IDs must be unique",
                 field = "terms.conditions",
-                value = conditionIds.toString()
+                value = conditionIds.toString(),
             )
         }
 
@@ -174,7 +181,7 @@ object ContractValidator {
                     code = "INVALID_OBLIGATION_PARTY_DID",
                     message = "Obligation '${obligation.id}' has invalid party DID: ${result.errorMessage()}",
                     field = "terms.obligations.${obligation.id}.partyDid",
-                    value = obligation.partyDid
+                    value = obligation.partyDid,
                 )
             }
         }
@@ -185,33 +192,41 @@ object ContractValidator {
     /**
      * Validates state transition.
      */
-    fun validateStateTransition(from: ContractStatus, to: ContractStatus): ValidationResult {
-        val validTransitions = mapOf(
-            ContractStatus.DRAFT to setOf(
-                ContractStatus.PENDING,
-                ContractStatus.CANCELLED
-            ),
-            ContractStatus.PENDING to setOf(
-                ContractStatus.ACTIVE,
-                ContractStatus.CANCELLED
-            ),
-            ContractStatus.ACTIVE to setOf(
-                ContractStatus.EXECUTED,
-                ContractStatus.SUSPENDED,
-                ContractStatus.EXPIRED,
-                ContractStatus.TERMINATED,
-                ContractStatus.CANCELLED
-            ),
-            ContractStatus.SUSPENDED to setOf(
-                ContractStatus.ACTIVE,
-                ContractStatus.TERMINATED,
-                ContractStatus.CANCELLED
-            ),
-            ContractStatus.EXECUTED to emptySet(), // Terminal state
-            ContractStatus.EXPIRED to emptySet(), // Terminal state
-            ContractStatus.CANCELLED to emptySet(), // Terminal state
-            ContractStatus.TERMINATED to emptySet() // Terminal state
-        )
+    fun validateStateTransition(
+        from: ContractStatus,
+        to: ContractStatus,
+    ): ValidationResult {
+        val validTransitions =
+            mapOf(
+                ContractStatus.DRAFT to
+                    setOf(
+                        ContractStatus.PENDING,
+                        ContractStatus.CANCELLED,
+                    ),
+                ContractStatus.PENDING to
+                    setOf(
+                        ContractStatus.ACTIVE,
+                        ContractStatus.CANCELLED,
+                    ),
+                ContractStatus.ACTIVE to
+                    setOf(
+                        ContractStatus.EXECUTED,
+                        ContractStatus.SUSPENDED,
+                        ContractStatus.EXPIRED,
+                        ContractStatus.TERMINATED,
+                        ContractStatus.CANCELLED,
+                    ),
+                ContractStatus.SUSPENDED to
+                    setOf(
+                        ContractStatus.ACTIVE,
+                        ContractStatus.TERMINATED,
+                        ContractStatus.CANCELLED,
+                    ),
+                ContractStatus.EXECUTED to emptySet(), // Terminal state
+                ContractStatus.EXPIRED to emptySet(), // Terminal state
+                ContractStatus.CANCELLED to emptySet(), // Terminal state
+                ContractStatus.TERMINATED to emptySet(), // Terminal state
+            )
 
         val allowed = validTransitions[from] ?: emptySet()
 
@@ -220,7 +235,7 @@ object ContractValidator {
                 code = "INVALID_STATE_TRANSITION",
                 message = "Cannot transition from $from to $to. Allowed transitions: $allowed",
                 field = "status",
-                value = "$from -> $to"
+                value = "$from -> $to",
             )
         }
 
@@ -243,5 +258,3 @@ object ContractValidator {
         }
     }
 }
-
-

@@ -1,6 +1,6 @@
 package org.trustweave.core.plugin
 
-/**
+/*
  * Helper functions for plugin-related tests.
  */
 
@@ -12,14 +12,12 @@ fun createTestPluginMetadata(
     name: String = "Test Plugin",
     version: String = "1.0.0",
     provider: String = "test",
-    capabilities: PluginCapabilities = PluginCapabilities()
-): PluginMetadata {
-    return PluginMetadata(
+    capabilities: PluginCapabilities = PluginCapabilities(),
+): PluginMetadata =
+    PluginMetadata(
         id = id,
         name = name,
         version = version,
         provider = provider,
-        capabilities = capabilities
+        capabilities = capabilities,
     )
-}
-

@@ -18,10 +18,11 @@ public final class org/trustweave/did/sidetree/SidetreeCommitment {
 	public final fun compute (Ljava/util/Map;)Ljava/lang/String;
 }
 
-public final class org/trustweave/did/sidetree/SidetreeHttpClient {
+public final class org/trustweave/did/sidetree/SidetreeHttpClient : java/lang/AutoCloseable {
 	public static final field Companion Lorg/trustweave/did/sidetree/SidetreeHttpClient$Companion;
 	public fun <init> (Lokhttp3/OkHttpClient;Ljava/lang/String;Lorg/trustweave/did/sidetree/SidetreeMethodSpec;Lkotlin/Pair;)V
 	public synthetic fun <init> (Lokhttp3/OkHttpClient;Ljava/lang/String;Lorg/trustweave/did/sidetree/SidetreeMethodSpec;Lkotlin/Pair;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun close ()V
 	public final fun resolveDid (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun submitOperation (Lkotlinx/serialization/json/JsonObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }

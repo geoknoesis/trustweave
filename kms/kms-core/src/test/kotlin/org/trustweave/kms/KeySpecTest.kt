@@ -3,8 +3,8 @@ package org.trustweave.kms
 import org.trustweave.core.identifiers.KeyId
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class KeySpecTest {
@@ -69,4 +69,3 @@ class KeySpecTest {
         assertEquals(Algorithm.Secp256k1, keySpec.algorithm)
     }
 }
-

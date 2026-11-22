@@ -591,7 +591,6 @@ class InMemoryKeyManagementService(
                         is Algorithm.Secp256k1, is Algorithm.P256 -> 32
                         is Algorithm.P384 -> 48
                         is Algorithm.P521 -> 66
-                        else -> 32
                     }
 
                 // Convert BigInteger to byte array (unsigned, big-endian, fixed length).
@@ -709,7 +708,6 @@ class InMemoryKeyManagementService(
                             is Algorithm.P256 -> "SHA256withECDSA"
                             is Algorithm.P384 -> "SHA384withECDSA"
                             is Algorithm.P521 -> "SHA512withECDSA"
-                            else -> "SHA256withECDSA"
                         }
                     val signer = Signature.getInstance(hashAlgorithm)
                     signer.initSign(privateKey)

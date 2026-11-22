@@ -233,7 +233,7 @@ See the [GoDiddy Documentation](https://godiddy.com/docs) for a complete list of
 ## Error Handling
 
 The GoDiddy integration follows TrustWeave's error handling patterns. `resolver.resolveDid(...)`
-returns the sealed [`DidResolutionResult`](../../../did/did-core/src/main/kotlin/org/trustweave/did/resolver/DidResolutionResult.kt):
+returns the sealed [`DidResolutionResult`](https://github.com/geoknoesis/trustweave/blob/main/did/did-core/src/main/kotlin/org/trustweave/did/resolver/DidResolutionResult.kt):
 
 ```kotlin
 import org.trustweave.did.resolver.DidResolutionResult

@@ -335,7 +335,7 @@ val did = trustWeave.createDid { method(KEY) }.getOrThrowDid()
 // Throws IllegalStateException on failure (suitable for tests/examples only)
 ```
 
-**`createDidWithKey`** returns [`DidCreationWithKeyResult`](../../trust/src/main/kotlin/org/trustweave/trust/types/DidResult.kt) (not `kotlin.Result`). For a quick `(Did, keyId)` pair in examples/tests, use `import org.trustweave.trust.types.getOrThrow` and `.getOrThrow()`.
+**`createDidWithKey`** returns [`DidCreationWithKeyResult`](https://github.com/geoknoesis/trustweave/blob/main/trust/src/main/kotlin/org/trustweave/trust/types/DidResult.kt) (not `kotlin.Result`). For a quick `(Did, keyId)` pair in examples/tests, use `import org.trustweave.trust.types.getOrThrow` and `.getOrThrow()`.
 
 **Note:** All I/O operations (`createDid`, `issue`, `updateDid`, `rotateKey`, `wallet`, `revoke`) now return sealed result types for exhaustive error handling. `resolveDid()` also returns a sealed result type.
 

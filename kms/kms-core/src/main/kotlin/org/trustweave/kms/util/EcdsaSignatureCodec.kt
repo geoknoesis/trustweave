@@ -28,14 +28,14 @@ import java.math.BigInteger
  * All operations are pure Kotlin + [BigInteger]; no crypto provider is required.
  */
 object EcdsaSignatureCodec {
-
     /**
      * The order `n` of the secp256k1 group (SEC 2, version 2.0).
      */
-    private val SECP256K1_ORDER = BigInteger(
-        "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141",
-        16
-    )
+    private val SECP256K1_ORDER =
+        BigInteger(
+            "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141",
+            16,
+        )
 
     private val SECP256K1_HALF_ORDER: BigInteger = SECP256K1_ORDER.shiftRight(1)
 
@@ -47,12 +47,13 @@ object EcdsaSignatureCodec {
      * - P-384 → 48 (P1363 signature = 96 bytes)
      * - P-521 → 66 (P1363 signature = 132 bytes)
      */
-    fun fieldSizeBytes(algorithm: Algorithm): Int? = when (algorithm) {
-        Algorithm.Secp256k1, Algorithm.P256 -> 32
-        Algorithm.P384 -> 48
-        Algorithm.P521 -> 66
-        else -> null
-    }
+    fun fieldSizeBytes(algorithm: Algorithm): Int? =
+        when (algorithm) {
+            Algorithm.Secp256k1, Algorithm.P256 -> 32
+            Algorithm.P384 -> 48
+            Algorithm.P521 -> 66
+            else -> null
+        }
 
     /**
      * Returns the expected P1363 (`r || s`) signature size in bytes for ECDSA-capable
@@ -73,9 +74,13 @@ object EcdsaSignatureCodec {
      * @throws IllegalArgumentException if [bytes] is not valid DER, if [algorithm] is not an
      *         ECDSA algorithm, or if `r`/`s` do not fit in the curve's field size.
      */
-    fun derToP1363(bytes: ByteArray, algorithm: Algorithm): ByteArray {
-        val fieldSize = fieldSizeBytes(algorithm)
-            ?: throw IllegalArgumentException("Not an ECDSA algorithm: ${algorithm.name}")
+    fun derToP1363(
+        bytes: ByteArray,
+        algorithm: Algorithm,
+    ): ByteArray {
+        val fieldSize =
+            fieldSizeBytes(algorithm)
+                ?: throw IllegalArgumentException("Not an ECDSA algorithm: ${algorithm.name}")
         return derToP1363(bytes, fieldSize)
     }
 
@@ -86,10 +91,14 @@ object EcdsaSignatureCodec {
      * @throws IllegalArgumentException if [bytes] is not valid DER or `r`/`s` exceed
      *         [fieldSizeBytes].
      */
-    fun derToP1363(bytes: ByteArray, fieldSizeBytes: Int): ByteArray {
+    fun derToP1363(
+        bytes: ByteArray,
+        fieldSizeBytes: Int,
+    ): ByteArray {
         require(fieldSizeBytes > 0) { "fieldSizeBytes must be positive, got $fieldSizeBytes" }
-        val (r, s) = parseDer(bytes)
-            ?: throw IllegalArgumentException("Malformed DER ECDSA signature (${bytes.size} bytes)")
+        val (r, s) =
+            parseDer(bytes)
+                ?: throw IllegalArgumentException("Malformed DER ECDSA signature (${bytes.size} bytes)")
         val out = ByteArray(fieldSizeBytes * 2)
         writeFixedWidth(r, out, 0, fieldSizeBytes)
         writeFixedWidth(s, out, fieldSizeBytes, fieldSizeBytes)
@@ -160,13 +169,17 @@ object EcdsaSignatureCodec {
      *   codec does not understand; callers should not silently destroy it).
      * - secp256k1 signatures are normalized to low-s.
      */
-    fun normalize(signature: ByteArray, algorithm: Algorithm): ByteArray {
+    fun normalize(
+        signature: ByteArray,
+        algorithm: Algorithm,
+    ): ByteArray {
         val fieldSize = fieldSizeBytes(algorithm) ?: return signature
-        val p1363 = when {
-            isDer(signature) -> derToP1363(signature, fieldSize)
-            signature.size == fieldSize * 2 -> signature
-            else -> return signature
-        }
+        val p1363 =
+            when {
+                isDer(signature) -> derToP1363(signature, fieldSize)
+                signature.size == fieldSize * 2 -> signature
+                else -> return signature
+            }
         return if (algorithm == Algorithm.Secp256k1) normalizeSecp256k1LowS(p1363) else p1363
     }
 
@@ -197,7 +210,10 @@ object EcdsaSignatureCodec {
      * Returns `(length, offsetOfContent)`, or `null` if malformed (including indefinite length
      * and non-minimal long form).
      */
-    private fun readLength(bytes: ByteArray, offset: Int): Pair<Int, Int>? {
+    private fun readLength(
+        bytes: ByteArray,
+        offset: Int,
+    ): Pair<Int, Int>? {
         if (offset >= bytes.size) return null
         val first = bytes[offset].toInt() and 0xFF
         if (first < 0x80) return first to offset + 1
@@ -220,7 +236,10 @@ object EcdsaSignatureCodec {
      * malformed. Tolerates redundant leading zero bytes (some backends emit BER-padded
      * integers), but rejects empty values.
      */
-    private fun readInteger(bytes: ByteArray, offset: Int): Pair<BigInteger, Int>? {
+    private fun readInteger(
+        bytes: ByteArray,
+        offset: Int,
+    ): Pair<BigInteger, Int>? {
         if (offset >= bytes.size) return null
         if ((bytes[offset].toInt() and 0xFF) != 0x02) return null
         val (len, contentStart) = readLength(bytes, offset + 1) ?: return null

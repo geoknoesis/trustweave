@@ -38,9 +38,11 @@ class PresentationBuilderBranchCoverageTest {
         type: String,
         subjectId: String = "did:key:holder",
         claims: Map<String, Any> = emptyMap(),
+        proofSuite: org.trustweave.credential.format.ProofSuiteId = org.trustweave.credential.format.ProofSuiteId.VC_LD,
     ): VerifiableCredential =
         trustWeave
             .issue {
+                withProof(proofSuite)
                 credential {
                     type(type)
                     issuer(issuerDid)
@@ -284,12 +286,19 @@ class PresentationBuilderBranchCoverageTest {
                 trustWeave
                     .presentationResult {
                         credentials(credential)
-                        holder("did:key:holder")
+                        holder(issuerDid)
+                        verificationMethod("$issuerDid#$keyId")
                         challenge("verification-challenge-123")
                     }.getOrThrow()
 
             assertNotNull(presentation)
-            assertEquals("verification-challenge-123", presentation.challenge)
+            val proof =
+                presentation.proof as? org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof
+            assertNotNull(proof)
+            assertEquals(
+                kotlinx.serialization.json.JsonPrimitive("verification-challenge-123"),
+                proof.additionalProperties["challenge"],
+            )
         }
 
     // ========== Domain Branches ==========
@@ -320,12 +329,19 @@ class PresentationBuilderBranchCoverageTest {
                 trustWeave
                     .presentationResult {
                         credentials(credential)
-                        holder("did:key:holder")
+                        holder(issuerDid)
+                        verificationMethod("$issuerDid#$keyId")
                         domain("example.com")
                     }.getOrThrow()
 
             assertNotNull(presentation)
-            assertEquals("example.com", presentation.domain)
+            val proof =
+                presentation.proof as? org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof
+            assertNotNull(proof)
+            assertEquals(
+                kotlinx.serialization.json.JsonPrimitive("example.com"),
+                proof.additionalProperties["domain"],
+            )
         }
 
     // ========== Proof Type Branches ==========
@@ -394,11 +410,12 @@ class PresentationBuilderBranchCoverageTest {
                 trustWeave
                     .presentationResult {
                         credentials(credential)
-                        holder("did:key:holder")
-                        verificationMethod("did:key:holder#key-1")
+                        holder(issuerDid)
+                        verificationMethod("$issuerDid#$keyId")
                     }.getOrThrow()
 
             assertNotNull(presentation)
+            assertNotNull(presentation.proof)
         }
 
     // ========== Selective Disclosure Branches ==========
@@ -430,6 +447,7 @@ class PresentationBuilderBranchCoverageTest {
                 issueTestCredential(
                     type = "PersonCredential",
                     claims = mapOf("name" to "John Doe", "email" to "john@example.com", "ssn" to "123-45-6789"),
+                    proofSuite = org.trustweave.credential.format.ProofSuiteId.SD_JWT_VC,
                 )
 
             val presentation =
@@ -452,6 +470,7 @@ class PresentationBuilderBranchCoverageTest {
                 issueTestCredential(
                     type = "PersonCredential",
                     claims = mapOf("name" to "John Doe", "email" to "john@example.com", "ssn" to "123-45-6789"),
+                    proofSuite = org.trustweave.credential.format.ProofSuiteId.SD_JWT_VC,
                 )
 
             val presentation =
@@ -475,17 +494,19 @@ class PresentationBuilderBranchCoverageTest {
             val credential =
                 issueTestCredential(
                     type = "PersonCredential",
+                    subjectId = issuerDid,
                     claims = mapOf("name" to "John Doe"),
+                    proofSuite = org.trustweave.credential.format.ProofSuiteId.SD_JWT_VC,
                 )
 
             val presentation =
                 trustWeave
                     .presentationResult {
                         credentials(credential)
-                        holder("did:key:holder")
+                        holder(issuerDid)
                         challenge("challenge-123")
                         domain("example.com")
-                        verificationMethod("did:key:holder#key-1")
+                        verificationMethod(keyId)
                         selectiveDisclosure {
                             reveal("name")
                         }

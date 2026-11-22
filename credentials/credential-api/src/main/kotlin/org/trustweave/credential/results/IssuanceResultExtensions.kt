@@ -2,7 +2,7 @@ package org.trustweave.credential.results
 
 import org.trustweave.credential.model.vc.VerifiableCredential
 
-/**
+/*
  * Additional convenience extensions for IssuanceResult.
  */
 

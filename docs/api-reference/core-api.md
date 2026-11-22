@@ -18,7 +18,7 @@ keywords:
 Complete API reference for TrustWeave's TrustWeave API.
 
 > **Version:** 0.7.0
-> **Kotlin:** 2.3.21+ | **Java:** 21+
+> **Kotlin:** 2.4.21+ | **Java:** 21+
 > See [CHANGELOG.md](https://github.com/geoknoesis/trustweave/blob/main/CHANGELOG.md) for version history and migration guides.
 >
 > **Note:** This API reference documents the `TrustWeave` API, which is the primary interface for trust and identity operations in TrustWeave. The TrustWeave provides a DSL-based API for creating DIDs, issuing credentials, managing wallets, and more.
@@ -328,7 +328,7 @@ suspend fun createDidWithKey(
 
 **Access via:** `trustWeave.createDidWithKey { }`
 
-**Returns:** [`DidCreationWithKeyResult`](../../trust/src/main/kotlin/org/trustweave/trust/types/DidResult.kt) — `Success(did, keyId)` or `Failure` (either wraps `DidCreationResult.Failure` or describes key extraction failure).
+**Returns:** [`DidCreationWithKeyResult`](https://github.com/geoknoesis/trustweave/blob/main/trust/src/main/kotlin/org/trustweave/trust/types/DidResult.kt) — `Success(did, keyId)` or `Failure` (either wraps `DidCreationResult.Failure` or describes key extraction failure).
 
 **Tests / examples:** use exhaustive `when` or `import org.trustweave.trust.types.getOrThrow` and call `.getOrThrow()` for a `Pair<Did, String>` (throws on failure).
 

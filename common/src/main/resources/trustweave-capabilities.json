@@ -1,6 +1,6 @@
 {
   "anchors:anchor-core": {
-    "maturity": "experimental",
+    "maturity": "supported",
     "operations": [],
     "formats": []
   },
@@ -70,7 +70,7 @@
     "formats": []
   },
   "common": {
-    "maturity": "experimental",
+    "maturity": "supported",
     "operations": [],
     "formats": []
   },
@@ -80,7 +80,7 @@
     "formats": []
   },
   "contract": {
-    "maturity": "experimental",
+    "maturity": "supported",
     "operations": [],
     "formats": []
   },
@@ -90,7 +90,7 @@
     "formats": []
   },
   "credentials:credential-api": {
-    "maturity": "experimental",
+    "maturity": "supported",
     "operations": [],
     "formats": []
   },
@@ -220,7 +220,7 @@
     "formats": []
   },
   "did:did-core": {
-    "maturity": "experimental",
+    "maturity": "supported",
     "operations": [],
     "formats": []
   },
@@ -250,7 +250,7 @@
     "formats": []
   },
   "did:plugins:ens": {
-    "maturity": "experimental",
+    "maturity": "stub",
     "operations": [],
     "formats": []
   },
@@ -360,7 +360,7 @@
     "formats": []
   },
   "kms:kms-core": {
-    "maturity": "experimental",
+    "maturity": "supported",
     "operations": [],
     "formats": []
   },
@@ -385,7 +385,7 @@
     "formats": []
   },
   "kms:plugins:entrust": {
-    "maturity": "experimental",
+    "maturity": "stub",
     "operations": [],
     "formats": []
   },
@@ -425,17 +425,17 @@
     "formats": []
   },
   "kms:plugins:thales-luna": {
-    "maturity": "experimental",
+    "maturity": "stub",
     "operations": [],
     "formats": []
   },
   "kms:plugins:utimaco": {
-    "maturity": "experimental",
+    "maturity": "stub",
     "operations": [],
     "formats": []
   },
   "kms:plugins:venafi": {
-    "maturity": "experimental",
+    "maturity": "stub",
     "operations": [],
     "formats": []
   },
@@ -480,7 +480,7 @@
     "formats": []
   },
   "signatures:pades": {
-    "maturity": "experimental",
+    "maturity": "stub",
     "operations": [],
     "formats": []
   },
@@ -505,7 +505,7 @@
     "formats": []
   },
   "trust": {
-    "maturity": "experimental",
+    "maturity": "supported",
     "operations": [],
     "formats": []
   },
@@ -572,7 +572,7 @@
     ]
   },
   "wallet:wallet-core": {
-    "maturity": "experimental",
+    "maturity": "supported",
     "operations": [],
     "formats": []
   },

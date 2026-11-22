@@ -366,7 +366,7 @@ class DefaultUniversalResolver(
                             try {
                                 parseDidDocumentFromJson(it)
                             } catch (e: DidException) {
-                                malformedDocumentReason = e.message ?: "Malformed DID document in resolver response"
+                                malformedDocumentReason = e.message
                                 null
                             } catch (e: IllegalArgumentException) {
                                 malformedDocumentReason = e.message ?: "Malformed DID document in resolver response"
@@ -435,7 +435,7 @@ class DefaultUniversalResolver(
                             // invalid" (the caller's DID was fine). INVALID_DID_DOCUMENT names what
                             // actually happened, mirroring GodiddyResolver's identical
                             // document-conversion-failure guard.
-                            val reason = malformedDocumentReason ?: "Malformed DID document in resolver response"
+                            val reason = malformedDocumentReason
                             DidResolutionResult.Failure.ResolutionError(
                                 did = Did(did),
                                 reason = reason,

@@ -8,23 +8,17 @@ grand_parent: API Reference
 
 # Protocol Implementation Guide
 
-Complete guide for implementing credential exchange protocols in TrustWeave.
-
-> **TODO (audit 2026-05):** The skeleton in [Step 2: Implement CredentialExchangeProtocol](#step-2-implement-credentialexchangeprotocol) and the `@Test` in [Unit Tests](#unit-tests) describe the obsolete request/response API (`offerCredential(CredentialOfferRequest)` returning `CredentialOfferResponse`, raw `protocolName: String`, `supportedOperations: Set<…>` on the protocol). The real SPI signatures are:
->
-> - `interface CredentialExchangeProtocol { val protocolName: ExchangeProtocolName; val capabilities: ExchangeProtocolCapabilities; suspend fun offer(request: ExchangeRequest.Offer): ExchangeMessageEnvelope; suspend fun request(request: ExchangeRequest.Request): ExchangeMessageEnvelope; suspend fun issue(request: ExchangeRequest.Issue): Pair<VerifiableCredential, ExchangeMessageEnvelope>; suspend fun requestProof(request: ProofExchangeRequest.Request): ExchangeMessageEnvelope; suspend fun presentProof(request: ProofExchangeRequest.Presentation): Pair<VerifiablePresentation, ExchangeMessageEnvelope> }`
-> - Supported operations are declared via `capabilities = ExchangeProtocolCapabilities(supportedOperations = setOf(ExchangeOperation.OFFER_CREDENTIAL, …))`.
-> - The SPI provider interface is `org.trustweave.credential.spi.exchange.CredentialExchangeProtocolProvider` with `name: String`, `supportedProtocols: List<String>`, and `create(protocolName: String, options: Map<String, Any?>): CredentialExchangeProtocol?`.
->
-> See `credentials/plugins/didcomm/src/main/kotlin/org/trustweave/credential/didcomm/exchange/DidCommExchangeProtocol.kt` and `…/exchange/spi/DidCommExchangeProtocolProvider.kt` for a working reference implementation.
+Complete guide for implementing and registering credential exchange protocols in TrustWeave.
 
 ## Overview
 
-This guide covers how to implement new credential exchange protocols using the protocol abstraction layer. All protocols implement the `CredentialExchangeProtocol` interface, allowing them to be used interchangeably.
+All credential exchange protocols implement `org.trustweave.credential.exchange.CredentialExchangeProtocol`, enabling `ExchangeService` and `ExchangeProtocolRegistry` to invoke DIDComm, OIDC4VCI, CHAPI, OID4VP, SIOP, or custom protocols through a uniform, type-safe API.
+
+For a complete working reference, inspect `credentials/plugins/didcomm/src/main/kotlin/org/trustweave/credential/didcomm/exchange/DidCommExchangeProtocol.kt` and `DidCommExchangeProtocolProvider.kt`.
 
 ## Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────┐
 │  ExchangeProtocolRegistry                   │
 │  (Manages all protocol implementations)     │
@@ -42,94 +36,142 @@ This guide covers how to implement new credential exchange protocols using the p
          │                       │
          ▼                       ▼
 ┌──────────────────┐  ┌──────────────────┐
-│  ExchangeService  │  │  CredentialService│
-│  (Unified API)    │  │  (Issuance/Verify)│
+│  ExchangeService │  │ CredentialService│
+│  (Unified API)   │  │ (Issuance/Verify)│
 └──────────────────┘  └──────────────────┘
 ```
 
 ## Implemented Protocols
 
-### 1. DIDComm V2
-
-**Status**: ✅ Fully Implemented
-
-- **Protocol Name**: `"didcomm"`
-- **Library**: Custom implementation with `didcomm-java` integration
-- **Supported Operations**: All (offer, request, issue, proof request, proof presentation)
-- **Documentation**: `credentials/plugins/didcomm/README.md`
-
-### 2. OIDC4VCI
-
-**Status**: ✅ Implemented (Basic)
-
-- **Protocol Name**: `"oidc4vci"`
-- **Library**: walt.id `waltid-openid4vc` (optional)
-- **Supported Operations**: Issuance only (offer, request, issue)
-- **Documentation**: `credentials/plugins/oidc4vci/README.md`
-
-### 3. CHAPI
-
-**Status**: ✅ Implemented (Basic)
-
-- **Protocol Name**: `"chapi"`
-- **Library**: Custom implementation (browser API wrapper)
-- **Supported Operations**: Offer, issue, proof request, proof presentation
-- **Documentation**: `credentials/plugins/chapi/README.md`
+| Protocol | `ExchangeProtocolName` | Module | Supported Operations |
+|----------|------------------------|--------|----------------------|
+| **DIDComm V2** | `ExchangeProtocolName.DidComm` (`"didcomm"`) | `credentials:plugins:didcomm` | Offer, Request, Issue, Proof Request, Proof Presentation |
+| **OIDC4VCI** | `ExchangeProtocolName.Oidc4Vci` (`"oidc4vci"`) | `credentials:plugins:oidc4vci` | Issuance flows (Offer, Request, Issue) |
+| **CHAPI** | `ExchangeProtocolName.Chapi` (`"chapi"`) | `credentials:plugins:chapi` | Browser-mediated Offer, Issue, Proof Request, Proof Presentation |
+| **OID4VP / SIOP** | `"oidc4vp"` / `"siop"` | `credentials:plugins:oidc4vp`, `credentials:plugins:siop` | Verification & presentation flows |
 
 ## Implementing a New Protocol
 
 ### Step 1: Create Plugin Structure
 
-```
+```text
 credentials/plugins/your-protocol/
 ├── build.gradle.kts
 ├── README.md
-└── src/main/kotlin/org.trustweave/credential/yourprotocol/
-    ├── YourProtocolService.kt
-    ├── models/
-    │   └── YourProtocolModels.kt
-    └── exchange/
-        ├── YourProtocolExchangeProtocol.kt
-        └── spi/
-            └── YourProtocolExchangeProtocolProvider.kt
+└── src/main/
+    ├── kotlin/org/trustweave/credential/yourprotocol/
+    │   ├── YourProtocolService.kt
+    │   ├── models/
+    │   │   └── YourProtocolModels.kt
+    │   └── exchange/
+    │       ├── YourProtocolExchangeProtocol.kt
+    │       └── spi/
+    │           └── YourProtocolExchangeProtocolProvider.kt
+    └── resources/META-INF/services/
+        └── org.trustweave.credential.spi.exchange.CredentialExchangeProtocolProvider
 ```
 
-### Step 2: Implement CredentialExchangeProtocol
+### Step 2: Implement `CredentialExchangeProtocol`
+
+Implement `protocolName`, `capabilities`, and the five `suspend` exchange operations returning `ExchangeMessageEnvelope` (plus the VC/VP pair for `issue` and `presentProof`):
 
 ```kotlin
 package org.trustweave.credential.yourprotocol.exchange
 
-import org.trustweave.credential.exchange.*
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import org.trustweave.credential.exchange.CredentialExchangeProtocol
+import org.trustweave.credential.exchange.ExchangeOperation
+import org.trustweave.credential.exchange.capability.ExchangeProtocolCapabilities
+import org.trustweave.credential.exchange.model.ExchangeMessageEnvelope
+import org.trustweave.credential.exchange.model.ExchangeMessageType
+import org.trustweave.credential.exchange.request.ExchangeRequest
+import org.trustweave.credential.exchange.request.ProofExchangeRequest
+import org.trustweave.credential.identifiers.ExchangeProtocolName
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.model.vc.VerifiablePresentation
 
 class YourProtocolExchangeProtocol(
     private val service: YourProtocolService
 ) : CredentialExchangeProtocol {
 
-    override val protocolName = "yourprotocol"
+    override val protocolName = ExchangeProtocolName("yourprotocol")
 
-    override val supportedOperations = setOf(
-        ExchangeOperation.OFFER_CREDENTIAL,
-        ExchangeOperation.REQUEST_CREDENTIAL,
-        ExchangeOperation.ISSUE_CREDENTIAL
+    override val capabilities = ExchangeProtocolCapabilities(
+        supportedOperations = setOf(
+            ExchangeOperation.OFFER_CREDENTIAL,
+            ExchangeOperation.REQUEST_CREDENTIAL,
+            ExchangeOperation.ISSUE_CREDENTIAL
+        ),
+        supportsAsync = false,
+        requiresTransportSecurity = true
     )
 
-    override suspend fun offerCredential(
-        request: CredentialOfferRequest
-    ): CredentialOfferResponse {
+    override suspend fun offer(request: ExchangeRequest.Offer): ExchangeMessageEnvelope {
         val offer = service.createOffer(
-            issuerDid = request.issuerDid,
-            holderDid = request.holderDid,
+            issuerDid = request.issuerDid.value,
+            holderDid = request.holderDid.value,
             preview = request.credentialPreview
         )
-
-        return CredentialOfferResponse(
-            offerId = offer.id,
-            offerData = offer,
-            protocolName = protocolName
+        return ExchangeMessageEnvelope(
+            protocolName = protocolName,
+            messageType = ExchangeMessageType.Offer,
+            messageData = buildJsonObject {
+                put("offerId", JsonPrimitive(offer.id))
+            },
+            metadata = mapOf("messageId" to JsonPrimitive(offer.id))
         )
     }
 
-    // Implement other operations...
+    override suspend fun request(request: ExchangeRequest.Request): ExchangeMessageEnvelope {
+        val req = service.createRequest(
+            holderDid = request.holderDid.value,
+            issuerDid = request.issuerDid.value,
+            offerId = request.offerId.value
+        )
+        return ExchangeMessageEnvelope(
+            protocolName = protocolName,
+            messageType = ExchangeMessageType.Request,
+            messageData = buildJsonObject {
+                put("requestId", JsonPrimitive(req.id))
+            },
+            metadata = mapOf("messageId" to JsonPrimitive(req.id))
+        )
+    }
+
+    override suspend fun issue(
+        request: ExchangeRequest.Issue
+    ): Pair<VerifiableCredential, ExchangeMessageEnvelope> {
+        val issueId = service.createIssueMessage(
+            issuerDid = request.issuerDid.value,
+            holderDid = request.holderDid.value,
+            credential = request.credential,
+            requestId = request.requestId.value
+        )
+        val envelope = ExchangeMessageEnvelope(
+            protocolName = protocolName,
+            messageType = ExchangeMessageType.Issue,
+            messageData = buildJsonObject {
+                put("issueId", JsonPrimitive(issueId))
+            },
+            metadata = mapOf("messageId" to JsonPrimitive(issueId))
+        )
+        return Pair(request.credential, envelope)
+    }
+
+    override suspend fun requestProof(request: ProofExchangeRequest.Request): ExchangeMessageEnvelope {
+        throw UnsupportedOperationException(
+            "Protocol '${protocolName.value}' does not support proof requests"
+        )
+    }
+
+    override suspend fun presentProof(
+        request: ProofExchangeRequest.Presentation
+    ): Pair<VerifiablePresentation, ExchangeMessageEnvelope> {
+        throw UnsupportedOperationException(
+            "Protocol '${protocolName.value}' does not support proof presentations"
+        )
+    }
 }
 ```
 
@@ -137,6 +179,8 @@ class YourProtocolExchangeProtocol(
 
 ```kotlin
 package org.trustweave.credential.yourprotocol
+
+import org.trustweave.credential.exchange.model.CredentialPreview
 
 class YourProtocolService {
     suspend fun createOffer(
@@ -150,6 +194,8 @@ class YourProtocolService {
 ```
 
 ### Step 4: Create SPI Provider
+
+Implement `org.trustweave.credential.spi.exchange.CredentialExchangeProtocolProvider`:
 
 ```kotlin
 package org.trustweave.credential.yourprotocol.exchange.spi
@@ -170,7 +216,6 @@ class YourProtocolExchangeProtocolProvider : CredentialExchangeProtocolProvider 
         val service = YourProtocolService(
             // Initialize from options
         )
-
         return YourProtocolExchangeProtocol(service)
     }
 }
@@ -178,13 +223,15 @@ class YourProtocolExchangeProtocolProvider : CredentialExchangeProtocolProvider 
 
 ### Step 5: Register SPI Provider
 
-Create `src/main/resources/META-INF/services/org.trustweave.credential.exchange.spi.CredentialExchangeProtocolProvider`:
+Create `src/main/resources/META-INF/services/org.trustweave.credential.spi.exchange.CredentialExchangeProtocolProvider`:
 
-```
+```text
 org.trustweave.credential.yourprotocol.exchange.spi.YourProtocolExchangeProtocolProvider
 ```
 
-### Step 6: Add to Build File
+`ExchangeServices.createExchangeServiceWithAutoDiscovery(...)` discovers providers registered under this `ServiceLoader` entry automatically.
+
+### Step 6: Add Dependencies to `build.gradle.kts`
 
 ```kotlin
 dependencies {
@@ -192,7 +239,6 @@ dependencies {
     implementation(project(":did:did-core"))
     implementation(project(":common"))
 
-    // Protocol-specific dependencies
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.core)
 }
@@ -200,7 +246,7 @@ dependencies {
 
 ## Protocol-Specific Options
 
-Each protocol may require specific options in the `options` map:
+Pass protocol options via `ExchangeOptions.builder()`:
 
 ### DIDComm
 
@@ -235,97 +281,107 @@ val options = ExchangeOptions.builder()
 import org.trustweave.credential.exchange.options.ExchangeOptions
 
 val options = ExchangeOptions.Empty
-// CHAPI typically doesn't require additional options
-// Messages are generated for browser use
 ```
 
 ## Testing
 
 ### Unit Tests
 
+Test the `CredentialExchangeProtocol` implementation directly using `ExchangeRequest.*` and `ExchangeMessageEnvelope`:
+
 ```kotlin
+import kotlinx.coroutines.test.runTest
+import org.trustweave.credential.exchange.model.CredentialAttribute
+import org.trustweave.credential.exchange.model.CredentialPreview
+import org.trustweave.credential.exchange.model.ExchangeMessageType
+import org.trustweave.credential.exchange.request.ExchangeRequest
+import org.trustweave.credential.identifiers.ExchangeProtocolName
+import org.trustweave.did.identifiers.Did
+
 @Test
 fun `test offer credential`() = runTest {
     val service = YourProtocolService()
     val protocol = YourProtocolExchangeProtocol(service)
 
-    val offer = protocol.offerCredential(
-        CredentialOfferRequest(
-            issuerDid = "did:key:issuer",
-            holderDid = "did:key:holder",
+    val envelope = protocol.offer(
+        ExchangeRequest.Offer(
+            protocolName = ExchangeProtocolName("yourprotocol"),
+            issuerDid = Did("did:key:issuer"),
+            holderDid = Did("did:key:holder"),
             credentialPreview = CredentialPreview(
                 attributes = listOf(CredentialAttribute("name", "Alice"))
             )
         )
     )
 
-    assertEquals("yourprotocol", offer.protocolName)
-    assertNotNull(offer.offerId)
+    assertEquals(ExchangeProtocolName("yourprotocol"), envelope.protocolName)
+    assertEquals(ExchangeMessageType.Offer, envelope.messageType)
+    assertNotNull(envelope.metadata["messageId"])
 }
 ```
 
 ### Integration Tests
 
+Exercise the full flow through `ExchangeService` and `ExchangeResult`:
+
 ```kotlin
-import org.trustweave.credential.exchange.*
+import org.trustweave.credential.exchange.ExchangeServices
+import org.trustweave.credential.exchange.options.ExchangeOptions
 import org.trustweave.credential.exchange.registry.ExchangeProtocolRegistries
 import org.trustweave.credential.exchange.request.ExchangeRequest
 import org.trustweave.credential.exchange.result.ExchangeResult
-import org.trustweave.credential.identifiers.*
+import org.trustweave.credential.identifiers.ExchangeProtocolName
 
 @Test
 fun `test complete exchange flow`() = runTest {
+    val protocolName = ExchangeProtocolName("yourprotocol")
     val registry = ExchangeProtocolRegistries.default()
     registry.register(YourProtocolExchangeProtocol(service))
-    
+
     val exchangeService = ExchangeServices.createExchangeService(
         protocolRegistry = registry,
         credentialService = credentialService,
         didResolver = didResolver
     )
 
-    // Test full flow
-    val offerResult = exchangeService.offer(
+    val offer = when (val offerResult = exchangeService.offer(
         ExchangeRequest.Offer(
-            protocolName = "yourprotocol".requireExchangeProtocolName(),
+            protocolName = protocolName,
             issuerDid = issuerDid,
             holderDid = holderDid,
             credentialPreview = preview,
-            options = ExchangeOptions.builder().build()
+            options = ExchangeOptions.Empty
         )
-    )
-    val offer = when (offerResult) {
+    )) {
         is ExchangeResult.Success -> offerResult.value
-        else -> throw IllegalStateException("Offer failed: $offerResult")
+        is ExchangeResult.Failure -> error("Offer failed: ${offerResult.errors}")
     }
-    
-    val requestResult = exchangeService.request(
+
+    val request = when (val requestResult = exchangeService.request(
         ExchangeRequest.Request(
-            protocolName = "yourprotocol".requireExchangeProtocolName(),
+            protocolName = protocolName,
             holderDid = holderDid,
             issuerDid = issuerDid,
             offerId = offer.offerId,
-            options = ExchangeOptions.builder().build()
+            options = ExchangeOptions.Empty
         )
-    )
-    val request = when (requestResult) {
+    )) {
         is ExchangeResult.Success -> requestResult.value
-        else -> throw IllegalStateException("Request failed: $requestResult")
+        is ExchangeResult.Failure -> error("Request failed: ${requestResult.errors}")
     }
-    
-    val issueResult = exchangeService.issue(
+
+    val issue = when (val issueResult = exchangeService.issue(
         ExchangeRequest.Issue(
-            protocolName = "yourprotocol".requireExchangeProtocolName(),
+            protocolName = protocolName,
             issuerDid = issuerDid,
             holderDid = holderDid,
             credential = credential,
             requestId = request.requestId,
-            options = ExchangeOptions.builder().build()
+            options = ExchangeOptions.Empty
         )
-    )
-    val issue = when (issueResult) {
+    )) {
         is ExchangeResult.Success -> issueResult.value
-        else -> throw IllegalStateException("Issue failed: $issueResult")
+        is ExchangeResult.Failure -> error("Issue failed: ${issueResult.errors}")
     }
 
     assertNotNull(issue.credential)
@@ -334,69 +390,16 @@ fun `test complete exchange flow`() = runTest {
 
 ## Best Practices
 
-1. **Error Handling**: Always validate inputs and provide clear error messages
-2. **Type Safety**: Use strongly-typed models for protocol-specific data
-3. **Documentation**: Document protocol-specific options and limitations
-4. **Testing**: Write comprehensive tests for all operations
-5. **SPI Registration**: Always register SPI providers for auto-discovery
-6. **Protocol Metadata**: Implement `supportedOperations` correctly
-
-## Common Patterns
-
-### Converting Common Models to Protocol-Specific
-
-```kotlin
-// Convert common preview to protocol-specific
-val protocolPreview = ProtocolPreview(
-    attributes = request.credentialPreview.attributes.map { attr ->
-        ProtocolAttribute(
-            name = attr.name,
-            value = attr.value,
-            mimeType = attr.mimeType
-        )
-    }
-)
-```
-
-### Handling Optional Operations
-
-```kotlin
-override suspend fun requestProof(
-    request: ProofRequestRequest
-): ProofRequestResponse {
-    if (!supportedOperations.contains(ExchangeOperation.REQUEST_PROOF)) {
-        throw UnsupportedOperationException(
-            "Protocol '$protocolName' does not support proof requests"
-        )
-    }
-    // Implementation...
-}
-```
-
-### Protocol-Specific Data in Responses
-
-```kotlin
-return CredentialOfferResponse(
-    offerId = offer.id,
-    offerData = offer, // Protocol-specific format
-    protocolName = protocolName
-)
-```
-
-## Future Protocols
-
-Potential protocols to implement:
-
-- **OIDC4VP**: OpenID Connect for Verifiable Presentations
-- **SIOPv2**: Self-Issued OpenID Provider v2
-- **WACI**: Wallet and Credential Interactions
-- **ISO/IEC 18013-5**: Mobile Driving License (mDL)
-- **ISO/IEC 23220**: Verifiable Credentials standard
+1. **Declare accurate `capabilities`**: List only operations your protocol truly implements in `capabilities.supportedOperations` so `ExchangeService` fails fast with `ExchangeResult.Failure.OperationNotSupported`.
+2. **Validate inputs and options**: Reject missing required metadata (such as `thid` in DIDComm) with `IllegalArgumentException` or structured `ExchangeException` subtypes.
+3. **Keep protocol payloads inside `ExchangeMessageEnvelope`**: Store the protocol wire object in `messageData` and correlation keys (such as `messageId`) in `metadata`.
+4. **Register SPI providers**: Ship `META-INF/services/org.trustweave.credential.spi.exchange.CredentialExchangeProtocolProvider` for auto-discovery.
+5. **Enforce transport & input bounds**: Follow TrustWeave security rules (HTTPS-or-loopback URLs, bounded response reads, SSRF-safe clients).
 
 ## References
 
+- [API Reference](API_REFERENCE.md)
 - [Protocol Abstraction Documentation](../../../core-concepts/credential-exchange-protocols.md)
 - [DIDComm Implementation](./didcomm.md)
 - [OIDC4VCI Implementation](./oidc4vci.md)
 - [CHAPI Implementation](./chapi.md)
-

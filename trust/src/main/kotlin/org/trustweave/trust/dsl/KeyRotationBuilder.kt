@@ -3,7 +3,6 @@ package org.trustweave.trust.dsl
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.trustweave.did.DidMethod
 import org.trustweave.did.KeyAlgorithm
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
@@ -126,7 +125,7 @@ class KeyRotationBuilder(
 
             // Get DID method from provider
             val didMethod =
-                didContext.getDidMethod(methodName) as? DidMethod
+                didContext.getDidMethod(methodName)
                     ?: throw IllegalStateException(
                         "DID method '$methodName' is not configured. " +
                             "Configure it in TrustWeave.build { did { method(\"$methodName\") { ... } } }",

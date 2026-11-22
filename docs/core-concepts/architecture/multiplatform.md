@@ -1,4 +1,5 @@
 ---
+title: Multiplatform Module Organization
 redirect_from:
   - /architecture/multiplatform/
 parent: Architecture
@@ -239,12 +240,12 @@ will be added explicitly, not pulled in by accident.
 `:wallet:wallet-core` retain their existing identities and continue to host:
 
 - DSL builders bound to `kotlinx-json` (e.g.
-  [CredentialSubjectBuilder](../../../credentials/credential-api/src/main/kotlin/org/trustweave/credential/model/vc/CredentialSubjectBuilder.kt))
+  [CredentialSubjectBuilder](https://github.com/geoknoesis/trustweave/blob/main/credentials/credential-api/src/main/kotlin/org/trustweave/credential/model/vc/CredentialSubjectBuilder.kt))
 - JVM-only exception hierarchy (`TrustWeaveException` and friends)
 - `ServiceLoader`-based plugin discovery
-  ([PluginRegistry](../../../common/src/main/kotlin/org/trustweave/core/plugin/PluginRegistry.kt))
+  ([PluginRegistry](https://github.com/geoknoesis/trustweave/blob/main/common/src/main/kotlin/org/trustweave/core/plugin/PluginRegistry.kt))
 - JSON DSL helpers like
-  [`jsonData { }`](../../../common/src/main/kotlin/org/trustweave/core/json/JsonData.kt)
+  [`jsonData { }`](https://github.com/geoknoesis/trustweave/blob/main/common/src/main/kotlin/org/trustweave/core/json/JsonData.kt)
   (depends on `kotlinx.serialization.json.JsonObject`, which *is* portable —
   this helper could move to `common-mp` in a future step)
 - HTTP clients, blockchain SDKs, persistence layers
@@ -316,5 +317,5 @@ verify with `./gradlew check`.
 - [Clean Architecture in TrustWeave](CLEAN_ARCHITECTURE.md) — layering rules
   that the `-mp` / JVM split also respects (entities and use-case interfaces
   belong in `-mp`; framework adapters belong in JVM wrappers).
-- [`settings.gradle.kts`](../../../settings.gradle.kts) — the full module list
+- [`settings.gradle.kts`](https://github.com/geoknoesis/trustweave/blob/main/settings.gradle.kts) — the full module list
   and the canonical home of the "Strategy A" comment.

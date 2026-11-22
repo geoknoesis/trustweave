@@ -3,7 +3,7 @@ package org.trustweave.core.util
 import org.trustweave.core.exception.toTrustWeaveException
 import kotlin.coroutines.cancellation.CancellationException
 
-/**
+/*
  * Extension functions for Result<T> to improve error handling.
  */
 

@@ -77,6 +77,43 @@ object KeyManagementServices {
         )
     }
 
+    // Canonical SPI names for well-known legacy/camelCase aliases (all keys lowercased).
+    private val providerAliases: Map<String, String> =
+        mapOf(
+            "inmemory" to "inmemory",
+            "in-memory" to "inmemory",
+            "aws" to "aws",
+            "awskms" to "aws",
+            "azure" to "azure",
+            "azurekms" to "azure",
+            "google-cloud-kms" to "google-cloud-kms",
+            "googlekms" to "google-cloud-kms",
+            "google" to "google-cloud-kms",
+            "vault" to "vault",
+            "hashicorp" to "vault",
+        )
+
+    /**
+     * Normalizes a provider name for case-insensitive and alias-aware lookup.
+     *
+     * Maps legacy camelCase / alternate names (e.g. `"inMemory"` -> `"inmemory"`,
+     * `"awsKms"` -> `"aws"`, `"azureKms"` -> `"azure"`, `"googleKms"` -> `"google-cloud-kms"`,
+     * `"hashicorp"` -> `"vault"`) to their canonical SPI names.
+     */
+    internal fun normalizeProviderName(providerName: String): String {
+        val trimmed = providerName.trim()
+        val lowered = trimmed.lowercase(java.util.Locale.ROOT)
+        return providerAliases[lowered] ?: lowered
+    }
+
+    private fun findProvider(providerName: String): KeyManagementServiceProvider? {
+        cachedProviders.find { it.name == providerName }?.let { return it }
+        val canonical = normalizeProviderName(providerName)
+        return cachedProviders.find {
+            it.name.equals(canonical, ignoreCase = true) || normalizeProviderName(it.name) == canonical
+        }
+    }
+
     /**
      * Creates a KeyManagementService instance for the specified provider.
      *
@@ -95,7 +132,8 @@ object KeyManagementServices {
     ): KeyManagementService {
         checkShutdown()
 
-        val cacheKey = ConfigCacheKey.create(providerName, options)
+        val canonicalName = findProvider(providerName)?.name ?: normalizeProviderName(providerName)
+        val cacheKey = ConfigCacheKey.create(canonicalName, options)
 
         return createCached(providerName, cacheKey) { it.create(options) }
     }
@@ -118,7 +156,8 @@ object KeyManagementServices {
     ): KeyManagementService {
         checkShutdown()
 
-        val cacheKey = ConfigCacheKey.create(providerName, options)
+        val canonicalName = findProvider(providerName)?.name ?: normalizeProviderName(providerName)
+        val cacheKey = ConfigCacheKey.create(canonicalName, options)
 
         return createCached(providerName, cacheKey) { it.create(options) }
     }
@@ -133,7 +172,7 @@ object KeyManagementServices {
             checkShutdown()
             instanceCache.computeIfAbsent(cacheKey) {
                 val provider =
-                    cachedProviders.find { it.name == providerName }
+                    findProvider(providerName)
                         ?: throw IllegalArgumentException(
                             "KMS provider '$providerName' not found. Available providers: ${cachedProviders.map { it.name }}",
                         )
@@ -154,7 +193,7 @@ object KeyManagementServices {
      * @param providerName The provider name
      * @return Provider instance, or null if not found
      */
-    fun getProvider(providerName: String): KeyManagementServiceProvider? = cachedProviders.find { it.name == providerName }
+    fun getProvider(providerName: String): KeyManagementServiceProvider? = findProvider(providerName)
 
     /**
      * Clears the instance cache.

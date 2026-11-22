@@ -1,14 +1,12 @@
 package org.trustweave.anchor.services
 
-import org.trustweave.anchor.AnchorResult
-import org.trustweave.anchor.AnchorRef
-import org.trustweave.anchor.anchorTyped
-import org.trustweave.anchor.validation.ChainIdValidator
-import org.trustweave.anchor.exceptions.BlockchainException
-import org.trustweave.anchor.BlockchainAnchorClient
-import org.trustweave.anchor.BlockchainAnchorRegistry
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
+import org.trustweave.anchor.AnchorRef
+import org.trustweave.anchor.AnchorResult
+import org.trustweave.anchor.BlockchainAnchorRegistry
+import org.trustweave.anchor.exceptions.BlockchainException
+import org.trustweave.anchor.validation.ChainIdValidator
 
 /**
  * Focused service for blockchain anchoring operations.
@@ -26,7 +24,7 @@ import kotlinx.serialization.json.Json
  * ```
  */
 class BlockchainService(
-    private val blockchainRegistry: BlockchainAnchorRegistry
+    private val blockchainRegistry: BlockchainAnchorRegistry,
 ) {
     /**
      * Anchors data to a blockchain.
@@ -50,16 +48,16 @@ class BlockchainService(
     suspend fun <T : Any> anchor(
         data: T,
         serializer: KSerializer<T>,
-        chainId: String
+        chainId: String,
     ): AnchorResult {
         val availableChains = blockchainRegistry.getAllChainIds()
-        
+
         // Validate chain ID format
         ChainIdValidator.validateFormat(chainId).let {
             if (!it.isValid()) {
                 throw BlockchainException.ChainNotRegistered(
                     chainId = chainId,
-                    availableChains = availableChains
+                    availableChains = availableChains,
                 )
             }
         }
@@ -69,16 +67,17 @@ class BlockchainService(
             if (!it.isValid()) {
                 throw BlockchainException.ChainNotRegistered(
                     chainId = chainId,
-                    availableChains = availableChains
+                    availableChains = availableChains,
                 )
             }
         }
 
-        val client = blockchainRegistry.get(chainId) as? BlockchainAnchorClient
-            ?: throw BlockchainException.ChainNotRegistered(
-                chainId = chainId,
-                availableChains = availableChains
-            )
+        val client =
+            blockchainRegistry.get(chainId)
+                ?: throw BlockchainException.ChainNotRegistered(
+                    chainId = chainId,
+                    availableChains = availableChains,
+                )
 
         val json = Json.encodeToJsonElement(serializer, data)
         return client.writePayload(json)
@@ -106,23 +105,24 @@ class BlockchainService(
      */
     suspend fun <T : Any> read(
         ref: AnchorRef,
-        serializer: KSerializer<T>
+        serializer: KSerializer<T>,
     ): T {
         val chainId = ref.chainId
         val availableChains = blockchainRegistry.getAllChainIds()
-        
+
         if (chainId !in availableChains) {
             throw BlockchainException.ChainNotRegistered(
                 chainId = chainId,
-                availableChains = availableChains
+                availableChains = availableChains,
             )
         }
 
-        val client = blockchainRegistry.get(chainId) as? BlockchainAnchorClient
-            ?: throw BlockchainException.ChainNotRegistered(
-                chainId = chainId,
-                availableChains = availableChains
-            )
+        val client =
+            blockchainRegistry.get(chainId)
+                ?: throw BlockchainException.ChainNotRegistered(
+                    chainId = chainId,
+                    availableChains = availableChains,
+                )
 
         val result = client.readPayload(ref)
         return Json.decodeFromJsonElement(serializer, result.payload)
@@ -135,5 +135,3 @@ class BlockchainService(
      */
     fun availableChains(): List<String> = blockchainRegistry.getAllChainIds()
 }
-
-

@@ -1,3 +1,10 @@
+---
+layout: default
+title: Operating TrustWeave services
+parent: Operations
+nav_order: 40
+---
+
 # Operating TrustWeave services
 
 TrustWeave is a library. The hosting application owns telemetry destinations, durable audit

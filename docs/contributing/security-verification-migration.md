@@ -1,3 +1,10 @@
+---
+layout: default
+title: Verification security migration
+parent: Contributing to TrustWeave
+nav_order: 65
+---
+
 # Verification security migration
 
 The production-readiness remediation changes acceptance behavior and public signatures.
@@ -52,7 +59,7 @@ Web Crypto. Await its result. `resetWallet()` returns `keysCleared`; a false val
 means local records were reset but browser key storage still needs manual erasure.
 Passkey identities now record backup eligibility at enrollment. Existing identities
 without the field retain their device-only verification policy. See the
-[custody contract](../../reference-wallet/CUSTODY.md) for the sync-provider boundary.
+[custody contract](https://github.com/geoknoesis/trustweave/blob/main/reference-wallet/CUSTODY.md) for the sync-provider boundary.
 
 ## Credential anchors and database status lists
 

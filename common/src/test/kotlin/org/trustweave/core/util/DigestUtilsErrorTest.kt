@@ -1,22 +1,26 @@
 package org.trustweave.core.util
 
-import org.trustweave.core.exception.SerializationException
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.junit.jupiter.api.Test
-import kotlin.test.*
+import org.trustweave.core.exception.SerializationException
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 /**
  * Error handling tests for DigestUtils.
  */
 class DigestUtilsErrorTest {
-
     @Test
     fun `test canonicalizeJson throws InvalidJson for malformed JSON`() {
         val invalidJson = "{ invalid json }"
 
-        val exception = assertFailsWith<SerializationException.InvalidJson> {
-            DigestUtils.canonicalizeJson(invalidJson)
-        }
+        val exception =
+            assertFailsWith<SerializationException.InvalidJson> {
+                DigestUtils.canonicalizeJson(invalidJson)
+            }
 
         assertEquals("INVALID_JSON", exception.code)
         assertNotNull(exception.parseError)
@@ -25,9 +29,10 @@ class DigestUtilsErrorTest {
 
     @Test
     fun `test canonicalizeJson throws InvalidJson for blank input`() {
-        val exception = assertFailsWith<IllegalArgumentException> {
-            DigestUtils.canonicalizeJson("")
-        }
+        val exception =
+            assertFailsWith<IllegalArgumentException> {
+                DigestUtils.canonicalizeJson("")
+            }
 
         assertTrue(exception.message?.contains("blank") == true)
     }
@@ -36,9 +41,10 @@ class DigestUtilsErrorTest {
     fun `test canonicalizeJson throws InvalidJson for incomplete JSON`() {
         val incompleteJson = """{"key": "value"""
 
-        val exception = assertFailsWith<SerializationException.InvalidJson> {
-            DigestUtils.canonicalizeJson(incompleteJson)
-        }
+        val exception =
+            assertFailsWith<SerializationException.InvalidJson> {
+                DigestUtils.canonicalizeJson(incompleteJson)
+            }
 
         assertEquals("INVALID_JSON", exception.code)
     }
@@ -46,9 +52,10 @@ class DigestUtilsErrorTest {
     @Test
     fun `test canonicalizeJson with JsonElement works correctly`() {
         // Test that JsonElement canonicalization works
-        val element = buildJsonObject {
-            put("key", "value")
-        }
+        val element =
+            buildJsonObject {
+                put("key", "value")
+            }
 
         // Normal case should work
         val result = DigestUtils.canonicalizeJson(element)
@@ -103,11 +110,12 @@ class DigestUtilsErrorTest {
 
     @Test
     fun `test digest with very large JSON`() {
-        val largeJson = buildJsonObject {
-            repeat(1000) { i ->
-                put("key$i", "value$i")
-            }
-        }.toString()
+        val largeJson =
+            buildJsonObject {
+                repeat(1000) { i ->
+                    put("key$i", "value$i")
+                }
+            }.toString()
 
         val digest = DigestUtils.sha256DigestMultibase(largeJson)
 
@@ -146,4 +154,3 @@ class DigestUtilsErrorTest {
         assertTrue(canonical.contains("a"))
     }
 }
-

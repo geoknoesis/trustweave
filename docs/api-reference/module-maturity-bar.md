@@ -1,7 +1,14 @@
+---
+layout: default
+title: The module maturity bar
+parent: API Reference
+nav_order: 312
+---
+
 # The module maturity bar
 
 Every one of the 110 modules carries a maturity in
-[`trustweave-capabilities.json`](../../common/src/main/resources/trustweave-capabilities.json).
+[`trustweave-capabilities.json`](https://github.com/geoknoesis/trustweave/blob/main/common/src/main/resources/trustweave-capabilities.json).
 This page is the rule those maturities are assigned by, so that a reader can disagree with a
 particular classification on the evidence rather than on taste.
 

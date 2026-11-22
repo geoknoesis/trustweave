@@ -1,3 +1,10 @@
+---
+layout: default
+title: Library telemetry
+parent: Operations
+nav_order: 30
+---
+
 # Library telemetry
 
 Until 11 September 2026 the SDK's instrumentation stopped at the HTTP boundary. A host running the

@@ -6,46 +6,146 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class PaymentDeprecationTest {
-
     private class CapturingLogger : MarkerIgnoringBase() {
         val warnings = mutableListOf<String>()
+
         override fun getName(): String = "capturing"
 
         override fun isWarnEnabled(): Boolean = true
-        override fun warn(msg: String?) { warnings += (msg ?: "") }
-        override fun warn(format: String?, arg: Any?) { warnings += (format ?: "") }
-        override fun warn(format: String?, vararg args: Any?) { warnings += (format ?: "") }
-        override fun warn(format: String?, arg1: Any?, arg2: Any?) { warnings += (format ?: "") }
-        override fun warn(msg: String?, t: Throwable?) { warnings += (msg ?: "") }
+
+        override fun warn(msg: String?) {
+            warnings += (msg ?: "")
+        }
+
+        override fun warn(
+            format: String?,
+            arg: Any?,
+        ) {
+            warnings += (format ?: "")
+        }
+
+        override fun warn(
+            format: String?,
+            vararg args: Any?,
+        ) {
+            warnings += (format ?: "")
+        }
+
+        override fun warn(
+            format: String?,
+            arg1: Any?,
+            arg2: Any?,
+        ) {
+            warnings += (format ?: "")
+        }
+
+        override fun warn(
+            msg: String?,
+            t: Throwable?,
+        ) {
+            warnings += (msg ?: "")
+        }
 
         // unused overrides — implement as no-ops
         override fun isTraceEnabled(): Boolean = false
+
         override fun trace(msg: String?) {}
-        override fun trace(format: String?, arg: Any?) {}
-        override fun trace(format: String?, arg1: Any?, arg2: Any?) {}
-        override fun trace(format: String?, vararg arguments: Any?) {}
-        override fun trace(msg: String?, t: Throwable?) {}
+
+        override fun trace(
+            format: String?,
+            arg: Any?,
+        ) {}
+
+        override fun trace(
+            format: String?,
+            arg1: Any?,
+            arg2: Any?,
+        ) {}
+
+        override fun trace(
+            format: String?,
+            vararg arguments: Any?,
+        ) {}
+
+        override fun trace(
+            msg: String?,
+            t: Throwable?,
+        ) {}
 
         override fun isDebugEnabled(): Boolean = false
+
         override fun debug(msg: String?) {}
-        override fun debug(format: String?, arg: Any?) {}
-        override fun debug(format: String?, arg1: Any?, arg2: Any?) {}
-        override fun debug(format: String?, vararg arguments: Any?) {}
-        override fun debug(msg: String?, t: Throwable?) {}
+
+        override fun debug(
+            format: String?,
+            arg: Any?,
+        ) {}
+
+        override fun debug(
+            format: String?,
+            arg1: Any?,
+            arg2: Any?,
+        ) {}
+
+        override fun debug(
+            format: String?,
+            vararg arguments: Any?,
+        ) {}
+
+        override fun debug(
+            msg: String?,
+            t: Throwable?,
+        ) {}
 
         override fun isInfoEnabled(): Boolean = false
+
         override fun info(msg: String?) {}
-        override fun info(format: String?, arg: Any?) {}
-        override fun info(format: String?, arg1: Any?, arg2: Any?) {}
-        override fun info(format: String?, vararg arguments: Any?) {}
-        override fun info(msg: String?, t: Throwable?) {}
+
+        override fun info(
+            format: String?,
+            arg: Any?,
+        ) {}
+
+        override fun info(
+            format: String?,
+            arg1: Any?,
+            arg2: Any?,
+        ) {}
+
+        override fun info(
+            format: String?,
+            vararg arguments: Any?,
+        ) {}
+
+        override fun info(
+            msg: String?,
+            t: Throwable?,
+        ) {}
 
         override fun isErrorEnabled(): Boolean = false
+
         override fun error(msg: String?) {}
-        override fun error(format: String?, arg: Any?) {}
-        override fun error(format: String?, arg1: Any?, arg2: Any?) {}
-        override fun error(format: String?, vararg arguments: Any?) {}
-        override fun error(msg: String?, t: Throwable?) {}
+
+        override fun error(
+            format: String?,
+            arg: Any?,
+        ) {}
+
+        override fun error(
+            format: String?,
+            arg1: Any?,
+            arg2: Any?,
+        ) {}
+
+        override fun error(
+            format: String?,
+            vararg arguments: Any?,
+        ) {}
+
+        override fun error(
+            msg: String?,
+            t: Throwable?,
+        ) {}
     }
 
     @Test

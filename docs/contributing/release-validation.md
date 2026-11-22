@@ -1,3 +1,10 @@
+---
+layout: default
+title: SDK compatibility, coverage, and release evidence
+parent: Contributing to TrustWeave
+nav_order: 60
+---
+
 # SDK compatibility, coverage, and release evidence
 
 Run these commands from the repository root with JDK 21:
@@ -53,7 +60,7 @@ The Release evidence workflow (`.github/workflows/release-evidence.yml`) has thr
 3. `release-assets` attaches `SHA256SUMS` and the aggregate SBOM to the GitHub release for the tag.
 
 A configured workflow is not evidence of a successful release: retain the actual run. To verify a downloaded
-artifact, follow "Verifying a Release" in [SECURITY.md](../../SECURITY.md), which covers checking the download
+artifact, follow "Verifying a Release" in [SECURITY.md](https://github.com/geoknoesis/trustweave/blob/main/SECURITY.md), which covers checking the download
 against `SHA256SUMS` and `gh attestation verify`.
 
 Module reports are under the root `build/<module-path>/reports/` directory; root reports are under `build/reports/`. On Windows,

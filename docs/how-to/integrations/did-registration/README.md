@@ -252,3 +252,9 @@ registry.register(keyMethod)
 val result = registry.resolve("did:key:...")
 ```
 
+## Further Reading
+
+- **[DID Method Registration Guide](did-method-registration-guide.md)** — End-to-end registration walkthrough
+- **[DID Method Registration - Quick Reference](did-method-registration-quick-reference.md)** — Field mappings and minimal/full JSON examples
+- **[DID Method Registration JSON Specification](did-method-registration-specification.md)** — Detailed JSON-to-`HttpDidMethod` mapping specification
+

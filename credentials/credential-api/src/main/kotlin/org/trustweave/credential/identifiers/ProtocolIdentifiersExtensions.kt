@@ -1,6 +1,6 @@
 package org.trustweave.credential.identifiers
 
-/**
+/*
  * Extension functions for safe parsing of protocol-related identifiers.
  *
  * Provides ergonomic helpers for converting strings to typed identifier wrappers.

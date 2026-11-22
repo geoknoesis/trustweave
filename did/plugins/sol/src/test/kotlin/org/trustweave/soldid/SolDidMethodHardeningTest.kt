@@ -57,6 +57,11 @@ class SolDidMethodHardeningTest {
             InMemoryKeyManagementService(),
             InMemoryBlockchainAnchorClient(chainId = "solana:mainnet-beta"),
             SolDidConfig(rpcUrl = rpc(), network = SolDidConfig.MAINNET, programId = programId),
+            okhttp3.OkHttpClient
+                .Builder()
+                .followRedirects(false)
+                .followSslRedirects(false)
+                .build(),
         )
 
     private fun docJson(address: String) = """{"@context":"https://www.w3.org/ns/did/v1","id":"did:sol:$address"}"""

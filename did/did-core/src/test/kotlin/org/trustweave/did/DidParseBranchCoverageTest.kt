@@ -1,7 +1,10 @@
 package org.trustweave.did
 
 import org.trustweave.did.identifiers.Did
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 /**
  * Comprehensive branch coverage tests for Did constructor.

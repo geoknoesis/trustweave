@@ -1,4 +1,61 @@
 {
-  "_comment": "Binary jars the evidence build (build/**/libs) produces but release never stages. Each entry needs a reason. Anything staged must be validated; anything validated must be staged unless listed here. Empty until a tag run shows which jars, if any, are build-only.",
-  "allowed": []
+  "_comment": "Binary jars the evidence build (build/**/libs) produces but release never stages. Each entry needs a reason and mirrors unpublishedModules in build.gradle.kts. Anything staged must be validated; anything validated must be staged unless listed here.",
+  "allowed": [
+    {
+      "name": "distribution-examples-0.7.0.jar",
+      "reason": "Executable documentation examples module; excluded from Maven Central publication (unpublishedModules)"
+    },
+    {
+      "name": "distribution-conformance-0.7.0.jar",
+      "reason": "Conformance verification harness; excluded from Maven Central publication (unpublishedModules)"
+    },
+    {
+      "name": "kms-plugins-thales-luna-0.7.0.jar",
+      "reason": "Pure stub KMS module; excluded from Maven Central publication (unpublishedModules)"
+    },
+    {
+      "name": "kms-plugins-utimaco-0.7.0.jar",
+      "reason": "Pure stub KMS module; excluded from Maven Central publication (unpublishedModules)"
+    },
+    {
+      "name": "kms-plugins-entrust-0.7.0.jar",
+      "reason": "Pure stub KMS module; excluded from Maven Central publication (unpublishedModules)"
+    },
+    {
+      "name": "kms-plugins-venafi-0.7.0.jar",
+      "reason": "Pure stub KMS module; excluded from Maven Central publication (unpublishedModules)"
+    },
+    {
+      "name": "did-plugins-threebox-0.7.0.jar",
+      "reason": "Pure stub DID module; excluded from Maven Central publication (unpublishedModules)"
+    },
+    {
+      "name": "did-plugins-btcr-0.7.0.jar",
+      "reason": "Pure stub DID module; excluded from Maven Central publication (unpublishedModules)"
+    },
+    {
+      "name": "did-plugins-tezos-0.7.0.jar",
+      "reason": "Pure stub DID module; excluded from Maven Central publication (unpublishedModules)"
+    },
+    {
+      "name": "did-plugins-ens-0.7.0.jar",
+      "reason": "Pure stub DID module; excluded from Maven Central publication (unpublishedModules)"
+    },
+    {
+      "name": "anchors-plugins-starknet-0.7.0.jar",
+      "reason": "Pure stub anchor module; excluded from Maven Central publication (unpublishedModules)"
+    },
+    {
+      "name": "credentials-plugins-platforms-salesforce-0.7.0.jar",
+      "reason": "Pure stub platform module; excluded from Maven Central publication (unpublishedModules)"
+    },
+    {
+      "name": "credentials-plugins-platforms-servicenow-0.7.0.jar",
+      "reason": "Pure stub platform module; excluded from Maven Central publication (unpublishedModules)"
+    },
+    {
+      "name": "signatures-pades-0.7.0.jar",
+      "reason": "Pure stub signature module; excluded from Maven Central publication (unpublishedModules)"
+    }
+  ]
 }

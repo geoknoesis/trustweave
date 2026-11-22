@@ -1,4 +1,5 @@
 ---
+title: "Credential Exchange Protocols - Quick Start"
 redirect_from:
   - /features/credential-exchange-protocols/QUICK_START/
 parent: Feature Reference

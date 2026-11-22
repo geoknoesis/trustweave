@@ -38,9 +38,11 @@ class PresentationDslTest {
         type: String,
         subjectId: String = "did:key:holder",
         claims: Map<String, Any> = emptyMap(),
+        proofSuite: org.trustweave.credential.format.ProofSuiteId = org.trustweave.credential.format.ProofSuiteId.VC_LD,
     ): VerifiableCredential =
         trustWeave
             .issue {
+                withProof(proofSuite)
                 credential {
                     type(type)
                     issuer(issuerDid)
@@ -212,12 +214,37 @@ class PresentationDslTest {
                 trustWeave
                     .presentationResult {
                         credentials(credential)
-                        holder("did:key:holder")
+                        holder(issuerDid)
+                        verificationMethod("$issuerDid#$keyId")
                         challenge("verification-challenge-123")
                     }.getOrThrow()
 
             assertNotNull(presentation)
-            assertEquals("verification-challenge-123", presentation.challenge)
+            val proof =
+                presentation.proof as? org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof
+            assertNotNull(proof, "Challenge presentation must carry a signed LinkedDataProof")
+            assertEquals(
+                kotlinx.serialization.json.JsonPrimitive("verification-challenge-123"),
+                proof.additionalProperties["challenge"],
+            )
+        }
+
+    @Test
+    fun `test presentation creation with challenge without verificationMethod fails explicitly`() =
+        runBlocking<Unit> {
+            val credential = issueTestCredential(type = "PersonCredential")
+
+            val result =
+                trustWeave.presentationResult {
+                    credentials(credential)
+                    holder("did:key:holder")
+                    challenge("verification-challenge-123")
+                }
+
+            assertTrue(
+                result is org.trustweave.trust.types.PresentationResult.Failure.AdapterError,
+                "Requesting a challenge proof without verificationMethod must fail explicitly, got: $result",
+            )
         }
 
     @Test
@@ -229,12 +256,19 @@ class PresentationDslTest {
                 trustWeave
                     .presentationResult {
                         credentials(credential)
-                        holder("did:key:holder")
+                        holder(issuerDid)
+                        verificationMethod("$issuerDid#$keyId")
                         domain("example.com")
                     }.getOrThrow()
 
             assertNotNull(presentation)
-            assertEquals("example.com", presentation.domain)
+            val proof =
+                presentation.proof as? org.trustweave.credential.model.vc.CredentialProof.LinkedDataProof
+            assertNotNull(proof, "Domain presentation must carry a signed LinkedDataProof")
+            assertEquals(
+                kotlinx.serialization.json.JsonPrimitive("example.com"),
+                proof.additionalProperties["domain"],
+            )
         }
 
     @Test
@@ -311,6 +345,7 @@ class PresentationDslTest {
                             "email" to "john@example.com",
                             "ssn" to "123-45-6789",
                         ),
+                    proofSuite = org.trustweave.credential.format.ProofSuiteId.SD_JWT_VC,
                 )
 
             val presentation =

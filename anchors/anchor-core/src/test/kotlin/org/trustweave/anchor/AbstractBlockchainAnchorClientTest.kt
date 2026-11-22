@@ -1,184 +1,214 @@
 package org.trustweave.anchor
 
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import org.junit.jupiter.api.Test
 import org.trustweave.anchor.exceptions.BlockchainException
 import org.trustweave.core.exception.TrustWeaveException
-import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.*
-import org.junit.jupiter.api.Test
-import kotlin.test.*
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 /**
  * Comprehensive tests for AbstractBlockchainAnchorClient API.
  * Tests via a concrete test implementation.
  */
 class AbstractBlockchainAnchorClientTest {
+    @Test
+    fun `test writePayload with opt-in in-memory test mode`() =
+        runBlocking<Unit> {
+            val client =
+                TestBlockchainAnchorClient(
+                    chainId = "algorand:testnet",
+                    canSubmit = false,
+                    inMemoryTestMode = true,
+                )
+
+            val payload =
+                buildJsonObject {
+                    put("data", "test")
+                }
+
+            val result = client.writePayload(payload)
+
+            assertNotNull(result)
+            assertEquals("algorand:testnet", result.ref.chainId)
+            assertNotNull(result.ref.txHash)
+            assertTrue(result.ref.txHash.startsWith("test_tx_"))
+            // In-memory references must be clearly marked as test-mode artifacts
+            assertEquals("true", result.ref.extra[AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE])
+        }
 
     @Test
-    fun `test writePayload with opt-in in-memory test mode`() = runBlocking<Unit> {
-        val client = TestBlockchainAnchorClient(
-            chainId = "algorand:testnet",
-            canSubmit = false,
-            inMemoryTestMode = true
-        )
+    fun `test writePayload fails closed without credentials when test mode is off`() =
+        runBlocking<Unit> {
+            val client =
+                TestBlockchainAnchorClient(
+                    chainId = "algorand:testnet",
+                    canSubmit = false,
+                )
 
-        val payload = buildJsonObject {
-            put("data", "test")
+            val payload =
+                buildJsonObject {
+                    put("data", "test")
+                }
+
+            val exception =
+                assertFailsWith<BlockchainException.ConfigurationFailed> {
+                    client.writePayload(payload)
+                }
+            assertTrue(
+                exception.message.contains(AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE),
+                "Error should explain how to opt in to the test fallback",
+            )
         }
-
-        val result = client.writePayload(payload)
-
-        assertNotNull(result)
-        assertEquals("algorand:testnet", result.ref.chainId)
-        assertNotNull(result.ref.txHash)
-        assertTrue(result.ref.txHash.startsWith("test_tx_"))
-        // In-memory references must be clearly marked as test-mode artifacts
-        assertEquals("true", result.ref.extra[AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE])
-    }
 
     @Test
-    fun `test writePayload fails closed without credentials when test mode is off`() = runBlocking<Unit> {
-        val client = TestBlockchainAnchorClient(
-            chainId = "algorand:testnet",
-            canSubmit = false
-        )
+    fun `test writePayload with real mode`() =
+        runBlocking<Unit> {
+            val client =
+                TestBlockchainAnchorClient(
+                    chainId = "algorand:testnet",
+                    canSubmit = true,
+                )
 
-        val payload = buildJsonObject {
-            put("data", "test")
-        }
+            val payload =
+                buildJsonObject {
+                    put("data", "test")
+                }
 
-        val exception = assertFailsWith<BlockchainException.ConfigurationFailed> {
-            client.writePayload(payload)
+            val result = client.writePayload(payload)
+
+            assertNotNull(result)
+            assertEquals("algorand:testnet", result.ref.chainId)
+            assertNotNull(result.ref.txHash)
+            assertTrue(result.ref.txHash.startsWith("real_tx_"))
         }
-        assertTrue(
-            exception.message.contains(AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE),
-            "Error should explain how to opt in to the test fallback"
-        )
-    }
 
     @Test
-    fun `test writePayload with real mode`() = runBlocking<Unit> {
-        val client = TestBlockchainAnchorClient(
-            chainId = "algorand:testnet",
-            canSubmit = true
-        )
+    fun `test writePayload with contract address`() =
+        runBlocking<Unit> {
+            val client =
+                TestBlockchainAnchorClient(
+                    chainId = "algorand:testnet",
+                    contractAddress = "app-123",
+                    inMemoryTestMode = true,
+                )
 
-        val payload = buildJsonObject {
-            put("data", "test")
+            val payload =
+                buildJsonObject {
+                    put("data", "test")
+                }
+
+            val result = client.writePayload(payload)
+
+            assertEquals("app-123", result.ref.contract)
         }
-
-        val result = client.writePayload(payload)
-
-        assertNotNull(result)
-        assertEquals("algorand:testnet", result.ref.chainId)
-        assertNotNull(result.ref.txHash)
-        assertTrue(result.ref.txHash.startsWith("real_tx_"))
-    }
 
     @Test
-    fun `test writePayload with contract address`() = runBlocking<Unit> {
-        val client = TestBlockchainAnchorClient(
-            chainId = "algorand:testnet",
-            contractAddress = "app-123",
-            inMemoryTestMode = true
-        )
+    fun `test writePayload with custom media type`() =
+        runBlocking<Unit> {
+            val client = TestBlockchainAnchorClient("algorand:testnet", inMemoryTestMode = true)
 
-        val payload = buildJsonObject {
-            put("data", "test")
+            val payload =
+                buildJsonObject {
+                    put("data", "test")
+                }
+
+            val result = client.writePayload(payload, "application/cbor")
+
+            assertEquals("application/cbor", result.mediaType)
+            assertTrue(result.ref.extra.containsKey("mediaType"))
+            assertEquals("application/cbor", result.ref.extra["mediaType"])
         }
-
-        val result = client.writePayload(payload)
-
-        assertEquals("app-123", result.ref.contract)
-    }
 
     @Test
-    fun `test writePayload with custom media type`() = runBlocking<Unit> {
-        val client = TestBlockchainAnchorClient("algorand:testnet", inMemoryTestMode = true)
+    fun `test readPayload roundtrip from in-memory storage when test mode is on`() =
+        runBlocking<Unit> {
+            val client = TestBlockchainAnchorClient("algorand:testnet", inMemoryTestMode = true)
 
-        val payload = buildJsonObject {
-            put("data", "test")
+            val payload =
+                buildJsonObject {
+                    put("data", "test")
+                }
+
+            val writeResult = client.writePayload(payload)
+            val readResult = client.readPayload(writeResult.ref)
+
+            assertEquals(writeResult.payload, readResult.payload)
+            assertEquals(writeResult.ref.txHash, readResult.ref.txHash)
         }
-
-        val result = client.writePayload(payload, "application/cbor")
-
-        assertEquals("application/cbor", result.mediaType)
-        assertTrue(result.ref.extra.containsKey("mediaType"))
-        assertEquals("application/cbor", result.ref.extra["mediaType"])
-    }
 
     @Test
-    fun `test readPayload roundtrip from in-memory storage when test mode is on`() = runBlocking<Unit> {
-        val client = TestBlockchainAnchorClient("algorand:testnet", inMemoryTestMode = true)
+    fun `test readPayload validates chain ID`() =
+        runBlocking<Unit> {
+            val client = TestBlockchainAnchorClient("algorand:testnet")
 
-        val payload = buildJsonObject {
-            put("data", "test")
+            val ref =
+                AnchorRef(
+                    chainId = "eip155:137",
+                    txHash = "tx-123",
+                )
+
+            assertFailsWith<IllegalArgumentException> {
+                client.readPayload(ref)
+            }
         }
-
-        val writeResult = client.writePayload(payload)
-        val readResult = client.readPayload(writeResult.ref)
-
-        assertEquals(writeResult.payload, readResult.payload)
-        assertEquals(writeResult.ref.txHash, readResult.ref.txHash)
-    }
 
     @Test
-    fun `test readPayload validates chain ID`() = runBlocking<Unit> {
-        val client = TestBlockchainAnchorClient("algorand:testnet")
+    fun `test readPayload throws NotFoundException when not found`() =
+        runBlocking<Unit> {
+            val client = TestBlockchainAnchorClient("algorand:testnet")
 
-        val ref = AnchorRef(
-            chainId = "eip155:137",
-            txHash = "tx-123"
-        )
+            val ref =
+                AnchorRef(
+                    chainId = "algorand:testnet",
+                    txHash = "nonexistent-tx",
+                )
 
-        assertFailsWith<IllegalArgumentException> {
-            client.readPayload(ref)
+            assertFailsWith<TrustWeaveException.NotFound> {
+                client.readPayload(ref)
+            }
         }
-    }
 
     @Test
-    fun `test readPayload throws NotFoundException when not found`() = runBlocking<Unit> {
-        val client = TestBlockchainAnchorClient("algorand:testnet")
+    fun `test writePayload handles exceptions`() =
+        runBlocking<Unit> {
+            val client =
+                TestBlockchainAnchorClient(
+                    chainId = "algorand:testnet",
+                    canSubmit = true,
+                    throwOnSubmit = true,
+                )
 
-        val ref = AnchorRef(
-            chainId = "algorand:testnet",
-            txHash = "nonexistent-tx"
-        )
+            val payload =
+                buildJsonObject {
+                    put("data", "test")
+                }
 
-        assertFailsWith<TrustWeaveException.NotFound> {
-            client.readPayload(ref)
+            assertFailsWith<BlockchainException.TransactionFailed> {
+                client.writePayload(payload)
+            }
         }
-    }
 
     @Test
-    fun `test writePayload handles exceptions`() = runBlocking<Unit> {
-        val client = TestBlockchainAnchorClient(
-            chainId = "algorand:testnet",
-            canSubmit = true,
-            throwOnSubmit = true
-        )
+    fun `test buildAnchorRef with extra metadata`() =
+        runBlocking<Unit> {
+            val client = TestBlockchainAnchorClient("algorand:testnet", inMemoryTestMode = true)
 
-        val payload = buildJsonObject {
-            put("data", "test")
+            val payload =
+                buildJsonObject {
+                    put("data", "test")
+                }
+
+            val result = client.writePayload(payload, "application/json")
+
+            assertTrue(result.ref.extra.containsKey("mediaType"))
         }
-
-        assertFailsWith<BlockchainException.TransactionFailed> {
-            client.writePayload(payload)
-        }
-    }
-
-    @Test
-    fun `test buildAnchorRef with extra metadata`() = runBlocking<Unit> {
-        val client = TestBlockchainAnchorClient("algorand:testnet", inMemoryTestMode = true)
-
-        val payload = buildJsonObject {
-            put("data", "test")
-        }
-
-        val result = client.writePayload(payload, "application/json")
-
-        assertTrue(result.ref.extra.containsKey("mediaType"))
-    }
 
     @Test
     fun `test fabricated test hashes never collide`() {
@@ -208,8 +238,7 @@ class AbstractBlockchainAnchorClientTest {
 
         override fun canSubmitTransaction(): Boolean = false
 
-        override suspend fun submitTransactionToBlockchain(payloadBytes: ByteArray): String =
-            throw UnsupportedOperationException()
+        override suspend fun submitTransactionToBlockchain(payloadBytes: ByteArray): String = throw UnsupportedOperationException()
 
         override suspend fun readTransactionFromBlockchain(txHash: String): AnchorResult =
             throw TrustWeaveException.NotFound("not supported")
@@ -227,15 +256,16 @@ class AbstractBlockchainAnchorClientTest {
         private val canSubmit: Boolean = false,
         private val contractAddress: String? = null,
         private val throwOnSubmit: Boolean = false,
-        inMemoryTestMode: Boolean = false
+        inMemoryTestMode: Boolean = false,
     ) : AbstractBlockchainAnchorClient(
-        chainId = chainId,
-        options = mapOf(
-            "contractAddress" to contractAddress,
-            "appId" to contractAddress,
-            AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE to inMemoryTestMode
-        )
-    ) {
+            chainId = chainId,
+            options =
+                mapOf(
+                    "contractAddress" to contractAddress,
+                    "appId" to contractAddress,
+                    AbstractBlockchainAnchorClient.OPTION_IN_MEMORY_TEST_MODE to inMemoryTestMode,
+                ),
+        ) {
         private val realStorage = ConcurrentHashMap<String, AnchorResult>()
         private var realTxCounter = 0
 
@@ -248,26 +278,22 @@ class AbstractBlockchainAnchorClientTest {
             val txHash = "real_tx_${realTxCounter++}_${System.currentTimeMillis()}"
             val ref = buildAnchorRef(txHash, getContractAddress(), buildExtraMetadata("application/json"))
             val payload = Json.parseToJsonElement(String(payloadBytes))
-            val result = AnchorResult(
-                ref = ref,
-                payload = payload,
-                mediaType = "application/json",
-                timestamp = System.currentTimeMillis() / 1000
-            )
+            val result =
+                AnchorResult(
+                    ref = ref,
+                    payload = payload,
+                    mediaType = "application/json",
+                    timestamp = System.currentTimeMillis() / 1000,
+                )
             realStorage[txHash] = result
             return txHash
         }
 
-        override suspend fun readTransactionFromBlockchain(txHash: String): AnchorResult {
-            return realStorage[txHash] ?: throw TrustWeaveException.NotFound("Not found: $txHash")
-        }
+        override suspend fun readTransactionFromBlockchain(txHash: String): AnchorResult =
+            realStorage[txHash] ?: throw TrustWeaveException.NotFound("Not found: $txHash")
 
-        override fun generateTestTxHash(): String {
-            return "test_tx_${System.currentTimeMillis()}_${Math.random()}"
-        }
+        override fun generateTestTxHash(): String = "test_tx_${System.currentTimeMillis()}_${Math.random()}"
 
         override fun getBlockchainName(): String = "Test Blockchain"
     }
 }
-
-

@@ -1,8 +1,11 @@
 package org.trustweave.contract.evaluation
 
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.trustweave.contract.models.ConditionType
 import org.trustweave.core.util.DigestUtils
-import kotlinx.serialization.json.*
 import java.io.InputStream
 import java.security.MessageDigest
 
@@ -18,7 +21,6 @@ import java.security.MessageDigest
  * Use [BaseEvaluationEngine] which provides automatic hash calculation.
  */
 internal object EngineHash {
-
     /**
      * Computes hash from class file bytecode.
      *
@@ -31,11 +33,13 @@ internal object EngineHash {
      */
     fun fromClassFile(engineClass: Class<out ContractEvaluationEngine>): String {
         val className = engineClass.name.replace('.', '/') + ".class"
-        val classLoader = engineClass.classLoader
-            ?: throw IllegalStateException("Cannot get classloader for ${engineClass.name}")
+        val classLoader =
+            engineClass.classLoader
+                ?: throw IllegalStateException("Cannot get classloader for ${engineClass.name}")
 
-        val inputStream: InputStream = classLoader.getResourceAsStream(className)
-            ?: throw IllegalStateException("Cannot find class file for ${engineClass.name}")
+        val inputStream: InputStream =
+            classLoader.getResourceAsStream(className)
+                ?: throw IllegalStateException("Cannot find class file for ${engineClass.name}")
 
         return inputStream.use { stream ->
             val bytecode = stream.readBytes()
@@ -62,18 +66,22 @@ internal object EngineHash {
         engineId: String,
         version: String,
         supportedConditionTypes: Set<ConditionType>,
-        implementationSignature: String? = null
+        implementationSignature: String? = null,
     ): String {
-        val descriptor = buildJsonObject {
-            put("engineId", engineId)
-            put("version", version)
-            put("supportedConditionTypes", buildJsonArray {
-                supportedConditionTypes.forEach { add(it.name) }
-            })
-            if (implementationSignature != null) {
-                put("implementationSignature", implementationSignature)
+        val descriptor =
+            buildJsonObject {
+                put("engineId", engineId)
+                put("version", version)
+                put(
+                    "supportedConditionTypes",
+                    buildJsonArray {
+                        supportedConditionTypes.forEach { add(it.name) }
+                    },
+                )
+                if (implementationSignature != null) {
+                    put("implementationSignature", implementationSignature)
+                }
             }
-        }
 
         return DigestUtils.sha256DigestMultibase(descriptor)
     }
@@ -93,21 +101,25 @@ internal object EngineHash {
         engineClass: Class<out ContractEvaluationEngine>,
         engineId: String,
         version: String,
-        supportedConditionTypes: Set<ConditionType>
+        supportedConditionTypes: Set<ConditionType>,
     ): String {
         // Hash bytecode
         val bytecodeHash = fromClassFile(engineClass)
 
         // Hash descriptor
-        val descriptorHash = fromDescriptor(
-            engineId, version, supportedConditionTypes
-        )
+        val descriptorHash =
+            fromDescriptor(
+                engineId,
+                version,
+                supportedConditionTypes,
+            )
 
         // Combine both hashes
-        val combined = buildJsonObject {
-            put("bytecodeHash", bytecodeHash)
-            put("descriptorHash", descriptorHash)
-        }
+        val combined =
+            buildJsonObject {
+                put("bytecodeHash", bytecodeHash)
+                put("descriptorHash", descriptorHash)
+            }
 
         return DigestUtils.sha256DigestMultibase(combined)
     }
@@ -137,7 +149,6 @@ internal object EngineHash {
             }
         }
 
-        return "u${sb.reverse().toString()}"
+        return "u${sb.reverse()}"
     }
 }
-

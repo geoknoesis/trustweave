@@ -1,30 +1,39 @@
 package org.trustweave.core.plugin
 
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.addJsonObject
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import org.junit.jupiter.api.Test
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Comprehensive tests for PluginConfiguration, PluginConfig, PluginType, PluginConfigurationLoader.
  */
 class PluginConfigurationTest {
-
     @Test
     fun `test PluginConfiguration with all fields`() {
-        val config = PluginConfiguration(
-            plugins = listOf(
-                PluginConfig(
-                    id = "test-plugin",
-                    type = PluginType.CREDENTIAL_SERVICE,
-                    provider = "test",
-                    enabled = true,
-                    config = mapOf("key" to "value"),
-                    priority = 1
-                )
-            ),
-            defaultProviders = mapOf("credential-service" to "test"),
-            providerChains = mapOf("credential-service" to listOf("test", "fallback"))
-        )
+        val config =
+            PluginConfiguration(
+                plugins =
+                    listOf(
+                        PluginConfig(
+                            id = "test-plugin",
+                            type = PluginType.CREDENTIAL_SERVICE,
+                            provider = "test",
+                            enabled = true,
+                            config = mapOf("key" to "value"),
+                            priority = 1,
+                        ),
+                    ),
+                defaultProviders = mapOf("credential-service" to "test"),
+                providerChains = mapOf("credential-service" to listOf("test", "fallback")),
+            )
 
         assertEquals(1, config.plugins.size)
         assertEquals(1, config.defaultProviders.size)
@@ -42,14 +51,15 @@ class PluginConfigurationTest {
 
     @Test
     fun `test PluginConfig with all fields`() {
-        val pluginConfig = PluginConfig(
-            id = "test-plugin",
-            type = PluginType.CREDENTIAL_SERVICE,
-            provider = "test",
-            enabled = true,
-            config = mapOf("key1" to "value1", "key2" to "value2"),
-            priority = 5
-        )
+        val pluginConfig =
+            PluginConfig(
+                id = "test-plugin",
+                type = PluginType.CREDENTIAL_SERVICE,
+                provider = "test",
+                enabled = true,
+                config = mapOf("key1" to "value1", "key2" to "value2"),
+                priority = 5,
+            )
 
         assertEquals("test-plugin", pluginConfig.id)
         assertEquals(PluginType.CREDENTIAL_SERVICE, pluginConfig.type)
@@ -61,11 +71,12 @@ class PluginConfigurationTest {
 
     @Test
     fun `test PluginConfig with defaults`() {
-        val pluginConfig = PluginConfig(
-            id = "test-plugin",
-            type = PluginType.CREDENTIAL_SERVICE,
-            provider = "test"
-        )
+        val pluginConfig =
+            PluginConfig(
+                id = "test-plugin",
+                type = PluginType.CREDENTIAL_SERVICE,
+                provider = "test",
+            )
 
         assertTrue(pluginConfig.enabled)
         assertTrue(pluginConfig.config.isEmpty())
@@ -74,12 +85,13 @@ class PluginConfigurationTest {
 
     @Test
     fun `test PluginConfig getConfigValue`() {
-        val pluginConfig = PluginConfig(
-            id = "test-plugin",
-            type = PluginType.CREDENTIAL_SERVICE,
-            provider = "test",
-            config = mapOf("key" to "value")
-        )
+        val pluginConfig =
+            PluginConfig(
+                id = "test-plugin",
+                type = PluginType.CREDENTIAL_SERVICE,
+                provider = "test",
+                config = mapOf("key" to "value"),
+            )
 
         assertEquals("value", pluginConfig.getConfigValue("key"))
         assertNull(pluginConfig.getConfigValue("nonexistent"))
@@ -87,12 +99,13 @@ class PluginConfigurationTest {
 
     @Test
     fun `test PluginConfig getConfigInt`() {
-        val pluginConfig = PluginConfig(
-            id = "test-plugin",
-            type = PluginType.CREDENTIAL_SERVICE,
-            provider = "test",
-            config = mapOf("port" to "8080", "invalid" to "not-a-number")
-        )
+        val pluginConfig =
+            PluginConfig(
+                id = "test-plugin",
+                type = PluginType.CREDENTIAL_SERVICE,
+                provider = "test",
+                config = mapOf("port" to "8080", "invalid" to "not-a-number"),
+            )
 
         assertEquals(8080, pluginConfig.getConfigInt("port"))
         assertNull(pluginConfig.getConfigInt("invalid"))
@@ -101,12 +114,13 @@ class PluginConfigurationTest {
 
     @Test
     fun `test PluginConfig getConfigBoolean`() {
-        val pluginConfig = PluginConfig(
-            id = "test-plugin",
-            type = PluginType.CREDENTIAL_SERVICE,
-            provider = "test",
-            config = mapOf("enabled" to "true", "disabled" to "false", "invalid" to "maybe")
-        )
+        val pluginConfig =
+            PluginConfig(
+                id = "test-plugin",
+                type = PluginType.CREDENTIAL_SERVICE,
+                provider = "test",
+                config = mapOf("enabled" to "true", "disabled" to "false", "invalid" to "maybe"),
+            )
 
         assertEquals(true, pluginConfig.getConfigBoolean("enabled"))
         assertEquals(false, pluginConfig.getConfigBoolean("disabled"))
@@ -116,12 +130,13 @@ class PluginConfigurationTest {
 
     @Test
     fun `test PluginConfig getConfigLong`() {
-        val pluginConfig = PluginConfig(
-            id = "test-plugin",
-            type = PluginType.CREDENTIAL_SERVICE,
-            provider = "test",
-            config = mapOf("timestamp" to "1234567890", "invalid" to "not-a-long")
-        )
+        val pluginConfig =
+            PluginConfig(
+                id = "test-plugin",
+                type = PluginType.CREDENTIAL_SERVICE,
+                provider = "test",
+                config = mapOf("timestamp" to "1234567890", "invalid" to "not-a-long"),
+            )
 
         assertEquals(1234567890L, pluginConfig.getConfigLong("timestamp"))
         assertNull(pluginConfig.getConfigLong("invalid"))
@@ -130,12 +145,13 @@ class PluginConfigurationTest {
 
     @Test
     fun `test PluginConfig getConfigDouble`() {
-        val pluginConfig = PluginConfig(
-            id = "test-plugin",
-            type = PluginType.CREDENTIAL_SERVICE,
-            provider = "test",
-            config = mapOf("ratio" to "3.14", "invalid" to "not-a-double")
-        )
+        val pluginConfig =
+            PluginConfig(
+                id = "test-plugin",
+                type = PluginType.CREDENTIAL_SERVICE,
+                provider = "test",
+                config = mapOf("ratio" to "3.14", "invalid" to "not-a-double"),
+            )
 
         assertEquals(3.14, pluginConfig.getConfigDouble("ratio"))
         assertNull(pluginConfig.getConfigDouble("invalid"))
@@ -144,12 +160,13 @@ class PluginConfigurationTest {
 
     @Test
     fun `test PluginConfig getConfigAsJsonObject`() {
-        val pluginConfig = PluginConfig(
-            id = "test-plugin",
-            type = PluginType.CREDENTIAL_SERVICE,
-            provider = "test",
-            config = mapOf("key" to "value", "number" to "42")
-        )
+        val pluginConfig =
+            PluginConfig(
+                id = "test-plugin",
+                type = PluginType.CREDENTIAL_SERVICE,
+                provider = "test",
+                config = mapOf("key" to "value", "number" to "42"),
+            )
 
         val jsonObject = pluginConfig.getConfigAsJsonObject()
 
@@ -159,15 +176,17 @@ class PluginConfigurationTest {
 
     @Test
     fun `test PluginConfig getConfigAsJsonObject with JSON values`() {
-        val pluginConfig = PluginConfig(
-            id = "test-plugin",
-            type = PluginType.CREDENTIAL_SERVICE,
-            provider = "test",
-            config = mapOf(
-                "simple" to "value",
-                "json" to """{"nested": "object"}"""
+        val pluginConfig =
+            PluginConfig(
+                id = "test-plugin",
+                type = PluginType.CREDENTIAL_SERVICE,
+                provider = "test",
+                config =
+                    mapOf(
+                        "simple" to "value",
+                        "json" to """{"nested": "object"}""",
+                    ),
             )
-        )
 
         val jsonObject = pluginConfig.getConfigAsJsonObject()
 
@@ -178,12 +197,13 @@ class PluginConfigurationTest {
 
     @Test
     fun `test PluginConfig getConfigAsJsonObject with invalid JSON falls back to string`() {
-        val pluginConfig = PluginConfig(
-            id = "test-plugin",
-            type = PluginType.CREDENTIAL_SERVICE,
-            provider = "test",
-            config = mapOf("invalid" to "{ invalid json }")
-        )
+        val pluginConfig =
+            PluginConfig(
+                id = "test-plugin",
+                type = PluginType.CREDENTIAL_SERVICE,
+                provider = "test",
+                config = mapOf("invalid" to "{ invalid json }"),
+            )
 
         val jsonObject = pluginConfig.getConfigAsJsonObject()
 
@@ -239,15 +259,19 @@ class PluginConfigurationTest {
 
     @Test
     fun `test PluginConfigurationLoader loadFromJsonObject`() {
-        val jsonObject = buildJsonObject {
-            put("plugins", buildJsonArray {
-                addJsonObject {
-                    put("id", "test-plugin")
-                    put("type", "CREDENTIAL_SERVICE")
-                    put("provider", "test")
-                }
-            })
-        }
+        val jsonObject =
+            buildJsonObject {
+                put(
+                    "plugins",
+                    buildJsonArray {
+                        addJsonObject {
+                            put("id", "test-plugin")
+                            put("type", "CREDENTIAL_SERVICE")
+                            put("provider", "test")
+                        }
+                    },
+                )
+            }
 
         val config = PluginConfigurationLoader.loadFromJsonObject(jsonObject)
 
@@ -255,4 +279,3 @@ class PluginConfigurationTest {
         assertEquals("test-plugin", config.plugins.first().id)
     }
 }
-

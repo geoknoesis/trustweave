@@ -273,6 +273,14 @@ class TrustWeaveConfig internal constructor(
          *   is anything other than [SchemaFormat.JSON_SCHEMA]; alternative default schema formats
          *   are not yet supported and would otherwise be silently ignored.
          */
+        @Deprecated(
+            message =
+                "Declarative schema configuration is not supported yet; automatic schema validation " +
+                    "(autoValidate = true) throws UnsupportedOperationException and only SchemaFormat.JSON_SCHEMA is supported. " +
+                    "Register and validate schemas programmatically via trustWeave.registerSchema { ... } and " +
+                    "trustWeave.verify { validateSchema(...) } instead.",
+            level = DeprecationLevel.WARNING,
+        )
         fun schemas(
             autoValidate: Boolean = false,
             defaultFormat: SchemaFormat = SchemaFormat.JSON_SCHEMA,

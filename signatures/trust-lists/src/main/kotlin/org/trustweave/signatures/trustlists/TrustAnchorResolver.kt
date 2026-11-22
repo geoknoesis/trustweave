@@ -181,7 +181,7 @@ class DefaultTrustAnchorResolver(
                     withdrawnAt = service.statusStartingTime,
                 )
 
-            else -> null ?: TrustAnchorMatch.NotTrusted
+            else -> TrustAnchorMatch.NotTrusted
         }
     }
 

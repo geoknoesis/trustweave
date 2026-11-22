@@ -1,3 +1,11 @@
+---
+layout: default
+title: Wallet configuration rejection
+parent: Verified Examples
+grand_parent: Operations
+nav_order: 40
+---
+
 # Wallet configuration rejection
 
 This complete test checks deployment maturity, unsafe paths and invalid/conflicting encryption keys before accepting configuration. It demonstrates rejected configurations, not a production endorsement of the file wallet. Run `:wallet:plugins:file:test --tests "*FileWalletFactoryTest"`.

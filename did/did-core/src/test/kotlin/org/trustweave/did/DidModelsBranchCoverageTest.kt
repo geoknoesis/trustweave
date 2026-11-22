@@ -13,7 +13,11 @@ import org.trustweave.did.resolver.DidErrorType
 import org.trustweave.did.resolver.DidResolutionError
 import org.trustweave.did.resolver.DidResolutionMetadata
 import org.trustweave.did.resolver.DidResolutionResult
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Instant
 
 /**

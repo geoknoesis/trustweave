@@ -124,7 +124,10 @@ class Oidc4VciService(
     private data class TokenResponse(
         val accessToken: String,
         val cNonce: String?,
-    )
+    ) {
+        override fun toString(): String =
+            "TokenResponse(accessToken=[REDACTED], cNonce=${if (cNonce != null) "[REDACTED]" else "null"})"
+    }
 
     /**
      * Internal signal: credential endpoint rejected the proof and supplied a fresh `c_nonce`

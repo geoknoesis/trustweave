@@ -48,6 +48,7 @@ class DatabaseTrustRegistry(
 
     private fun initializeSchemaLocked() {
         dataSource.connection.use { conn ->
+            val savedAutoCommit = conn.autoCommit
             conn.autoCommit = false
             try {
                 conn
@@ -66,7 +67,7 @@ class DatabaseTrustRegistry(
                             revocation_reason TEXT
                         )
                         """.trimIndent(),
-                    ).execute()
+                    ).use { it.execute() }
                 conn
                     .prepareStatement(
                         """
@@ -82,7 +83,7 @@ class DatabaseTrustRegistry(
                             revocation_reason TEXT
                         )
                         """.trimIndent(),
-                    ).execute()
+                    ).use { it.execute() }
                 conn
                     .prepareStatement(
                         """
@@ -96,13 +97,15 @@ class DatabaseTrustRegistry(
                             changed_at TIMESTAMP NOT NULL
                         )
                         """.trimIndent(),
-                    ).execute()
+                    ).use { it.execute() }
                 addColumnIfMissing(conn, "registry_issuers", "revocation_reason", "TEXT")
                 addColumnIfMissing(conn, "registry_verifiers", "revocation_reason", "TEXT")
                 conn.commit()
             } catch (e: Exception) {
-                conn.rollback()
+                runCatching { conn.rollback() }
                 throw RuntimeException("Failed to initialise trust registry schema: ${e.message}", e)
+            } finally {
+                runCatching { conn.autoCommit = savedAutoCommit }
             }
         }
     }
@@ -237,17 +240,18 @@ class DatabaseTrustRegistry(
                         conn
                             .prepareStatement(
                                 "INSERT INTO registry_issuers (did,name,description,credential_types,service_endpoint,status,registered_at,updated_at,metadata) VALUES (?,?,?,?,?,?,?,?,?)",
-                            ).apply {
-                                setString(1, registration.did)
-                                setString(2, registration.name)
-                                setString(3, registration.description)
-                                setString(4, json.encodeToString(registration.credentialTypes))
-                                setString(5, registration.serviceEndpoint)
-                                setString(6, AccreditationStatus.ACTIVE.name)
-                                setTimestamp(7, Timestamp(now.toEpochMilliseconds()))
-                                setTimestamp(8, Timestamp(now.toEpochMilliseconds()))
-                                setString(9, json.encodeToString(registration.metadata))
-                            }.executeUpdate()
+                            ).use { st ->
+                                st.setString(1, registration.did)
+                                st.setString(2, registration.name)
+                                st.setString(3, registration.description)
+                                st.setString(4, json.encodeToString(registration.credentialTypes))
+                                st.setString(5, registration.serviceEndpoint)
+                                st.setString(6, AccreditationStatus.ACTIVE.name)
+                                st.setTimestamp(7, Timestamp(now.toEpochMilliseconds()))
+                                st.setTimestamp(8, Timestamp(now.toEpochMilliseconds()))
+                                st.setString(9, json.encodeToString(registration.metadata))
+                                st.executeUpdate()
+                            }
                         recordChange(
                             conn,
                             ParticipantRole.ISSUER,
@@ -276,11 +280,10 @@ class DatabaseTrustRegistry(
     override suspend fun getIssuer(did: String): IssuerRecord? =
         withContext(Dispatchers.IO) {
             dataSource.connection.use { conn ->
-                conn
-                    .prepareStatement("SELECT * FROM registry_issuers WHERE did = ?")
-                    .apply { setString(1, did) }
-                    .executeQuery()
-                    .let { rs -> if (rs.next()) rowToIssuer(rs) else null }
+                conn.prepareStatement("SELECT * FROM registry_issuers WHERE did = ?").use { st ->
+                    st.setString(1, did)
+                    st.executeQuery().use { rs -> if (rs.next()) rowToIssuer(rs) else null }
+                }
             }
         }
 
@@ -376,24 +379,24 @@ class DatabaseTrustRegistry(
                                 "UPDATE registry_issuers SET name=COALESCE(?,name),description=COALESCE(?,description)," +
                                     "credential_types=COALESCE(?,credential_types),service_endpoint=COALESCE(?,service_endpoint)," +
                                     "metadata=COALESCE(?,metadata),updated_at=? WHERE did=?",
-                            ).apply {
-                                setString(1, update.name)
-                                setString(2, update.description)
-                                setString(3, update.credentialTypes?.let { json.encodeToString(it) })
-                                setString(4, update.serviceEndpoint)
-                                setString(5, update.metadata?.let { json.encodeToString(it) })
-                                setTimestamp(6, Timestamp(Clock.System.now().toEpochMilliseconds()))
-                                setString(7, did)
-                            }.executeUpdate()
+                            ).use { st ->
+                                st.setString(1, update.name)
+                                st.setString(2, update.description)
+                                st.setString(3, update.credentialTypes?.let { json.encodeToString(it) })
+                                st.setString(4, update.serviceEndpoint)
+                                st.setString(5, update.metadata?.let { json.encodeToString(it) })
+                                st.setTimestamp(6, Timestamp(Clock.System.now().toEpochMilliseconds()))
+                                st.setString(7, did)
+                                st.executeUpdate()
+                            }
                     if (rows == 0) throw NoSuchElementException("Issuer not found: $did")
-                    conn
-                        .prepareStatement("SELECT * FROM registry_issuers WHERE did = ?")
-                        .apply { setString(1, did) }
-                        .executeQuery()
-                        .let { rs ->
+                    conn.prepareStatement("SELECT * FROM registry_issuers WHERE did = ?").use { st ->
+                        st.setString(1, did)
+                        st.executeQuery().use { rs ->
                             rs.next()
                             rowToIssuer(rs)
                         }
+                    }
                 }
             }
         }
@@ -420,16 +423,17 @@ class DatabaseTrustRegistry(
                         conn
                             .prepareStatement(
                                 "INSERT INTO registry_verifiers (did,name,description,service_endpoint,status,registered_at,updated_at,metadata) VALUES (?,?,?,?,?,?,?,?)",
-                            ).apply {
-                                setString(1, registration.did)
-                                setString(2, registration.name)
-                                setString(3, registration.description)
-                                setString(4, registration.serviceEndpoint)
-                                setString(5, AccreditationStatus.ACTIVE.name)
-                                setTimestamp(6, Timestamp(now.toEpochMilliseconds()))
-                                setTimestamp(7, Timestamp(now.toEpochMilliseconds()))
-                                setString(8, json.encodeToString(registration.metadata))
-                            }.executeUpdate()
+                            ).use { st ->
+                                st.setString(1, registration.did)
+                                st.setString(2, registration.name)
+                                st.setString(3, registration.description)
+                                st.setString(4, registration.serviceEndpoint)
+                                st.setString(5, AccreditationStatus.ACTIVE.name)
+                                st.setTimestamp(6, Timestamp(now.toEpochMilliseconds()))
+                                st.setTimestamp(7, Timestamp(now.toEpochMilliseconds()))
+                                st.setString(8, json.encodeToString(registration.metadata))
+                                st.executeUpdate()
+                            }
                         recordChange(
                             conn,
                             ParticipantRole.VERIFIER,
@@ -457,11 +461,10 @@ class DatabaseTrustRegistry(
     override suspend fun getVerifier(did: String): VerifierRecord? =
         withContext(Dispatchers.IO) {
             dataSource.connection.use { conn ->
-                conn
-                    .prepareStatement("SELECT * FROM registry_verifiers WHERE did = ?")
-                    .apply { setString(1, did) }
-                    .executeQuery()
-                    .let { rs -> if (rs.next()) rowToVerifier(rs) else null }
+                conn.prepareStatement("SELECT * FROM registry_verifiers WHERE did = ?").use { st ->
+                    st.setString(1, did)
+                    st.executeQuery().use { rs -> if (rs.next()) rowToVerifier(rs) else null }
+                }
             }
         }
 
@@ -497,23 +500,23 @@ class DatabaseTrustRegistry(
                             .prepareStatement(
                                 "UPDATE registry_verifiers SET name=COALESCE(?,name),description=COALESCE(?,description)," +
                                     "service_endpoint=COALESCE(?,service_endpoint),metadata=COALESCE(?,metadata),updated_at=? WHERE did=?",
-                            ).apply {
-                                setString(1, update.name)
-                                setString(2, update.description)
-                                setString(3, update.serviceEndpoint)
-                                setString(4, update.metadata?.let { json.encodeToString(it) })
-                                setTimestamp(5, Timestamp(Clock.System.now().toEpochMilliseconds()))
-                                setString(6, did)
-                            }.executeUpdate()
+                            ).use { st ->
+                                st.setString(1, update.name)
+                                st.setString(2, update.description)
+                                st.setString(3, update.serviceEndpoint)
+                                st.setString(4, update.metadata?.let { json.encodeToString(it) })
+                                st.setTimestamp(5, Timestamp(Clock.System.now().toEpochMilliseconds()))
+                                st.setString(6, did)
+                                st.executeUpdate()
+                            }
                     if (rows == 0) throw NoSuchElementException("Verifier not found: $did")
-                    conn
-                        .prepareStatement("SELECT * FROM registry_verifiers WHERE did = ?")
-                        .apply { setString(1, did) }
-                        .executeQuery()
-                        .let { rs ->
+                    conn.prepareStatement("SELECT * FROM registry_verifiers WHERE did = ?").use { st ->
+                        st.setString(1, did)
+                        st.executeQuery().use { rs ->
                             rs.next()
                             rowToVerifier(rs)
                         }
+                    }
                 }
             }
         }

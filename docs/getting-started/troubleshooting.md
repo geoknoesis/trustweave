@@ -11,7 +11,7 @@ redirect_from:
 Common issues and solutions when working with TrustWeave.
 
 > **Version:** 0.7.0
-> If you encounter issues not covered here, please [file an issue](https://github.com/your-org/TrustWeave/issues) or check the [FAQ](../faq.md).
+> If you encounter issues not covered here, please [file an issue](https://github.com/geoknoesis/trustweave/issues) or check the [FAQ](../faq.md).
 
 ## Common Issues
 
@@ -172,20 +172,22 @@ contract and pass values via the matching DSL block:
 import org.trustweave.trust.TrustWeave
 
 val trustWeave = TrustWeave.build {
-    kms {
-        // KMS plugins typically need a credential or endpoint here.
+    keys {
+        provider("aws")
+        algorithm("P-256")
+        // Provider credentials and region are sourced from environment variables / AWS SDK chain.
     }
     did {
         method("web") {
-            // did:web plugin options
+            domain("yourdomain.com")
         }
     }
-    blockchains {
+    anchor {
         chain("algorand:testnet") {
             provider("algorand")
             options {
-                put("algodUrl",   System.getenv("ALGOD_URL"))
-                put("algodToken", System.getenv("ALGOD_TOKEN"))
+                "algodUrl" to System.getenv("ALGOD_URL")
+                "algodToken" to System.getenv("ALGOD_TOKEN")
             }
         }
     }
@@ -194,7 +196,7 @@ val trustWeave = TrustWeave.build {
 
 If a plugin still fails: confirm it appears on the classpath (`./gradlew dependencies`),
 that its `META-INF/services` provider file is shaded into the jar, and that the
-DSL block name matches the plugin id reported by the failing `PluginException`.
+DSL block name (`keys`, `did`, `anchor`, `trust`, `revocation`) matches the plugin configuration.
 
 ## Debugging Workflows
 
@@ -203,9 +205,9 @@ DSL block name matches the plugin id reported by the failing `PluginException`.
 Enable detailed logging to see what's happening:
 
 ```kotlin
-// Add logging dependency
+// Add logging dependency (SLF4J 2.0 compatible)
 dependencies {
-    implementation("ch.qos.logback:logback-classic:1.4.14")
+    implementation("ch.qos.logback:logback-classic:1.5.18")
 }
 
 // Configure logback.xml for detailed debugging
@@ -704,7 +706,7 @@ suspend fun operationWithTimeout(
 ```kotlin
 // Configure connection pool
 val dataSource = HikariDataSource().apply {
-    jdbcUrl = "jdbc:postgresql://db.example.org.trustweave"
+    jdbcUrl = "jdbc:postgresql://db.example.org:5432/trustweave"
     maximumPoolSize = 20  // Limit connections
     minimumIdle = 5
     connectionTimeout = 30000
@@ -744,7 +746,7 @@ Kotlin version mismatch
 ```
 
 **Solution:**
-- Use Kotlin 2.3.21 as required
+- Use Kotlin 2.4.21 as required
 - Update the Kotlin version in `gradle/libs.versions.toml`
 - Sync Gradle dependencies
 

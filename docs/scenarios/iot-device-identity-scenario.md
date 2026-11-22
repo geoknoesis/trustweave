@@ -6,7 +6,7 @@ nav_order: 9
 
 # IoT & Device Identity Scenario
 
-> **Runnable companion:** [iot-device example](../../distribution/examples/scenarios/iot-device/README.md). It demonstrates local signed claims and tamper rejection; this guide discusses a broader workflow.
+> **Runnable companion:** [iot-device example](https://github.com/geoknoesis/trustweave/blob/main/distribution/examples/scenarios/iot-device/README.md). It demonstrates local signed claims and tamper rejection; this guide discusses a broader workflow.
 
 
 This guide demonstrates how to build an IoT device identity system using TrustWeave that enables device authentication, secure device-to-device communication, device attestation, and network authorization.
@@ -165,8 +165,8 @@ flowchart TD
 ## Prerequisites
 
 - Java 21+
-- Kotlin 2.3.21
-- Gradle 9.5.0
+- Kotlin 2.4.21
+- Gradle 9.8.1
 - Basic understanding of Kotlin and coroutines
 - Familiarity with IoT concepts (helpful but not required)
 

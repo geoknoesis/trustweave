@@ -1,6 +1,6 @@
-public final class org/trustweave/godiddy/GodiddyClient {
+public final class org/trustweave/godiddy/GodiddyClient : java/lang/AutoCloseable {
 	public fun <init> (Lorg/trustweave/godiddy/GodiddyConfig;)V
-	public final fun close ()V
+	public fun close ()V
 	public final fun getJson (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun postJson (Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }

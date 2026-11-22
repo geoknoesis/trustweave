@@ -2,8 +2,8 @@ package org.trustweave.wallet
 
 import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.DidCreationOptionsBuilder
-import org.trustweave.did.model.DidDocument
 import org.trustweave.did.didCreationOptions
+import org.trustweave.did.model.DidDocument
 
 /**
  * DID management capability for wallets.
@@ -44,10 +44,15 @@ interface DidManagement {
      * @param options Method-specific options
      * @return Created DID string
      */
-    suspend fun createDid(method: String, options: DidCreationOptions = DidCreationOptions()): String
+    suspend fun createDid(
+        method: String,
+        options: DidCreationOptions = DidCreationOptions(),
+    ): String
 
-    suspend fun createDid(method: String, configure: DidCreationOptionsBuilder.() -> Unit): String =
-        createDid(method, didCreationOptions(configure))
+    suspend fun createDid(
+        method: String,
+        configure: DidCreationOptionsBuilder.() -> Unit,
+    ): String = createDid(method, didCreationOptions(configure))
 
     /**
      * Get all DIDs managed by this wallet.
@@ -109,7 +114,10 @@ interface KeyManagement {
      * @param options Key generation options
      * @return Key ID
      */
-    suspend fun generateKey(algorithm: String, options: Map<String, Any?> = emptyMap()): String
+    suspend fun generateKey(
+        algorithm: String,
+        options: Map<String, Any?> = emptyMap(),
+    ): String
 
     /**
      * Get all keys managed by this wallet.
@@ -141,7 +149,10 @@ interface KeyManagement {
      * @param data Data to sign
      * @return Signature bytes
      */
-    suspend fun sign(keyId: String, data: ByteArray): ByteArray
+    suspend fun sign(
+        keyId: String,
+        data: ByteArray,
+    ): ByteArray
 }
 
 /**
@@ -177,7 +188,6 @@ interface CredentialIssuance {
         subjectDid: String,
         credentialType: String,
         claims: Map<String, Any>,
-        options: org.trustweave.credential.proof.ProofOptions? = null
+        options: org.trustweave.credential.proof.ProofOptions? = null,
     ): org.trustweave.credential.model.vc.VerifiableCredential
 }
-

@@ -48,6 +48,11 @@ class CheqdDidMethodApiCacheTest {
             InMemoryKeyManagementService(),
             InMemoryBlockchainAnchorClient(chainId = "cheqd:mainnet"),
             CheqdDidConfig(cheqdApiUrl = "http://127.0.0.1:${s.address.port}", network = "mainnet"),
+            okhttp3.OkHttpClient
+                .Builder()
+                .followRedirects(false)
+                .followSslRedirects(false)
+                .build(),
         )
     }
 

@@ -1,4 +1,5 @@
 ---
+title: "VC-Only API Design - Aligning with W3C Verifiable Credentials"
 redirect_from:
   - /advanced/vc-only-api-design/
 parent: Advanced Topics

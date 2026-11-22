@@ -93,7 +93,7 @@ hangs and cleanup in `use` or `finally`. Avoid sleeps as proof of ordering.
 
 ## Regression and requirement evidence
 
-[The versioned test contract](../../config/testing-contract.json) names critical discovery,
+[The versioned test contract](https://github.com/geoknoesis/trustweave/blob/main/config/testing-contract.json) names critical discovery,
 host behavior and documentation tests. After a successful build, run:
 
 ```text
@@ -116,7 +116,7 @@ Do not combine old XML from unrelated runs and call it a new full-suite pass.
 
 ## Coverage policy
 
-[Coverage floors](../../config/coverage-policy.json) apply to measured Kover LINE and
+[Coverage floors](https://github.com/geoknoesis/trustweave/blob/main/config/coverage-policy.json) apply to measured Kover LINE and
 BRANCH counters. Missing packages, missing counters, zero-denominator evidence,
 duplicate counters, empty policies and invalid/non-finite percentages fail the check.
 Module-specific local measurement uses the corresponding scoped policy.
@@ -130,7 +130,7 @@ explicit assertions even when existing tests already execute those lines.
 
 A `example-source` marker binds the immediately following Kotlin block to a shipped
 `.kt` file in this repository. The checker rejects missing/ignored/external sources,
-wrong fence languages and drift. The [required example inventory](../../config/documentation-contract.json)
+wrong fence languages and drift. The [required example inventory](https://github.com/geoknoesis/trustweave/blob/main/config/documentation-contract.json)
 also rejects a removed or duplicated source marker. Keep executable examples in normal source/test sets
 and register their execution in CI. Update the source first, run it, then copy the exact
 source into the documentation.

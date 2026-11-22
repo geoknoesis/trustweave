@@ -1,3 +1,10 @@
+---
+layout: default
+title: Configuration and ledger data integrity
+parent: Operations
+nav_order: 10
+---
+
 # Configuration and ledger data integrity
 
 Plugin configuration is strict UTF-8 JSON. `PluginConfigurationLoader` accepts at most

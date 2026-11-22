@@ -21,7 +21,7 @@ Version information, deprecation notices, and migration guides for credential ex
 
 ### 0.7.0 (Current)
 
-See the [changelog](../../../../CHANGELOG.md#070---2026-08-29) for the full entry, including five
+See the [changelog](https://github.com/geoknoesis/trustweave/blob/main/CHANGELOG.md#070---2026-08-29) for the full entry, including five
 breaking changes.
 
 ### 0.6.0

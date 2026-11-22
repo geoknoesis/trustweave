@@ -173,10 +173,12 @@ object DidDocumentJsonProducer {
             put("serviceEndpoint", serviceEndpointToJsonElement(s.serviceEndpoint))
         }
 
-    private fun mapToJsonObject(map: Map<String, Any?>): JsonObject =
+    private fun mapToJsonObject(map: Map<*, *>): JsonObject =
         buildJsonObject {
             map.forEach { (key, value) ->
-                put(key, anyToJsonElement(value))
+                if (key != null) {
+                    put(key.toString(), anyToJsonElement(value))
+                }
             }
         }
 
@@ -186,7 +188,7 @@ object DidDocumentJsonProducer {
             is String -> JsonPrimitive(value)
             is Number -> JsonPrimitive(value)
             is Boolean -> JsonPrimitive(value)
-            is Map<*, *> -> mapToJsonObject(value as Map<String, Any?>)
+            is Map<*, *> -> mapToJsonObject(value)
             is List<*> -> JsonArray(value.map { anyToJsonElement(it) })
             else -> JsonPrimitive(value.toString())
         }

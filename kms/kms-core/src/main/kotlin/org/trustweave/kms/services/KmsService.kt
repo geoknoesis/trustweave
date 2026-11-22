@@ -27,7 +27,7 @@ interface KmsService {
     suspend fun generateKey(
         kms: KeyManagementService,
         algorithm: String,
-        options: Map<String, Any?> = emptyMap()
+        options: Map<String, Any?> = emptyMap(),
     ): GenerateKeyResult
 
     /**

@@ -25,8 +25,8 @@ import org.trustweave.credential.internal.CredentialConstants
 import org.trustweave.credential.internal.RevocationChecker
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.StatusPurpose
-import org.trustweave.credential.model.vc.CredentialStatus
 import org.trustweave.credential.model.vc.CredentialProof
+import org.trustweave.credential.model.vc.CredentialStatus
 import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.model.vc.VerifiablePresentation
@@ -334,7 +334,7 @@ internal class SdJwtProofEngine(
             // configured RevocationFailurePolicy (fail closed by default).
             val statusWarnings = mutableListOf<String>()
             val checker = config.properties["statusChecker"] as? CredentialStatusChecker
-            if (checker != null && verifiedCredential.credentialStatus != null) {
+            if (options.checkRevocation && checker != null && verifiedCredential.credentialStatus != null) {
                 val outcome =
                     RevocationChecker.checkWithStatusChecker(verifiedCredential, checker, options.revocationFailurePolicy)
                 outcome.failure?.let { return it }
@@ -403,12 +403,13 @@ internal class SdJwtProofEngine(
                 val allDisclosures = proof.disclosures ?: return@map credential
 
                 val requestedClaims =
-                    (
-                        request.proofOptions
-                            ?.additionalOptions
-                            ?.get("disclosedClaims") as? Set<*>
-                    )?.filterIsInstance<String>()
-                        ?.toSet()
+                    request.disclosedClaims?.takeIf { it.isNotEmpty() }
+                        ?: (
+                            request.proofOptions
+                                ?.additionalOptions
+                                ?.get("disclosedClaims") as? Set<*>
+                        )?.filterIsInstance<String>()
+                            ?.toSet()
 
                 val selectedDisclosures =
                     if (requestedClaims == null || requestedClaims.isEmpty()) {

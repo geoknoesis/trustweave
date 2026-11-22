@@ -27,4 +27,8 @@ data class DeactivateDidOptions(
      * - Method-specific configuration
      */
     val methodSpecificOptions: Map<String, JsonElement> = emptyMap(),
-)
+) {
+    override fun toString(): String =
+        "DeactivateDidOptions(secret=${if (secret != null) "[REDACTED]" else "null"}, " +
+            "methodSpecificOptions=$methodSpecificOptions)"
+}

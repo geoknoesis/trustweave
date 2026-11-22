@@ -196,6 +196,7 @@ internal object JsonLdUtils {
         if (idElement is JsonNull) return
         val idValue = (idElement as? JsonPrimitive)?.takeIf { it.isString }?.content ?: return
 
+        @Suppress("DEPRECATION")
         if (!UriUtils.isAbsoluteUri(idValue)) {
             throw SerializationException.EncodeFailed(
                 element = "credentialSubject.id",
@@ -214,7 +215,7 @@ internal object JsonLdUtils {
         }
     }
 
-    /**
+    /*
      * Detect `credentialSubject` claims that were silently dropped by JSON-LD processing.
      *
      * JSON-LD expansion removes properties whose terms are not defined by the active

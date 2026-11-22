@@ -1,4 +1,5 @@
 ---
+title: Security
 redirect_from:
   - /security/README/
 parent: Core Concepts

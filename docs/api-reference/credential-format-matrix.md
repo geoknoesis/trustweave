@@ -1,3 +1,10 @@
+---
+layout: default
+title: Credential format compatibility
+parent: API Reference
+nav_order: 320
+---
+
 # Credential format compatibility
 
 Capabilities are endpoint-specific. A library proof engine supporting a format does not mean every exchange adapter or wallet can receive and present it.

@@ -84,7 +84,10 @@ interface EvaluationEngines : Iterable<ContractEvaluationEngine> {
      * @return True if hash matches, false otherwise (including if engine is not registered)
      * @throws IllegalArgumentException if expectedHash is blank
      */
-    fun verify(engineId: String, expectedHash: String): Boolean
+    fun verify(
+        engineId: String,
+        expectedHash: String,
+    ): Boolean
 
     /**
      * Get all registered engine IDs.
@@ -138,7 +141,7 @@ internal class InMemoryEvaluationEngines : EvaluationEngines {
         }
         if (engines.containsKey(engine.engineId)) {
             throw IllegalArgumentException(
-                "Evaluation engine '${engine.engineId}' is already registered"
+                "Evaluation engine '${engine.engineId}' is already registered",
             )
         }
         engines[engine.engineId] = engine
@@ -163,7 +166,10 @@ internal class InMemoryEvaluationEngines : EvaluationEngines {
         return wasPresent
     }
 
-    override fun verify(engineId: String, expectedHash: String): Boolean {
+    override fun verify(
+        engineId: String,
+        expectedHash: String,
+    ): Boolean {
         require(expectedHash.isNotBlank()) { "Expected hash cannot be blank" }
         val actualHash = engineHashes[engineId] ?: return false
         return actualHash == expectedHash
@@ -184,4 +190,3 @@ internal class InMemoryEvaluationEngines : EvaluationEngines {
         engineHashes.clear()
     }
 }
-

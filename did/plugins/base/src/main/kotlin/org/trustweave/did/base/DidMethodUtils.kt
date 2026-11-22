@@ -1,6 +1,5 @@
 package org.trustweave.did.base
 
-import org.trustweave.did.*
 import org.trustweave.did.KeyAlgorithm
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId

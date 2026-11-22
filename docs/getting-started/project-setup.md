@@ -13,9 +13,9 @@ Set up your development environment for working with TrustWeave.
 ## Prerequisites
 
 - **Java 21+**: Download from [Adoptium](https://adoptium.net/) or [Oracle](https://www.oracle.com/java/technologies/downloads/)
-- **Kotlin 2.3.21**: Included with Gradle or download from [Kotlin releases](https://github.com/JetBrains/kotlin/releases)
-- **Gradle 9.5.0**: Download from [Gradle releases](https://gradle.org/releases/)
-- **Node.js** (optional): Automatically downloaded by Gradle for `chains/plugins/ganache` module tests. If you want to use a system installation, install from [nodejs.org](https://nodejs.org/)
+- **Kotlin 2.4.21**: Included with Gradle or download from [Kotlin releases](https://github.com/JetBrains/kotlin/releases)
+- **Gradle 9.8.1**: Included via the repository wrapper (`./gradlew`) or download from [Gradle releases](https://gradle.org/releases/)
+- **Docker** (optional): Required for `anchors/plugins/ganache` module tests using Testcontainers
 
 ## IDE Setup
 
@@ -53,8 +53,8 @@ Set up your development environment for working with TrustWeave.
 Clone the codebase so you can build and run examples locally.
 
 ```bash
-git clone https://github.com/your-org/TrustWeave.git
-cd TrustWeave
+git clone https://github.com/geoknoesis/trustweave.git
+cd trustweave
 ```
 
 **Result:** You now have the repository checked out on your machine and are positioned at the project root.
@@ -137,7 +137,6 @@ TrustWeave/
 - `kms/core` → `kms/kms-core`
 - `anchors/core` → `anchors/anchor-core`
 - `wallet/core` → `wallet/wallet-core`
-```
 
 ## Development Workflow
 
@@ -237,7 +236,7 @@ java -version  # Should show 21.x.x
 
 **Error**: `Kotlin version mismatch`
 
-**Solution**: Update Kotlin version in `buildSrc/src/main/kotlin/Versions.kt`
+**Solution**: Update the Kotlin version in `gradle/libs.versions.toml` and `settings.gradle.kts`.
 
 ## Next Steps
 

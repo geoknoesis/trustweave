@@ -29,8 +29,10 @@ From the repository root, use JDK 21 and the checked-in Gradle wrapper:
 ./gradlew :distribution:examples:runDocumentationQuickStart
 ```
 
-On Windows, use `.\gradlew.bat` with the same task. The checkout uses Kotlin 2.3.21
-and Gradle 9.5.0. For a separate application, first follow [Installation](installation.md).
+On Windows, use `.\gradlew.bat` with the same task. The checkout uses Kotlin 2.4.21
+and Gradle 9.8.1. For a separate application, add `org.trustweave:distribution-all:0.7.0`
+(which bundles `kms-plugins-inmemory` and `did:key` so `TrustWeave.quickStart()` works
+out of the box without `:testkit`) — see [Installation](installation.md).
 
 ## Complete example
 
@@ -102,4 +104,4 @@ that an issuer is trusted for your business policy.
 - [Result and exception contracts](api-patterns.md): handle failures explicitly.
 - [Provider deployment and custody](../api-reference/provider-deployment-profiles.md): assessed support and production boundaries.
 - [Production integration checklist](production-integration-checklist.md): trust, timeouts and operations.
-- [Compiled examples](../../distribution/examples/README.md): additional workflows and prerequisites.
+- [Compiled examples](https://github.com/geoknoesis/trustweave/blob/main/distribution/examples/README.md): additional workflows and prerequisites.

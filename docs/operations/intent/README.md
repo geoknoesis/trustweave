@@ -1,3 +1,11 @@
+---
+layout: default
+title: Verifiable Intent Operations
+parent: Operations
+has_children: true
+nav_order: 80
+---
+
 # Intent host operations and recovery exercise
 
 The executable fixture is `IntentOperationsExerciseTest` in the verifiable-intent module.

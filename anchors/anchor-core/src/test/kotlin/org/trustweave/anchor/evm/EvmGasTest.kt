@@ -11,7 +11,6 @@ import kotlin.test.assertTrue
  * plus the safety margin used for transaction gas limits.
  */
 class EvmGasTest {
-
     @Test
     fun `intrinsic gas of empty calldata is the base transaction cost`() {
         assertEquals(BigInteger.valueOf(21_000), EvmGas.intrinsicGas(ByteArray(0)))
@@ -60,7 +59,7 @@ class EvmGasTest {
         // 21004 * 110 / 100 = 23104.4 -> rounded up to 23105
         assertEquals(
             BigInteger.valueOf(23_105),
-            EvmGas.withMargin(BigInteger.valueOf(21_004))
+            EvmGas.withMargin(BigInteger.valueOf(21_004)),
         )
     }
 
@@ -68,7 +67,7 @@ class EvmGasTest {
     fun `margin of zero percent is the identity`() {
         assertEquals(
             BigInteger.valueOf(21_000),
-            EvmGas.withMargin(BigInteger.valueOf(21_000), marginPercent = 0)
+            EvmGas.withMargin(BigInteger.valueOf(21_000), marginPercent = 0),
         )
         assertFailsWith<IllegalArgumentException> {
             EvmGas.withMargin(BigInteger.ONE, marginPercent = -1)

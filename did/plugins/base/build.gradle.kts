@@ -5,7 +5,7 @@ plugins {
 
 group = "org.trustweave.did"
 dependencies {
-    implementation(project(":common"))   // Root-level common (exceptions)
+    implementation(project(":common")) // Root-level common (exceptions)
     implementation(project(":did:did-core"))
     implementation(project(":kms:kms-core"))
     implementation(project(":anchors:anchor-core"))
@@ -20,4 +20,3 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(kotlin("test"))
 }
-

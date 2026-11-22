@@ -1,4 +1,5 @@
 ---
+title: Trust DSL Examples
 nav_exclude: true
 ---
 

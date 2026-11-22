@@ -17,10 +17,8 @@ import kotlin.test.assertTrue
  * - SEC1 EC point compression/decompression required by the did:key multicodec entries
  */
 class DidMethodUtilsSpecComplianceTest {
-
     @Nested
     inner class PercentDecoding {
-
         @Test
         fun `plain segment is returned unchanged`() {
             assertEquals("example.com", DidMethodUtils.percentDecode("example.com"))
@@ -53,7 +51,6 @@ class DidMethodUtilsSpecComplianceTest {
 
     @Nested
     inner class WebDidBuilding {
-
         @Test
         fun `bare domain produces plain did`() {
             assertEquals("did:web:example.com", DidMethodUtils.buildWebDid("example.com"))
@@ -68,19 +65,18 @@ class DidMethodUtilsSpecComplianceTest {
         fun `domain with port and path`() {
             assertEquals(
                 "did:web:example.com%3A8080:user:alice",
-                DidMethodUtils.buildWebDid("example.com:8080", "user:alice")
+                DidMethodUtils.buildWebDid("example.com:8080", "user:alice"),
             )
         }
     }
 
     @Nested
     inner class Multicodec {
-
         @Test
         fun `x25519 prefix is varint 0xec 0x01`() {
             assertContentEquals(
                 byteArrayOf(0xec.toByte(), 0x01),
-                DidMethodUtils.getMulticodecPrefix("X25519")
+                DidMethodUtils.getMulticodecPrefix("X25519"),
             )
         }
 
@@ -101,14 +97,13 @@ class DidMethodUtilsSpecComplianceTest {
         fun `x25519 maps to key agreement verification method type`() {
             assertEquals(
                 "X25519KeyAgreementKey2020",
-                DidMethodUtils.algorithmToVerificationMethodType("X25519")
+                DidMethodUtils.algorithmToVerificationMethodType("X25519"),
             )
         }
     }
 
     @Nested
     inner class EcPointCompression {
-
         // Standard generator points (SEC 2 / FIPS 186-4) used as known-good curve points.
         private val secp256k1Gx = "79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798"
         private val secp256k1Gy = "483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8" // even
@@ -125,13 +120,19 @@ class DidMethodUtilsSpecComplianceTest {
             "011839296A789A3BC0045C8A5FB42C7D1BD998F54449579B446817AFBD17273E662C97EE72995EF426" +
                 "40C550B9013FAD0761353C7086A272C24088BE94769FD16650" // even
 
-        private fun hex(s: String): ByteArray =
-            s.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+        private fun hex(s: String): ByteArray = s.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
 
-        private fun uncompressed(x: String, y: String): ByteArray =
-            byteArrayOf(0x04) + hex(x) + hex(y)
+        private fun uncompressed(
+            x: String,
+            y: String,
+        ): ByteArray = byteArrayOf(0x04) + hex(x) + hex(y)
 
-        private fun assertRoundTrip(algorithm: String, x: String, y: String, yIsOdd: Boolean) {
+        private fun assertRoundTrip(
+            algorithm: String,
+            x: String,
+            y: String,
+            yIsOdd: Boolean,
+        ) {
             val point = uncompressed(x, y)
             val compressed = DidMethodUtils.compressEcPublicKey(algorithm, point)
 
@@ -168,7 +169,7 @@ class DidMethodUtilsSpecComplianceTest {
             val compressed = byteArrayOf(0x02) + hex(secp256k1Gx)
             assertContentEquals(
                 compressed,
-                DidMethodUtils.compressEcPublicKey("secp256k1", compressed)
+                DidMethodUtils.compressEcPublicKey("secp256k1", compressed),
             )
         }
 
@@ -215,49 +216,58 @@ class DidMethodUtilsSpecComplianceTest {
 
     @Nested
     inner class ResolutionMetadata {
-
         // buildDidDocument requires at least one verification method, so the DID Resolution
         // 1.0 tests below build a minimal real document rather than the empty one sketched in
         // the task brief.
-        private fun testDocument(did: String) = DidMethodUtils.buildDidDocument(
-            did = did,
-            verificationMethod = listOf(
-                DidMethodUtils.createVerificationMethod(
-                    did = did,
-                    keyHandle = org.trustweave.kms.KeyHandle(
-                        id = org.trustweave.core.identifiers.KeyId("key-1"),
-                        algorithm = "Ed25519",
-                        publicKeyMultibase = "z6Mk"
+        private fun testDocument(did: String) =
+            DidMethodUtils.buildDidDocument(
+                did = did,
+                verificationMethod =
+                    listOf(
+                        DidMethodUtils.createVerificationMethod(
+                            did = did,
+                            keyHandle =
+                                org.trustweave.kms.KeyHandle(
+                                    id =
+                                        org.trustweave.core.identifiers
+                                            .KeyId("key-1"),
+                                    algorithm = "Ed25519",
+                                    publicKeyMultibase = "z6Mk",
+                                ),
+                            algorithm = "Ed25519",
+                        ),
                     ),
-                    algorithm = "Ed25519"
-                )
             )
-        )
 
         @Test
         fun `createSuccessResolutionResult carries deactivated flag`() {
             val document = testDocument("did:test:123")
 
-            val active = DidMethodUtils.createSuccessResolutionResult(document, "test")
-                as DidResolutionResult.Success
+            val active =
+                DidMethodUtils.createSuccessResolutionResult(document, "test")
+                    as DidResolutionResult.Success
             assertEquals(false, active.documentMetadata.deactivated)
 
             // DID Resolution 1.0 §4.4: a deactivated DID resolves to Deactivated, not Success —
             // the caller gets no document, only documentMetadata.deactivated.
-            val deactivated = DidMethodUtils.createSuccessResolutionResult(
-                document, "test", deactivated = true
-            ) as DidResolutionResult.Deactivated
+            val deactivated =
+                DidMethodUtils.createSuccessResolutionResult(
+                    document,
+                    "test",
+                    deactivated = true,
+                ) as DidResolutionResult.Deactivated
             assertTrue(deactivated.documentMetadata.deactivated)
         }
 
         @Test
         fun `createSuccessResolutionResult returns Deactivated when the DID is deactivated`() {
             val document = testDocument("did:testchain:abc123")
-            val result = DidMethodUtils.createSuccessResolutionResult(
-                document = document,
-                method = "testchain",
-                deactivated = true
-            )
+            val result =
+                DidMethodUtils.createSuccessResolutionResult(
+                    document = document,
+                    method = "testchain",
+                    deactivated = true,
+                )
 
             assertTrue(result is DidResolutionResult.Deactivated, "Expected Deactivated, got $result")
             assertTrue(result.documentMetadata.deactivated)
@@ -267,10 +277,11 @@ class DidMethodUtilsSpecComplianceTest {
         @Test
         fun `createSuccessResolutionResult returns Success when the DID is live`() {
             val document = testDocument("did:testchain:abc123")
-            val result = DidMethodUtils.createSuccessResolutionResult(
-                document = document,
-                method = "testchain"
-            )
+            val result =
+                DidMethodUtils.createSuccessResolutionResult(
+                    document = document,
+                    method = "testchain",
+                )
 
             assertTrue(result is DidResolutionResult.Success, "Expected Success, got $result")
             assertFalse(result.documentMetadata.deactivated)

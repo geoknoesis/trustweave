@@ -12,13 +12,13 @@ javaPlatform {
 // Constraints cover every published TrustWeave module so consumers can align versions
 // with a single platform import. Intentionally excluded:
 //   - :testkit               (test-support module; must not be steered onto prod classpaths)
-//   - :distribution:examples / :distribution:conformance (sample/verification projects)
-//   - KMP scaffolds (:common-mp, :did:did-identifiers-mp, :wallet:wallet-core-mp,
-//     :credentials:credential-models-mp) — not yet published (no maven-publish applied)
+//   - :distribution:examples / :distribution:conformance (sample/verification projects; unpublished)
+//   - Pure stub modules (unpublishedModules in root build.gradle.kts)
 dependencies {
     constraints {
         // Core
         api(project(":common"))
+        api(project(":common-mp"))
         api(project(":observability"))
         api(project(":trust"))
         api(project(":contract"))
@@ -26,6 +26,7 @@ dependencies {
 
         // DID domain
         api(project(":did:did-core"))
+        api(project(":did:did-identifiers-mp"))
         api(project(":did:registrar"))
         api(project(":did:registrar-server-ktor"))
         api(project(":did:registrar-server-spring"))
@@ -38,19 +39,16 @@ dependencies {
         api(project(":did:plugins:polygon"))
         api(project(":did:plugins:sol"))
         api(project(":did:plugins:peer"))
-        api(project(":did:plugins:ens"))
         api(project(":did:plugins:plc"))
         api(project(":did:plugins:cheqd"))
         api(project(":did:plugins:jwk"))
         api(project(":did:plugins:godiddy"))
-        api(project(":did:plugins:threebox"))
-        api(project(":did:plugins:btcr"))
-        api(project(":did:plugins:tezos"))
         api(project(":did:plugins:orb"))
         api(project(":did:plugins:ebsi"))
 
         // Wallet domain
         api(project(":wallet:wallet-core"))
+        api(project(":wallet:wallet-core-mp"))
         api(project(":wallet:wallet-services"))
         api(project(":wallet:plugins:database"))
         api(project(":wallet:plugins:file"))
@@ -65,15 +63,11 @@ dependencies {
         api(project(":kms:plugins:hashicorp"))
         api(project(":kms:plugins:ibm"))
         api(project(":kms:plugins:thales"))
-        api(project(":kms:plugins:thales-luna"))
         api(project(":kms:plugins:cyberark"))
         api(project(":kms:plugins:fortanix"))
-        api(project(":kms:plugins:utimaco"))
         api(project(":kms:plugins:cloudhsm"))
-        api(project(":kms:plugins:entrust"))
         api(project(":kms:plugins:waltid"))
         api(project(":kms:plugins:pkcs11"))
-        api(project(":kms:plugins:venafi"))
 
         // Anchors domain
         api(project(":anchors:anchor-core"))
@@ -86,24 +80,19 @@ dependencies {
         api(project(":anchors:plugins:optimism"))
         api(project(":anchors:plugins:zksync"))
         api(project(":anchors:plugins:bitcoin"))
-        api(project(":anchors:plugins:starknet"))
         api(project(":anchors:plugins:cardano"))
         api(project(":anchors:plugins:ganache"))
         api(project(":anchors:plugins:indy"))
 
         // Credentials domain
         api(project(":credentials:credential-api"))
+        api(project(":credentials:credential-models-mp"))
         api(project(":credentials:plugins:status-list:database"))
         api(project(":credentials:plugins:status-list:bitstring"))
         api(project(":credentials:plugins:status-list:token"))
         api(project(":credentials:plugins:status-list:publishing"))
         api(project(":credentials:plugins:status-list:server"))
         api(project(":credentials:plugins:anchor"))
-        // NOTE: credentials:plugins:platforms:salesforce and :servicenow are deliberately absent.
-        // Every public method in both throws: they are structure without an implementation, marked
-        // "stub" in trustweave-capabilities.json. Exporting them here advertised Salesforce and
-        // ServiceNow integration to anyone taking the BOM and delivered a thrown exception. A
-        // consumer who wants the skeleton can still depend on the module directly.
         api(project(":credentials:plugins:platforms:entra"))
         api(project(":credentials:plugins:oidc4vci"))
         api(project(":credentials:plugins:oidc4vp"))
@@ -113,10 +102,11 @@ dependencies {
         api(project(":credentials:plugins:siop"))
         api(project(":credentials:plugins:openid-federation"))
         api(project(":credentials:plugins:mdl"))
+        api(project(":credentials:plugins:verifiable-intent"))
         api(project(":credentials:plugins:eudiw"))
         api(project(":credentials:plugins:jades"))
-        // NOTE: credentials:plugins:verifiable-intent is in-progress (not yet in
-        // settings.gradle.kts on main) — add it here when the module lands.
+        api(project(":credentials:plugins:avp-micro"))
+        api(project(":credentials:avp-authorization-server"))
         api(project(":credentials:oidc4vci-server"))
         api(project(":credentials:vc-api-server"))
 
@@ -126,7 +116,6 @@ dependencies {
         api(project(":signatures:jades"))
         api(project(":signatures:cades"))
         api(project(":signatures:xades"))
-        api(project(":signatures:pades"))
         api(project(":signatures:etsi-validation"))
 
         // Trust Registry domain
@@ -166,6 +155,7 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             from(components["javaPlatform"])
+            artifactId = "distribution-bom"
 
             pom {
                 name.set("TrustWeave BOM")

@@ -1,10 +1,16 @@
+---
+layout: default
+title: Assessed Module Capabilities
+parent: API Reference
+---
+
 # Assessed module capabilities
 
-Generated from `common/src/main/resources/trustweave-capabilities.json`. Unlisted modules are unassessed, not implicitly supported. Use `ModuleCapabilities.requireDeployment` before constructing production clients. It checks maturity, operations and formats; `requireOperations` alone checks functionality only. No catalog entry currently meets the supported-only production policy. See [deployment profiles](provider-deployment-profiles.md).
+Generated from `common/src/main/resources/trustweave-capabilities.json`. Unlisted modules are unassessed, not implicitly supported. Use `ModuleCapabilities.requireDeployment` before constructing production clients. It checks maturity, operations and formats; `requireOperations` alone checks functionality only. 8 core modules currently meet the `supported` maturity tier; plugins remain `experimental` or `stub` until separately qualified. See [deployment profiles](provider-deployment-profiles.md) and [module maturity](module-maturity.md).
 
 | Module | Maturity | Operations | Formats |
 |---|---|---|---|
-| `anchors:anchor-core` | experimental | None | None |
+| `anchors:anchor-core` | supported | None | None |
 | `anchors:plugins:algorand` | experimental | None | None |
 | `anchors:plugins:arbitrum` | experimental | None | None |
 | `anchors:plugins:base` | experimental | None | None |
@@ -18,11 +24,11 @@ Generated from `common/src/main/resources/trustweave-capabilities.json`. Unliste
 | `anchors:plugins:polygon` | experimental | None | None |
 | `anchors:plugins:starknet` | stub | None | None |
 | `anchors:plugins:zksync` | experimental | None | None |
-| `common` | experimental | None | None |
+| `common` | supported | None | None |
 | `common-mp` | experimental | None | None |
-| `contract` | experimental | None | None |
+| `contract` | supported | None | None |
 | `credentials:avp-authorization-server` | experimental | None | None |
-| `credentials:credential-api` | experimental | None | None |
+| `credentials:credential-api` | supported | None | None |
 | `credentials:credential-models-mp` | experimental | None | None |
 | `credentials:oidc4vci-server` | experimental | None | None |
 | `credentials:plugins:anchor` | experimental | None | None |
@@ -47,13 +53,13 @@ Generated from `common/src/main/resources/trustweave-capabilities.json`. Unliste
 | `credentials:plugins:status-list:token` | experimental | None | None |
 | `credentials:plugins:verifiable-intent` | experimental | None | None |
 | `credentials:vc-api-server` | experimental | None | None |
-| `did:did-core` | experimental | None | None |
+| `did:did-core` | supported | None | None |
 | `did:did-identifiers-mp` | experimental | None | None |
 | `did:plugins:base` | experimental | None | None |
 | `did:plugins:btcr` | stub | None | None |
 | `did:plugins:cheqd` | experimental | None | None |
 | `did:plugins:ebsi` | experimental | None | None |
-| `did:plugins:ens` | experimental | None | None |
+| `did:plugins:ens` | stub | None | None |
 | `did:plugins:ethr` | experimental | None | None |
 | `did:plugins:godiddy` | experimental | None | None |
 | `did:plugins:ion` | experimental | None | None |
@@ -75,12 +81,12 @@ Generated from `common/src/main/resources/trustweave-capabilities.json`. Unliste
 | `distribution:bom` | stub | None | None |
 | `distribution:conformance` | experimental | None | None |
 | `distribution:examples` | experimental | None | None |
-| `kms:kms-core` | experimental | None | None |
+| `kms:kms-core` | supported | None | None |
 | `kms:plugins:aws` | experimental | None | None |
 | `kms:plugins:azure` | experimental | None | None |
 | `kms:plugins:cloudhsm` | experimental | None | None |
 | `kms:plugins:cyberark` | experimental | None | None |
-| `kms:plugins:entrust` | experimental | None | None |
+| `kms:plugins:entrust` | stub | None | None |
 | `kms:plugins:fortanix` | experimental | None | None |
 | `kms:plugins:google` | experimental | None | None |
 | `kms:plugins:hashicorp` | experimental | None | None |
@@ -88,9 +94,9 @@ Generated from `common/src/main/resources/trustweave-capabilities.json`. Unliste
 | `kms:plugins:inmemory` | experimental | None | None |
 | `kms:plugins:pkcs11` | experimental | None | None |
 | `kms:plugins:thales` | experimental | None | None |
-| `kms:plugins:thales-luna` | experimental | None | None |
-| `kms:plugins:utimaco` | experimental | None | None |
-| `kms:plugins:venafi` | experimental | None | None |
+| `kms:plugins:thales-luna` | stub | None | None |
+| `kms:plugins:utimaco` | stub | None | None |
+| `kms:plugins:venafi` | stub | None | None |
 | `kms:plugins:waltid` | experimental | None | None |
 | `observability` | experimental | None | None |
 | `reference-wallet:android` | stub | None | None |
@@ -99,19 +105,19 @@ Generated from `common/src/main/resources/trustweave-capabilities.json`. Unliste
 | `signatures:cades` | experimental | None | None |
 | `signatures:etsi-validation` | experimental | None | None |
 | `signatures:jades` | experimental | None | None |
-| `signatures:pades` | experimental | None | None |
+| `signatures:pades` | stub | None | None |
 | `signatures:trust-lists` | experimental | None | None |
 | `signatures:tsa-core` | experimental | None | None |
 | `signatures:xades` | experimental | None | None |
 | `testkit` | experimental | None | None |
-| `trust` | experimental | None | None |
+| `trust` | supported | None | None |
 | `trust-registry:plugins:database` | experimental | None | None |
 | `trust-registry:trust-registry-core` | experimental | None | None |
 | `trust-registry:trust-registry-server` | experimental | None | None |
 | `wallet:plugins:cloud` | experimental | store, get, list, list-records, recover-records, delete, query | json-vc |
 | `wallet:plugins:database` | experimental | store, get, list, list-records, delete, query, tags, collections, page-records | json-vc |
 | `wallet:plugins:file` | experimental | store, get, list, list-records, delete, query, recover-records | json-vc |
-| `wallet:wallet-core` | experimental | None | None |
+| `wallet:wallet-core` | supported | None | None |
 | `wallet:wallet-core-mp` | experimental | None | None |
 | `wallet:wallet-services` | experimental | None | None |
 

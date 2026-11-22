@@ -5,7 +5,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class WalletCapabilitiesTest {
-
     @Test
     fun `default capabilities have storage and query enabled`() {
         val caps = WalletCapabilities()
@@ -30,18 +29,19 @@ class WalletCapabilitiesTest {
 
     @Test
     fun `supports returns true for enabled features by primary name`() {
-        val caps = WalletCapabilities(
-            collections = true,
-            tags = true,
-            metadata = true,
-            archive = true,
-            refresh = true,
-            createPresentation = true,
-            selectiveDisclosure = true,
-            didManagement = true,
-            keyManagement = true,
-            credentialIssuance = true
-        )
+        val caps =
+            WalletCapabilities(
+                collections = true,
+                tags = true,
+                metadata = true,
+                archive = true,
+                refresh = true,
+                createPresentation = true,
+                selectiveDisclosure = true,
+                didManagement = true,
+                keyManagement = true,
+                credentialIssuance = true,
+            )
 
         assertTrue(caps.supports("collections"))
         assertTrue(caps.supports("tags"))
@@ -57,15 +57,16 @@ class WalletCapabilitiesTest {
 
     @Test
     fun `supports aliases work`() {
-        val caps = WalletCapabilities(
-            createPresentation = true,
-            selectiveDisclosure = true,
-            didManagement = true,
-            keyManagement = true,
-            credentialIssuance = true,
-            credentialStorage = true,
-            credentialQuery = true
-        )
+        val caps =
+            WalletCapabilities(
+                createPresentation = true,
+                selectiveDisclosure = true,
+                didManagement = true,
+                keyManagement = true,
+                credentialIssuance = true,
+                credentialStorage = true,
+                credentialQuery = true,
+            )
 
         assertTrue(caps.supports("presentation"))
         assertTrue(caps.supports("selective-disclosure"))

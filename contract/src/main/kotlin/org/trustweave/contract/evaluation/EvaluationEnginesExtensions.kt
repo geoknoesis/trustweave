@@ -1,24 +1,24 @@
 package org.trustweave.contract.evaluation
 
+import kotlinx.serialization.json.JsonElement
 import org.trustweave.contract.models.ContractCondition
 import org.trustweave.contract.models.ExecutionModel
-import kotlinx.serialization.json.JsonElement
-
 import java.util.concurrent.CancellationException
-/**
+/*
  * Extension functions for better developer experience with evaluation engines.
  */
 
 /**
  * Helper function to extract engine ID from execution model.
  */
-private fun ExecutionModel.getEngineId(): String? = when (this) {
-    is ExecutionModel.Parametric -> evaluationEngine
-    is ExecutionModel.Conditional -> evaluationEngine
-    is ExecutionModel.Scheduled -> evaluationEngine
-    is ExecutionModel.EventDriven -> evaluationEngine
-    is ExecutionModel.Manual -> null
-}
+private fun ExecutionModel.getEngineId(): String? =
+    when (this) {
+        is ExecutionModel.Parametric -> evaluationEngine
+        is ExecutionModel.Conditional -> evaluationEngine
+        is ExecutionModel.Scheduled -> evaluationEngine
+        is ExecutionModel.EventDriven -> evaluationEngine
+        is ExecutionModel.Manual -> null
+    }
 
 /**
  * Get an engine or throw with a clear error message.
@@ -27,12 +27,11 @@ private fun ExecutionModel.getEngineId(): String? = when (this) {
  * @return The engine
  * @throws IllegalStateException if engine is not registered
  */
-fun EvaluationEngines.require(engineId: String): ContractEvaluationEngine {
-    return this[engineId] ?: throw IllegalStateException(
+fun EvaluationEngines.require(engineId: String): ContractEvaluationEngine =
+    this[engineId] ?: throw IllegalStateException(
         "Evaluation engine '$engineId' is not registered. " +
-        "Available engines: ${keys.joinToString()}"
+            "Available engines: ${keys.joinToString()}",
     )
-}
 
 /**
  * Verify engine integrity or throw SecurityException.
@@ -42,21 +41,24 @@ fun EvaluationEngines.require(engineId: String): ContractEvaluationEngine {
  * @throws IllegalStateException if engine is not registered
  * @throws SecurityException if integrity check fails (hash mismatch)
  */
-fun EvaluationEngines.verifyOrThrow(engineId: String, expectedHash: String) {
+fun EvaluationEngines.verifyOrThrow(
+    engineId: String,
+    expectedHash: String,
+) {
     val engine = this[engineId]
     if (engine == null) {
         throw IllegalStateException(
             "Evaluation engine '$engineId' is not registered. " +
-            "Available engines: ${keys.joinToString()}"
+                "Available engines: ${keys.joinToString()}",
         )
     }
     val actualHash = engine.implementationHash
     if (actualHash != expectedHash) {
         throw SecurityException(
             "Evaluation engine '$engineId' integrity check failed. " +
-            "Engine may have been tampered with. " +
-            "Expected hash: $expectedHash, " +
-            "Actual hash: $actualHash"
+                "Engine may have been tampered with. " +
+                "Expected hash: $expectedHash, " +
+                "Actual hash: $actualHash",
         )
     }
 }
@@ -74,22 +76,26 @@ fun ExecutionModel.withEngineHash(engines: EvaluationEngines): ExecutionModel {
     val engineHash = engine?.implementationHash
 
     return when (this) {
-        is ExecutionModel.Parametric -> copy(
-            engineVersion = engineVersion,
-            engineHash = engineHash
-        )
-        is ExecutionModel.Conditional -> copy(
-            engineVersion = engineVersion,
-            engineHash = engineHash
-        )
-        is ExecutionModel.Scheduled -> copy(
-            engineVersion = engineVersion,
-            engineHash = engineHash
-        )
-        is ExecutionModel.EventDriven -> copy(
-            engineVersion = engineVersion,
-            engineHash = engineHash
-        )
+        is ExecutionModel.Parametric ->
+            copy(
+                engineVersion = engineVersion,
+                engineHash = engineHash,
+            )
+        is ExecutionModel.Conditional ->
+            copy(
+                engineVersion = engineVersion,
+                engineHash = engineHash,
+            )
+        is ExecutionModel.Scheduled ->
+            copy(
+                engineVersion = engineVersion,
+                engineHash = engineHash,
+            )
+        is ExecutionModel.EventDriven ->
+            copy(
+                engineVersion = engineVersion,
+                engineHash = engineHash,
+            )
         is ExecutionModel.Manual -> this
     }
 }
@@ -108,13 +114,13 @@ fun ExecutionModel.withEngineHash(engines: EvaluationEngines): ExecutionModel {
 suspend fun ContractCondition.evaluateWith(
     engine: ContractEvaluationEngine,
     inputData: JsonElement,
-    context: EvaluationContext
-): org.trustweave.contract.models.ConditionResult {
-    return try {
+    context: EvaluationContext,
+): org.trustweave.contract.models.ConditionResult =
+    try {
         org.trustweave.contract.models.ConditionResult(
             conditionId = id,
             satisfied = engine.evaluateCondition(this, inputData, context),
-            evaluatedValue = inputData
+            evaluatedValue = inputData,
         )
     } catch (cancelled: CancellationException) {
         throw cancelled
@@ -123,28 +129,27 @@ suspend fun ContractCondition.evaluateWith(
             conditionId = id,
             satisfied = false,
             evaluatedValue = inputData,
-            error = "Invalid condition or input data: ${e.message}"
+            error = "Invalid condition or input data: ${e.message}",
         )
     } catch (e: UnsupportedOperationException) {
         org.trustweave.contract.models.ConditionResult(
             conditionId = id,
             satisfied = false,
             evaluatedValue = inputData,
-            error = "Condition type not supported: ${e.message}"
+            error = "Condition type not supported: ${e.message}",
         )
     } catch (e: IllegalStateException) {
         org.trustweave.contract.models.ConditionResult(
             conditionId = id,
             satisfied = false,
             evaluatedValue = inputData,
-            error = "Evaluation state error: ${e.message}"
+            error = "Evaluation state error: ${e.message}",
         )
     } catch (e: Exception) {
         // Re-throw unexpected exceptions
         // Note: Error types (OutOfMemoryError, etc.) are not caught and will propagate
         throw e
     }
-}
 
 /**
  * Get an engine or return default value.
@@ -155,7 +160,7 @@ suspend fun ContractCondition.evaluateWith(
  */
 inline fun EvaluationEngines.getOrElse(
     engineId: String,
-    defaultValue: () -> ContractEvaluationEngine
+    defaultValue: () -> ContractEvaluationEngine,
 ): ContractEvaluationEngine = this[engineId] ?: defaultValue()
 
 /**
@@ -164,9 +169,7 @@ inline fun EvaluationEngines.getOrElse(
  * @param predicate Function to test each engine
  * @return List of engines matching the predicate
  */
-fun EvaluationEngines.filter(
-    predicate: (ContractEvaluationEngine) -> Boolean
-): List<ContractEvaluationEngine> = values.filter(predicate)
+fun EvaluationEngines.filter(predicate: (ContractEvaluationEngine) -> Boolean): List<ContractEvaluationEngine> = values.filter(predicate)
 
 /**
  * Transform engines using a mapping function.
@@ -174,7 +177,4 @@ fun EvaluationEngines.filter(
  * @param transform Function to transform each engine
  * @return List of transformed values
  */
-fun <T> EvaluationEngines.map(
-    transform: (ContractEvaluationEngine) -> T
-): List<T> = values.map(transform)
-
+fun <T> EvaluationEngines.map(transform: (ContractEvaluationEngine) -> T): List<T> = values.map(transform)

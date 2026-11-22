@@ -3,7 +3,7 @@ package org.trustweave.credential.proof
 import org.trustweave.credential.requests.IssuanceRequest
 import org.trustweave.credential.requests.PresentationRequest
 
-/**
+/*
  * Extension functions for proof options to improve developer experience.
  */
 

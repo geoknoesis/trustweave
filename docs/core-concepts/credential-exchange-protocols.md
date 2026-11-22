@@ -133,7 +133,7 @@ val offer = registry.offerCredential("didcomm", request)
 - **Supported Operations**: Proof request and presentation (verifier ↔ holder)
 - **Implementation**: `Oidc4VpExchangeProtocol`
 - **Module**: [credentials/plugins/oidc4vp](https://github.com/geoknoesis/trustweave/tree/main/credentials/plugins/oidc4vp)
-- **Profiles**: Includes a HAIP (High Assurance Interoperability Profile) validator at [HaipProfileValidator.kt](../../credentials/plugins/oidc4vp/src/main/kotlin/org/trustweave/credential/oidc4vp/haip/HaipProfileValidator.kt) for `vp_token`-based flows over SD-JWT VC and ISO mdoc.
+- **Profiles**: Includes a HAIP (High Assurance Interoperability Profile) validator at [HaipProfileValidator.kt](https://github.com/geoknoesis/trustweave/blob/main/credentials/plugins/oidc4vp/src/main/kotlin/org/trustweave/credential/oidc4vp/haip/HaipProfileValidator.kt) for `vp_token`-based flows over SD-JWT VC and ISO mdoc.
 
 ### CHAPI
 

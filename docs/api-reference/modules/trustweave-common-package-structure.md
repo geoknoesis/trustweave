@@ -81,7 +81,19 @@ Plugin infrastructure for extensibility:
 - **`PluginLifecycle`** – Lifecycle interface for plugin initialization, startup, shutdown, and cleanup
 - **`PluginRegistry`** / **`ProviderChain`** – Internal infrastructure (`internal` visibility). Use domain registries (`DidMethodRegistry`, `BlockchainAnchorRegistry`, etc.) instead.
 
-> **TODO:** Add a public example for the domain-specific registries; `PluginRegistry` is no longer a public entry point.
+**Example using domain registries:**
+```kotlin
+import org.trustweave.anchor.BlockchainAnchorRegistry
+import org.trustweave.did.registry.DidMethodRegistry
+
+// DID method registry (manual registration or SPI auto-discovery via DidMethodRegistry.autoRegister(kms))
+val didRegistry = DidMethodRegistry()
+val registeredDidMethods = didRegistry.getAllMethodNames()
+
+// Blockchain anchor registry
+val anchorRegistry = BlockchainAnchorRegistry()
+val registeredChains = anchorRegistry.getAllChainIds()
+```
 
 ### `org.trustweave.core.util`
 

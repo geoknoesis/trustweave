@@ -1,13 +1,13 @@
 package org.trustweave.core.util
 
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 class DigestUtilsTest {
-
     @Test
     fun `canonicalizeJson should produce same output for same content with different key order`() {
         val json1 = """{"b":2,"a":1,"c":3}"""
@@ -71,14 +71,16 @@ class DigestUtilsTest {
 
     @Test
     fun `sha256DigestMultibase with JsonElement should work`() {
-        val element1 = buildJsonObject {
-            put("a", 1)
-            put("b", 2)
-        }
-        val element2 = buildJsonObject {
-            put("b", 2)
-            put("a", 1)
-        }
+        val element1 =
+            buildJsonObject {
+                put("a", 1)
+                put("b", 2)
+            }
+        val element2 =
+            buildJsonObject {
+                put("b", 2)
+                put("a", 1)
+            }
 
         val digest1 = DigestUtils.sha256DigestMultibase(element1)
         val digest2 = DigestUtils.sha256DigestMultibase(element2)
@@ -96,8 +98,10 @@ class DigestUtilsTest {
         // Should be base58 encoded (only contains base58 characters)
         val base58Chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
         val encodedPart = digest.substring(1)
-        assertTrue(encodedPart.all { it in base58Chars },
-            "Encoded part should only contain base58 characters")
+        assertTrue(
+            encodedPart.all { it in base58Chars },
+            "Encoded part should only contain base58 characters",
+        )
     }
 
     @Test
@@ -137,4 +141,3 @@ class DigestUtilsTest {
         assertTrue(canonical.contains("-1"))
     }
 }
-

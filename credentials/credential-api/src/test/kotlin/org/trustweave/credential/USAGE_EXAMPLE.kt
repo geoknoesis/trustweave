@@ -9,7 +9,7 @@
  * This is the recommended entry point for new TrustWeave users.
  */
 
-@file:Suppress("unused", "RemoveRedundantQualifierName")
+@file:Suppress("ktlint:standard:filename", "unused", "RemoveRedundantQualifierName")
 
 package org.trustweave.credential
 

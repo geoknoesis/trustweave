@@ -55,6 +55,11 @@ class SolDidMethodTest {
             InMemoryKeyManagementService(),
             InMemoryBlockchainAnchorClient(chainId = "solana:mainnet-beta"),
             SolDidConfig.mainnet(rpcUrl),
+            okhttp3.OkHttpClient
+                .Builder()
+                .followRedirects(false)
+                .followSslRedirects(false)
+                .build(),
         )
 
     @Test
@@ -195,7 +200,27 @@ class SolDidRemovedAccountAndNetworkTest {
             InMemoryKeyManagementService(),
             InMemoryBlockchainAnchorClient(chainId = "solana:mainnet-beta"),
             config(rpc()),
+            okhttp3.OkHttpClient
+                .Builder()
+                .followRedirects(false)
+                .followSslRedirects(false)
+                .build(),
         )
+
+    @Test
+    fun `default SolDidMethod blocks loopback RPC via SSRF guard and is AutoCloseable`() =
+        runBlocking<Unit> {
+            val guarded =
+                SolDidMethod(
+                    InMemoryKeyManagementService(),
+                    InMemoryBlockchainAnchorClient(chainId = "solana:mainnet-beta"),
+                    SolDidConfig.mainnet(rpc()),
+                )
+            guarded.use { m ->
+                val result = m.resolveDid(org.trustweave.did.identifiers.Did("did:sol:11111111111111111111111111111111"))
+                assertIs<DidResolutionResult.Failure.ResolutionError>(result)
+            }
+        }
 
     private fun json(document: org.trustweave.did.model.DidDocument): String =
         kotlinx.serialization.json.Json.encodeToString(

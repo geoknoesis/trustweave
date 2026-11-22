@@ -17,7 +17,6 @@ import java.net.UnknownHostException
  * mandatory pre-flight check on the initial, untrusted host.
  */
 public object PrivateNetworkGuard {
-
     /**
      * True if [address] falls in a range that an outbound request to a public endpoint must never
      * target: loopback, wildcard/any-local, link-local (incl. the `169.254.169.254` cloud-metadata

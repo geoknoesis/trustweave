@@ -1,0 +1,36 @@
+name: Documentation improvement
+description: Report broken links, outdated snippets, or missing documentation
+labels: [documentation]
+body:
+  - type: input
+    id: page
+    attributes:
+      label: Page or file path
+      description: Path in the repository (e.g., docs/how-to/issue-credentials.md) or URL on trustweave.org
+      placeholder: docs/getting-started/quick-start.md
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Issue type
+      options:
+        - Outdated or non-compiling code snippet
+        - Broken link or missing page
+        - Unclear or incomplete explanation
+        - Missing API / plugin documentation
+        - Typo or formatting issue
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: What needs to be improved?
+      description: Describe what is inaccurate, confusing, or missing.
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested fix (optional)
+      description: Proposed wording, corrected Kotlin snippet, or reference to the relevant source file.

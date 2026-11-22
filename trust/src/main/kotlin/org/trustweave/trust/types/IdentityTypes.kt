@@ -2,7 +2,7 @@ package org.trustweave.trust.types
 
 import org.trustweave.did.identifiers.Did
 
-/**
+/*
  * Type-safe identity wrappers for trust operations.
  *
  * Value classes provide compile-time type safety without runtime overhead,

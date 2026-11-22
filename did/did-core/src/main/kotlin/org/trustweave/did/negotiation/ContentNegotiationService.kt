@@ -73,6 +73,11 @@ interface ContentNegotiationService {
 class DefaultContentNegotiationService : ContentNegotiationService {
     companion object {
         val SUPPORTED_TYPES: List<String> = DidMediaTypes.SUPPORTED_DOCUMENT_TYPES
+        private val COMPACT_JSON =
+            Json {
+                prettyPrint = false
+                encodeDefaults = false
+            }
         // CBOR (application/did+cbor) is not yet implemented. Add here once a CBOR
         // serialization library (e.g. Jackson CBOR) is wired in.
     }
@@ -102,14 +107,12 @@ class DefaultContentNegotiationService : ContentNegotiationService {
             DidMediaTypes.DID_JSON,
             DidMediaTypes.JSON,
             -> {
-                Json {
-                    prettyPrint = false
-                    encodeDefaults = false
-                }.encodeToString(
-                    org.trustweave.did.model.DidDocument
-                        .serializer(),
-                    document,
-                ).toByteArray(Charsets.UTF_8)
+                COMPACT_JSON
+                    .encodeToString(
+                        org.trustweave.did.model.DidDocument
+                            .serializer(),
+                        document,
+                    ).toByteArray(Charsets.UTF_8)
             }
             else -> {
                 throw UnsupportedContentTypeException(contentType)

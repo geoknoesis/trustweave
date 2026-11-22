@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:filename")
+
 package org.trustweave.credential.requests
 
 import kotlin.time.Duration.Companion.minutes

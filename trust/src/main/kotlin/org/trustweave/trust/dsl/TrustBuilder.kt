@@ -116,9 +116,7 @@ class TrustBuilder(
             config.metadataBuilder.description?.let { desc ->
                 description(desc)
             }
-            config.metadataBuilder.addedAt?.let { instant ->
-                addedAt(instant)
-            }
+            addedAt(config.metadataBuilder.addedAt)
         }
 
     /**

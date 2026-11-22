@@ -1,4 +1,5 @@
 ---
+title: Error and result handling
 parent: Contributing to TrustWeave
 ---
 # Error and result handling
@@ -11,20 +12,20 @@ This document describes how TrustWeave surfaces failures across layers. Follow i
 
 2. **Programming errors** — Use `require`, `check`, or `IllegalArgumentException` / `IllegalStateException` only for bugs or impossible states the **caller** is responsible for (e.g. missing mandatory DSL field before `build()`). Document when the DSL throws.
 
-3. **Invalid user or configuration input** — Prefer structured failures on the result type (e.g. `DidCreationResult.Failure.InvalidConfiguration`) or [`TrustWeaveException.ValidationFailed`](../../common/src/main/kotlin/org/trustweave/core/exception/TrustWeaveException.kt) when an exception-based API is required.
+3. **Invalid user or configuration input** — Prefer structured failures on the result type (e.g. `DidCreationResult.Failure.InvalidConfiguration`) or [`TrustWeaveException.ValidationFailed`](https://github.com/geoknoesis/trustweave/blob/main/common/src/main/kotlin/org/trustweave/core/exception/TrustWeaveException.kt) when an exception-based API is required.
 
-4. **Infrastructure / I/O faults** — Use [`TrustWeaveException`](../../common/src/main/kotlin/org/trustweave/core/exception/TrustWeaveException.kt) or a **domain-specific** subclass (e.g. [`BlockchainException`](../../anchors/anchor-core/src/main/kotlin/org/trustweave/anchor/exceptions/BlockchainExceptions.kt)) with a **stable `code`** and structured `context`. Preserve `cause` when wrapping third-party errors.
+4. **Infrastructure / I/O faults** — Use [`TrustWeaveException`](https://github.com/geoknoesis/trustweave/blob/main/common/src/main/kotlin/org/trustweave/core/exception/TrustWeaveException.kt) or a **domain-specific** subclass (e.g. [`BlockchainException`](https://github.com/geoknoesis/trustweave/blob/main/anchors/anchor-core/src/main/kotlin/org/trustweave/anchor/exceptions/BlockchainExceptions.kt)) with a **stable `code`** and structured `context`. Preserve `cause` when wrapping third-party errors.
 
 5. **KMS operations** — Implementations return sealed `org.trustweave.kms.results.*` types. Use `getOrThrow()` only at boundaries that intentionally translate to exceptions.
 
 ## DID creation
 
-- **`createDid`** returns [`DidCreationResult`](../../trust/src/main/kotlin/org/trustweave/trust/types/DidResult.kt).
-- **`createDidWithKey`** returns [`DidCreationWithKeyResult`](../../trust/src/main/kotlin/org/trustweave/trust/types/DidResult.kt): success includes `(Did, keyId)`; failures either wrap `DidCreationResult.Failure` or describe key extraction errors.
+- **`createDid`** returns [`DidCreationResult`](https://github.com/geoknoesis/trustweave/blob/main/trust/src/main/kotlin/org/trustweave/trust/types/DidResult.kt).
+- **`createDidWithKey`** returns [`DidCreationWithKeyResult`](https://github.com/geoknoesis/trustweave/blob/main/trust/src/main/kotlin/org/trustweave/trust/types/DidResult.kt): success includes `(Did, keyId)`; failures either wrap `DidCreationResult.Failure` or describe key extraction errors.
 
 ## TrustWeave facade vs services
 
-- [**TrustWeave**](../../trust/src/main/kotlin/org/trustweave/trust/TrustWeave.kt) composes domain services; DID operations (`createDid`, `resolveDid`, etc.) are **members** on the facade. DID DSL builders and [`DidManagementService`](../../trust/src/main/kotlin/org/trustweave/trust/services/DidManagementService.kt) depend on [`DidDslContext`](../../trust/src/main/kotlin/org/trustweave/trust/context/DidDslContext.kt), not the full facade type.
+- [**TrustWeave**](https://github.com/geoknoesis/trustweave/blob/main/trust/src/main/kotlin/org/trustweave/trust/TrustWeave.kt) composes domain services; DID operations (`createDid`, `resolveDid`, etc.) are **members** on the facade. DID DSL builders and [`DidManagementService`](https://github.com/geoknoesis/trustweave/blob/main/trust/src/main/kotlin/org/trustweave/trust/services/DidManagementService.kt) depend on [`DidDslContext`](https://github.com/geoknoesis/trustweave/blob/main/trust/src/main/kotlin/org/trustweave/trust/context/DidDslContext.kt), not the full facade type.
 
 ## Credential API layout
 

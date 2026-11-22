@@ -3,7 +3,7 @@ package org.trustweave.did.resolver
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.model.DidDocumentMetadata
 
-/**
+/*
  * Ergonomic accessors over [DidResolutionResult].
  */
 

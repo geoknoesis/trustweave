@@ -1,21 +1,29 @@
 package org.trustweave.anchor
 
-import org.trustweave.core.exception.TrustWeaveException
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import kotlin.test.*
+import org.trustweave.core.exception.TrustWeaveException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNotEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Comprehensive tests for BlockchainAnchorClient API.
  * Uses a simple in-memory implementation for testing.
  */
 class BlockchainAnchorClientTest {
-
     private lateinit var client: TestBlockchainAnchorClient
     private val chainId = "algorand:testnet"
     private val contract = "app-123"
@@ -35,27 +43,29 @@ class BlockchainAnchorClientTest {
      */
     private class TestBlockchainAnchorClient(
         private val testChainId: String,
-        private val testContract: String?
+        private val testContract: String?,
     ) : BlockchainAnchorClient {
         private val storage = ConcurrentHashMap<String, AnchorResult>()
         private val txCounter = AtomicLong(0)
 
         override suspend fun writePayload(
             payload: JsonElement,
-            mediaType: String
+            mediaType: String,
         ): AnchorResult {
             val txHash = "tx_${txCounter.incrementAndGet()}_${System.currentTimeMillis()}"
-            val ref = AnchorRef(
-                chainId = testChainId,
-                txHash = txHash,
-                contract = testContract
-            )
-            val result = AnchorResult(
-                ref = ref,
-                payload = payload,
-                mediaType = mediaType,
-                timestamp = System.currentTimeMillis() / 1000
-            )
+            val ref =
+                AnchorRef(
+                    chainId = testChainId,
+                    txHash = txHash,
+                    contract = testContract,
+                )
+            val result =
+                AnchorResult(
+                    ref = ref,
+                    payload = payload,
+                    mediaType = mediaType,
+                    timestamp = System.currentTimeMillis() / 1000,
+                )
             storage[txHash] = result
             return result
         }
@@ -77,202 +87,228 @@ class BlockchainAnchorClientTest {
     }
 
     @Test
-    fun `test write payload successfully`() = runBlocking<Unit> {
-        val payload = buildJsonObject {
-            put("vcDigest", "uABC123")
-            put("issuer", "did:key:issuer")
+    fun `test write payload successfully`() =
+        runBlocking<Unit> {
+            val payload =
+                buildJsonObject {
+                    put("vcDigest", "uABC123")
+                    put("issuer", "did:key:issuer")
+                }
+
+            val result = client.writePayload(payload, "application/json")
+
+            assertNotNull(result)
+            assertEquals(chainId, result.ref.chainId)
+            assertNotNull(result.ref.txHash)
+            assertEquals(contract, result.ref.contract)
+            assertEquals(payload, result.payload)
+            assertEquals("application/json", result.mediaType)
+            assertNotNull(result.timestamp)
+            assertTrue(result.timestamp > 0)
         }
 
-        val result = client.writePayload(payload, "application/json")
-
-        assertNotNull(result)
-        assertEquals(chainId, result.ref.chainId)
-        assertNotNull(result.ref.txHash)
-        assertEquals(contract, result.ref.contract)
-        assertEquals(payload, result.payload)
-        assertEquals("application/json", result.mediaType)
-        assertNotNull(result.timestamp)
-        assertTrue(result.timestamp > 0)
-    }
-
     @Test
-    fun `test read payload successfully`() = runBlocking<Unit> {
-        val payload = buildJsonObject {
-            put("vcDigest", "uABC123")
-            put("issuer", "did:key:issuer")
+    fun `test read payload successfully`() =
+        runBlocking<Unit> {
+            val payload =
+                buildJsonObject {
+                    put("vcDigest", "uABC123")
+                    put("issuer", "did:key:issuer")
+                }
+
+            val writeResult = client.writePayload(payload, "application/json")
+
+            val readResult = client.readPayload(writeResult.ref)
+
+            assertEquals(writeResult.ref.txHash, readResult.ref.txHash)
+            assertEquals(payload, readResult.payload)
+            assertEquals("application/json", readResult.mediaType)
         }
 
-        val writeResult = client.writePayload(payload, "application/json")
-
-        val readResult = client.readPayload(writeResult.ref)
-
-        assertEquals(writeResult.ref.txHash, readResult.ref.txHash)
-        assertEquals(payload, readResult.payload)
-        assertEquals("application/json", readResult.mediaType)
-    }
-
     @Test
-    fun `test read payload fails when not found`() = runBlocking<Unit> {
-        val ref = AnchorRef(
-            chainId = chainId,
-            txHash = "nonexistent-tx-hash",
-            contract = contract
-        )
+    fun `test read payload fails when not found`() =
+        runBlocking<Unit> {
+            val ref =
+                AnchorRef(
+                    chainId = chainId,
+                    txHash = "nonexistent-tx-hash",
+                    contract = contract,
+                )
 
-        assertFailsWith<TrustWeaveException.NotFound> {
-            client.readPayload(ref)
-        }
-    }
-
-    @Test
-    fun `test read payload fails when chain ID mismatch`() = runBlocking<Unit> {
-        val payload = buildJsonObject {
-            put("vcDigest", "uABC123")
-        }
-        val writeResult = client.writePayload(payload, "application/json")
-
-        val wrongChainRef = writeResult.ref.copy(chainId = "different:chain")
-
-        assertFailsWith<IllegalArgumentException> {
-            client.readPayload(wrongChainRef)
-        }
-    }
-
-    @Test
-    fun `test write multiple payloads`() = runBlocking<Unit> {
-        val payload1 = buildJsonObject { put("id", "1") }
-        val payload2 = buildJsonObject { put("id", "2") }
-        val payload3 = buildJsonObject { put("id", "3") }
-
-        val result1 = client.writePayload(payload1, "application/json")
-        val result2 = client.writePayload(payload2, "application/json")
-        val result3 = client.writePayload(payload3, "application/json")
-
-        assertNotEquals(result1.ref.txHash, result2.ref.txHash)
-        assertNotEquals(result2.ref.txHash, result3.ref.txHash)
-        assertEquals(3, client.size())
-    }
-
-    @Test
-    fun `test write payload with different media types`() = runBlocking<Unit> {
-        val payload = buildJsonObject { put("data", "test") }
-
-        val jsonResult = client.writePayload(payload, "application/json")
-        val cborResult = client.writePayload(payload, "application/cbor")
-
-        assertEquals("application/json", jsonResult.mediaType)
-        assertEquals("application/cbor", cborResult.mediaType)
-    }
-
-    @Test
-    fun `test write payload with complex JSON structure`() = runBlocking<Unit> {
-        val payload = buildJsonObject {
-            put("vcDigest", "uABC123")
-            put("issuer", "did:key:issuer")
-            put("metadata", buildJsonObject {
-                put("timestamp", System.currentTimeMillis())
-                put("tags", buildJsonArray {
-                    add("important")
-                    add("verified")
-                })
-            })
+            assertFailsWith<TrustWeaveException.NotFound> {
+                client.readPayload(ref)
+            }
         }
 
-        val result = client.writePayload(payload, "application/json")
-
-        val readResult = client.readPayload(result.ref)
-        assertEquals(payload, readResult.payload)
-    }
-
     @Test
-    fun `test write payload with array payload`() = runBlocking<Unit> {
-        val payload = buildJsonArray {
-            add(buildJsonObject { put("id", "1") })
-            add(buildJsonObject { put("id", "2") })
+    fun `test read payload fails when chain ID mismatch`() =
+        runBlocking<Unit> {
+            val payload =
+                buildJsonObject {
+                    put("vcDigest", "uABC123")
+                }
+            val writeResult = client.writePayload(payload, "application/json")
+
+            val wrongChainRef = writeResult.ref.copy(chainId = "different:chain")
+
+            assertFailsWith<IllegalArgumentException> {
+                client.readPayload(wrongChainRef)
+            }
         }
 
-        val result = client.writePayload(payload, "application/json")
-
-        val readResult = client.readPayload(result.ref)
-        assertEquals(payload, readResult.payload)
-    }
-
     @Test
-    fun `test write payload generates unique transaction hashes`() = runBlocking<Unit> {
-        val payload = buildJsonObject { put("data", "test") }
+    fun `test write multiple payloads`() =
+        runBlocking<Unit> {
+            val payload1 = buildJsonObject { put("id", "1") }
+            val payload2 = buildJsonObject { put("id", "2") }
+            val payload3 = buildJsonObject { put("id", "3") }
 
-        val result1 = client.writePayload(payload, "application/json")
-        Thread.sleep(10) // Small delay to ensure different timestamps
-        val result2 = client.writePayload(payload, "application/json")
+            val result1 = client.writePayload(payload1, "application/json")
+            val result2 = client.writePayload(payload2, "application/json")
+            val result3 = client.writePayload(payload3, "application/json")
 
-        assertNotEquals(result1.ref.txHash, result2.ref.txHash)
-    }
-
-    @Test
-    fun `test write payload includes timestamp`() = runBlocking<Unit> {
-        val beforeWrite = System.currentTimeMillis() / 1000
-        val payload = buildJsonObject { put("data", "test") }
-
-        val result = client.writePayload(payload, "application/json")
-
-        val afterWrite = System.currentTimeMillis() / 1000
-        assertNotNull(result.timestamp)
-        assertTrue(result.timestamp >= beforeWrite)
-        assertTrue(result.timestamp <= afterWrite)
-    }
-
-    @Test
-    fun `test clear removes all anchors`() = runBlocking<Unit> {
-        val payload = buildJsonObject { put("data", "test") }
-
-        client.writePayload(payload, "application/json")
-        client.writePayload(payload, "application/json")
-        assertEquals(2, client.size())
-
-        client.clear()
-
-        assertEquals(0, client.size())
-    }
-
-    @Test
-    fun `test anchor ref contains correct metadata`() = runBlocking<Unit> {
-        val payload = buildJsonObject { put("vcDigest", "uABC123") }
-
-        val result = client.writePayload(payload, "application/json")
-
-        assertEquals(chainId, result.ref.chainId)
-        assertNotNull(result.ref.txHash)
-        assertTrue(result.ref.txHash.startsWith("tx_"))
-        assertEquals(contract, result.ref.contract)
-    }
-
-    @Test
-    fun `test write payload without contract`() = runBlocking<Unit> {
-        val clientWithoutContract = TestBlockchainAnchorClient(chainId, null)
-        val payload = buildJsonObject { put("data", "test") }
-
-        val result = clientWithoutContract.writePayload(payload, "application/json")
-
-        assertNull(result.ref.contract)
-    }
-
-    @Test
-    fun `test read payload preserves all fields`() = runBlocking<Unit> {
-        val payload = buildJsonObject {
-            put("vcDigest", "uABC123")
-            put("issuer", "did:key:issuer")
+            assertNotEquals(result1.ref.txHash, result2.ref.txHash)
+            assertNotEquals(result2.ref.txHash, result3.ref.txHash)
+            assertEquals(3, client.size())
         }
 
-        val writeResult = client.writePayload(payload, "application/json")
+    @Test
+    fun `test write payload with different media types`() =
+        runBlocking<Unit> {
+            val payload = buildJsonObject { put("data", "test") }
 
-        val readResult = client.readPayload(writeResult.ref)
+            val jsonResult = client.writePayload(payload, "application/json")
+            val cborResult = client.writePayload(payload, "application/cbor")
 
-        assertEquals(writeResult.ref.chainId, readResult.ref.chainId)
-        assertEquals(writeResult.ref.txHash, readResult.ref.txHash)
-        assertEquals(writeResult.ref.contract, readResult.ref.contract)
-        assertEquals(writeResult.payload, readResult.payload)
-        assertEquals(writeResult.mediaType, readResult.mediaType)
-        assertEquals(writeResult.timestamp, readResult.timestamp)
-    }
+            assertEquals("application/json", jsonResult.mediaType)
+            assertEquals("application/cbor", cborResult.mediaType)
+        }
+
+    @Test
+    fun `test write payload with complex JSON structure`() =
+        runBlocking<Unit> {
+            val payload =
+                buildJsonObject {
+                    put("vcDigest", "uABC123")
+                    put("issuer", "did:key:issuer")
+                    put(
+                        "metadata",
+                        buildJsonObject {
+                            put("timestamp", System.currentTimeMillis())
+                            put(
+                                "tags",
+                                buildJsonArray {
+                                    add("important")
+                                    add("verified")
+                                },
+                            )
+                        },
+                    )
+                }
+
+            val result = client.writePayload(payload, "application/json")
+
+            val readResult = client.readPayload(result.ref)
+            assertEquals(payload, readResult.payload)
+        }
+
+    @Test
+    fun `test write payload with array payload`() =
+        runBlocking<Unit> {
+            val payload =
+                buildJsonArray {
+                    add(buildJsonObject { put("id", "1") })
+                    add(buildJsonObject { put("id", "2") })
+                }
+
+            val result = client.writePayload(payload, "application/json")
+
+            val readResult = client.readPayload(result.ref)
+            assertEquals(payload, readResult.payload)
+        }
+
+    @Test
+    fun `test write payload generates unique transaction hashes`() =
+        runBlocking<Unit> {
+            val payload = buildJsonObject { put("data", "test") }
+
+            val result1 = client.writePayload(payload, "application/json")
+            Thread.sleep(10) // Small delay to ensure different timestamps
+            val result2 = client.writePayload(payload, "application/json")
+
+            assertNotEquals(result1.ref.txHash, result2.ref.txHash)
+        }
+
+    @Test
+    fun `test write payload includes timestamp`() =
+        runBlocking<Unit> {
+            val beforeWrite = System.currentTimeMillis() / 1000
+            val payload = buildJsonObject { put("data", "test") }
+
+            val result = client.writePayload(payload, "application/json")
+
+            val afterWrite = System.currentTimeMillis() / 1000
+            assertNotNull(result.timestamp)
+            assertTrue(result.timestamp >= beforeWrite)
+            assertTrue(result.timestamp <= afterWrite)
+        }
+
+    @Test
+    fun `test clear removes all anchors`() =
+        runBlocking<Unit> {
+            val payload = buildJsonObject { put("data", "test") }
+
+            client.writePayload(payload, "application/json")
+            client.writePayload(payload, "application/json")
+            assertEquals(2, client.size())
+
+            client.clear()
+
+            assertEquals(0, client.size())
+        }
+
+    @Test
+    fun `test anchor ref contains correct metadata`() =
+        runBlocking<Unit> {
+            val payload = buildJsonObject { put("vcDigest", "uABC123") }
+
+            val result = client.writePayload(payload, "application/json")
+
+            assertEquals(chainId, result.ref.chainId)
+            assertNotNull(result.ref.txHash)
+            assertTrue(result.ref.txHash.startsWith("tx_"))
+            assertEquals(contract, result.ref.contract)
+        }
+
+    @Test
+    fun `test write payload without contract`() =
+        runBlocking<Unit> {
+            val clientWithoutContract = TestBlockchainAnchorClient(chainId, null)
+            val payload = buildJsonObject { put("data", "test") }
+
+            val result = clientWithoutContract.writePayload(payload, "application/json")
+
+            assertNull(result.ref.contract)
+        }
+
+    @Test
+    fun `test read payload preserves all fields`() =
+        runBlocking<Unit> {
+            val payload =
+                buildJsonObject {
+                    put("vcDigest", "uABC123")
+                    put("issuer", "did:key:issuer")
+                }
+
+            val writeResult = client.writePayload(payload, "application/json")
+
+            val readResult = client.readPayload(writeResult.ref)
+
+            assertEquals(writeResult.ref.chainId, readResult.ref.chainId)
+            assertEquals(writeResult.ref.txHash, readResult.ref.txHash)
+            assertEquals(writeResult.ref.contract, readResult.ref.contract)
+            assertEquals(writeResult.payload, readResult.payload)
+            assertEquals(writeResult.mediaType, readResult.mediaType)
+            assertEquals(writeResult.timestamp, readResult.timestamp)
+        }
 }
-

@@ -16,9 +16,14 @@ sealed class AssetRef {
         override fun toString(): String = "native"
     }
 
-    data class Token(val symbol: String, val contract: String) : AssetRef()
+    data class Token(
+        val symbol: String,
+        val contract: String,
+    ) : AssetRef()
 
-    data class OperatorCredit(val operatorId: String) : AssetRef()
+    data class OperatorCredit(
+        val operatorId: String,
+    ) : AssetRef()
 }
 
 /**
@@ -63,15 +68,19 @@ data class TokenAmount(
     }
 
     companion object {
-        fun zero(chainId: String, asset: AssetRef = AssetRef.Native): TokenAmount =
-            TokenAmount(chainId, asset, BigInteger.ZERO)
+        fun zero(
+            chainId: String,
+            asset: AssetRef = AssetRef.Native,
+        ): TokenAmount = TokenAmount(chainId, asset, BigInteger.ZERO)
 
         /**
          * Placeholder amount used when an unmanaged client cannot derive the
          * fee actually paid (e.g. legacy plugins that don't return gas-used).
          * Treated as informational, never debited.
          */
-        fun unknown(chainId: String, asset: AssetRef = AssetRef.Native): TokenAmount =
-            TokenAmount(chainId, asset, BigInteger.ZERO)
+        fun unknown(
+            chainId: String,
+            asset: AssetRef = AssetRef.Native,
+        ): TokenAmount = TokenAmount(chainId, asset, BigInteger.ZERO)
     }
 }

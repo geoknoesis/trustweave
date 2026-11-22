@@ -96,11 +96,11 @@ class TypeSafeHelpersTest {
 
     @Test
     fun `test KmsProviders constants`() {
-        assertEquals("inMemory", KmsProviders.IN_MEMORY)
-        assertEquals("awsKms", KmsProviders.AWS)
-        assertEquals("azureKms", KmsProviders.AZURE)
-        assertEquals("googleKms", KmsProviders.GOOGLE)
-        assertEquals("hashicorp", KmsProviders.HASHICORP)
+        assertEquals("inmemory", KmsProviders.IN_MEMORY)
+        assertEquals("aws", KmsProviders.AWS)
+        assertEquals("azure", KmsProviders.AZURE)
+        assertEquals("google-cloud-kms", KmsProviders.GOOGLE)
+        assertEquals("vault", KmsProviders.HASHICORP)
         assertEquals("fortanix", KmsProviders.FORTANIX)
         assertEquals("thales", KmsProviders.THALES)
         assertEquals("cyberark", KmsProviders.CYBERARK)

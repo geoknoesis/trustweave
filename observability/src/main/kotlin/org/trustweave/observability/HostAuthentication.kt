@@ -284,20 +284,23 @@ public class HostAuthentication private constructor(
     ) {
         application.intercept(ApplicationCallPipeline.Plugins) {
             val path = call.request.path()
-            if (path in exemptPaths || path in protocolAuthenticatedPaths) {
+            if (path in exemptPaths) {
                 proceed()
                 return@intercept
             }
             val limit = rateLimit
             val caller = call.request.origin.remoteHost
-            // Generous, pre-authentication bound on anonymous work. Not the caller's real budget.
+            // Generous, pre-authentication bound on anonymous work. Applies to protocol-authenticated
+            // paths as well so unauthenticated callers cannot flood token/credential endpoints.
             if (limit != null && !limit.admitAttempt(caller)) {
                 call.tooManyRequests(limit)
                 finish()
                 return@intercept
             }
+            val isProtocolAuthenticated = path in protocolAuthenticatedPaths
             val gate = authenticator
-            if (gate != null &&
+            if (!isProtocolAuthenticated &&
+                gate != null &&
                 (call.request.httpMethod in protectedMethods || underProtectedPrefix(path))
             ) {
                 val admitted =

@@ -14,6 +14,8 @@ has_children: true
 
 Complete API reference for TrustWeave.
 
+> **Browsable KDoc (Dokka):** Browse the generated Kotlin API documentation for all published modules at **[KDoc API Reference (/api/)](/api/)** (`https://trustweave.org/api/`). To generate Dokka Javadoc locally from a source checkout, pass `-Ptrustweave.dokka=true` to Gradle (e.g., `./gradlew -Ptrustweave.dokka=true :trust:dokkaGeneratePublicationJavadoc`).
+
 ## Quick Reference
 
 | Category | Methods | Page |

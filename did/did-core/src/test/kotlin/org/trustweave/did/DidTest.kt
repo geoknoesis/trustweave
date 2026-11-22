@@ -3,12 +3,11 @@ package org.trustweave.did
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.trustweave.did.DidCreationOptions
 import org.trustweave.did.identifiers.Did
-import org.trustweave.did.telemetry.TelemetryDidMethod
 import org.trustweave.did.model.DidDocument
 import org.trustweave.did.registry.DidMethodRegistry
 import org.trustweave.did.resolver.DidResolutionResult
+import org.trustweave.did.telemetry.TelemetryDidMethod
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull

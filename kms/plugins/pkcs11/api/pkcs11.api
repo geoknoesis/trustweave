@@ -23,10 +23,11 @@ public final class org/trustweave/kms/pkcs11/Pkcs11Exception : java/lang/Runtime
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
-public final class org/trustweave/kms/pkcs11/Pkcs11KeyManagementService : org/trustweave/kms/KeyManagementService {
+public final class org/trustweave/kms/pkcs11/Pkcs11KeyManagementService : java/lang/AutoCloseable, org/trustweave/kms/KeyManagementService {
 	public static final field Companion Lorg/trustweave/kms/pkcs11/Pkcs11KeyManagementService$Companion;
 	public static final field OPTION_LABEL Ljava/lang/String;
 	public fun <init> (Lorg/trustweave/kms/pkcs11/Pkcs11Config;)V
+	public fun close ()V
 	public fun deleteKey-HAyBRPs (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun generateKey (Ljava/lang/String;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun generateKey (Lorg/trustweave/kms/Algorithm;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

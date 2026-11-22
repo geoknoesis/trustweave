@@ -23,11 +23,11 @@ has_children: true
 
 ## Runnable scenario code
 
-See the [scenario examples folder](../../distribution/examples/scenarios/README.md) for source, per-scenario READMEs and commands. The nine small domain examples verify signed claims and reject tampering locally.
+See the [scenario examples folder](https://github.com/geoknoesis/trustweave/blob/main/distribution/examples/scenarios/README.md) for source, per-scenario READMEs and commands. The nine small domain examples verify signed claims and reject tampering locally.
 
 ## Overview
 
-These guides explain workflows using code fragments. They are not all standalone programs. See the [examples module](../../distribution/examples/README.md) for runnable tasks and their implementation scope. The guides generally follow this pattern:
+These guides explain workflows using code fragments. They are not all standalone programs. See the [examples module](https://github.com/geoknoesis/trustweave/blob/main/distribution/examples/README.md) for runnable tasks and their implementation scope. The guides generally follow this pattern:
 
 1. **Setup** – Create TrustWeave instance and configure components
 2. **DID Creation** – Create identifiers for actors (issuers, holders, verifiers)
@@ -279,7 +279,7 @@ fun main() = runBlocking {
 ## Prerequisites
 
 - Java 21+
-- Kotlin 2.3.21
+- Kotlin 2.4.21
 - TrustWeave dependency (see [Installation](../getting-started/installation.md))
 
 ## Related Documentation

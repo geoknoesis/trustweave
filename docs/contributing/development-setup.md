@@ -13,8 +13,8 @@ This guide explains how to set up your development environment for TrustWeave.
 ### Required Software
 
 - **Java 21+** – Required for compilation and runtime
-- **Kotlin 2.3.21** – Included via Gradle plugin
-- **Gradle 9.5.0** – Automatically downloaded via Gradle Wrapper
+- **Kotlin 2.4.21** – Included via Gradle plugin
+- **Gradle 9.8.1** – Automatically downloaded via Gradle Wrapper
 - **Git** – For version control
 
 ### Optional Software

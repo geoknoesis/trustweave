@@ -6,7 +6,7 @@ import org.trustweave.did.model.DidDocument
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolver
 
-/**
+/*
  * Extension functions for fluent DID operations.
  *
  * These extensions work standalone without orchestration context and can be used

@@ -28,4 +28,8 @@ data class UpdateDidOptions(
      * - Method-specific configuration
      */
     val methodSpecificOptions: Map<String, JsonElement> = emptyMap(),
-)
+) {
+    override fun toString(): String =
+        "UpdateDidOptions(secret=${if (secret != null) "[REDACTED]" else "null"}, " +
+            "methodSpecificOptions=$methodSpecificOptions)"
+}

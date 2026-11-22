@@ -6,7 +6,7 @@ nav_order: 5
 
 # Government & Digital Identity Scenario
 
-> **Runnable companion:** [government example](../../distribution/examples/scenarios/government/README.md). It demonstrates local signed claims and tamper rejection; this guide discusses a broader workflow.
+> **Runnable companion:** [government example](https://github.com/geoknoesis/trustweave/blob/main/distribution/examples/scenarios/government/README.md). It demonstrates local signed claims and tamper rejection; this guide discusses a broader workflow.
 
 
 This guide demonstrates how to build a government digital identity system using TrustWeave that enables citizen identity wallets, government-issued credentials, document verification, and cross-border identity verification.
@@ -169,8 +169,8 @@ flowchart TD
 ## Prerequisites
 
 - Java 21+
-- Kotlin 2.3.21
-- Gradle 9.5.0
+- Kotlin 2.4.21
+- Gradle 9.8.1
 - Basic understanding of Kotlin and coroutines
 - Familiarity with government identity concepts (helpful but not required)
 

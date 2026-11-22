@@ -1,6 +1,11 @@
+@file:Suppress("ktlint:standard:filename")
+
 package org.trustweave.did.registry
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.trustweave.did.DidCreationOptions

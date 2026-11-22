@@ -82,11 +82,11 @@ object ProofPurposes {
  * ```
  */
 object KmsProviders {
-    const val IN_MEMORY = "inMemory"
-    const val AWS = "awsKms"
-    const val AZURE = "azureKms"
-    const val GOOGLE = "googleKms"
-    const val HASHICORP = "hashicorp"
+    const val IN_MEMORY = "inmemory"
+    const val AWS = "aws"
+    const val AZURE = "azure"
+    const val GOOGLE = "google-cloud-kms"
+    const val HASHICORP = "vault"
     const val FORTANIX = "fortanix"
     const val THALES = "thales"
     const val CYBERARK = "cyberark"

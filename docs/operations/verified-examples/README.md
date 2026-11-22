@@ -1,3 +1,11 @@
+---
+layout: default
+title: Verified Examples
+parent: Operations
+has_children: true
+nav_order: 90
+---
+
 # Verified integration examples
 
 These pages bind critical integration guidance to actual compiled SDK source. Run the commands from the SDK root with JDK 21; migration tests also require Docker.

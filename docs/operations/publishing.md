@@ -1,3 +1,10 @@
+---
+layout: default
+title: Publishing a release
+parent: Operations
+nav_order: 50
+---
+
 # Publishing a release
 
 Until 11 September 2026 this repository could build a release but not publish one. No build file

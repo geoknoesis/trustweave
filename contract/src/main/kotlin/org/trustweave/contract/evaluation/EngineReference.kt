@@ -29,7 +29,7 @@ sealed class EngineReference {
     data class WithEngine(
         override val engineId: String,
         override val expectedHash: String?,
-        override val expectedVersion: String?
+        override val expectedVersion: String?,
     ) : EngineReference()
 
     /**
@@ -46,13 +46,14 @@ sealed class EngineReference {
  * Helper function to extract engine metadata from execution model.
  * Returns non-null engineId for non-Manual execution models.
  */
-private fun ExecutionModel.getEngineMetadata(): Triple<String, String?, String?>? = when (this) {
-    is ExecutionModel.Parametric -> Triple(evaluationEngine, engineHash, engineVersion)
-    is ExecutionModel.Conditional -> Triple(evaluationEngine, engineHash, engineVersion)
-    is ExecutionModel.Scheduled -> Triple(evaluationEngine, engineHash, engineVersion)
-    is ExecutionModel.EventDriven -> Triple(evaluationEngine, engineHash, engineVersion)
-    is ExecutionModel.Manual -> null
-}
+private fun ExecutionModel.getEngineMetadata(): Triple<String, String?, String?>? =
+    when (this) {
+        is ExecutionModel.Parametric -> Triple(evaluationEngine, engineHash, engineVersion)
+        is ExecutionModel.Conditional -> Triple(evaluationEngine, engineHash, engineVersion)
+        is ExecutionModel.Scheduled -> Triple(evaluationEngine, engineHash, engineVersion)
+        is ExecutionModel.EventDriven -> Triple(evaluationEngine, engineHash, engineVersion)
+        is ExecutionModel.Manual -> null
+    }
 
 /**
  * Converts an ExecutionModel to an EngineReference.
@@ -63,7 +64,6 @@ fun ExecutionModel.toEngineReference(): EngineReference {
     return EngineReference.WithEngine(
         engineId = engineId,
         expectedHash = expectedHash,
-        expectedVersion = expectedVersion
+        expectedVersion = expectedVersion,
     )
 }
-

@@ -1,4 +1,5 @@
 ---
+title: How to Configure Trust Registry
 parent: How-To Guides
 nav_order: 140
 ---
@@ -22,7 +23,7 @@ Trust registries enable verifiers to determine which issuers they trust without 
 
 ## Prerequisites
 
-- **Kotlin**: 2.3.21+ or higher
+- **Kotlin**: 2.4.21+ or higher
 - **Java**: 21 or higher
 - **TrustWeave SDK**: Latest version
 - **Dependencies**: `distribution-all` with trust registry support

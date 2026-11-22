@@ -1,7 +1,10 @@
 package org.trustweave.did.validation
 
 import org.trustweave.core.util.ValidationResult
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /**
  * Tests for DidValidator (DID 1.1 §3.1 ABNF).

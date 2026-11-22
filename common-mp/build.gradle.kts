@@ -18,28 +18,20 @@ kotlin {
     }
 
     sourceSets {
-        val commonMain by getting {
-            dependencies {
-                implementation(libs.kotlinx.serialization.json)
-                implementation(libs.kotlinx.coroutines.core)
-                implementation(libs.kotlinx.datetime)
-            }
+        commonMain.dependencies {
+            implementation(libs.kotlinx.serialization.json)
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.datetime)
         }
-        val commonTest by getting {
-            dependencies {
-                implementation(libs.kotlin.test)
-            }
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
         }
-        val jvmMain by getting {
-            dependencies {
-                // Reserved for JVM convenience aliases.
-            }
+        jvmMain.dependencies {
+            // Reserved for JVM convenience aliases.
         }
-        val jvmTest by getting {
-            dependencies {
-                implementation(libs.junit.jupiter)
-                implementation(libs.kotlinx.coroutines.test)
-            }
+        jvmTest.dependencies {
+            implementation(libs.junit.jupiter)
+            implementation(libs.kotlinx.coroutines.test)
         }
     }
 }

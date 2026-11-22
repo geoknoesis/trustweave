@@ -17,7 +17,6 @@ import kotlin.test.assertTrue
  * sources and asserts the ChainId table knows each of them.
  */
 class ChainIdPluginCoverageTest {
-
     private val eip155Pattern = Regex("eip155:(\\d+)")
 
     @Test
@@ -25,24 +24,25 @@ class ChainIdPluginCoverageTest {
         val pluginsDir = findPluginsDir()
         assumeTrue(pluginsDir != null, "anchors/plugins source directory not found - skipping")
 
-        val referencedChainNumbers = Files.walk(pluginsDir!!).use { stream ->
-            stream.asSequence()
-                .filter { it.extension == "kt" }
-                // Only shipped sources define the supported chains; tests may
-                // reference deliberately-unsupported ids.
-                .filter { path -> path.map { it.toString() }.containsAll(listOf("src", "main")) }
-                .flatMap { path ->
-                    eip155Pattern.findAll(path.readText()).map { it.groupValues[1].toInt() }
-                }
-                .toSortedSet()
-        }
+        val referencedChainNumbers =
+            Files.walk(pluginsDir!!).use { stream ->
+                stream
+                    .asSequence()
+                    .filter { it.extension == "kt" }
+                    // Only shipped sources define the supported chains; tests may
+                    // reference deliberately-unsupported ids.
+                    .filter { path -> path.map { it.toString() }.containsAll(listOf("src", "main")) }
+                    .flatMap { path ->
+                        eip155Pattern.findAll(path.readText()).map { it.groupValues[1].toInt() }
+                    }.toSortedSet()
+            }
 
         assertTrue(referencedChainNumbers.isNotEmpty(), "expected plugins to reference eip155 chain ids")
 
         val missing = referencedChainNumbers.filter { ChainId.Eip155.fromChainNumber(it) == null }
         assertTrue(
             missing.isEmpty(),
-            "ChainId.Eip155 is missing chain numbers referenced by shipped plugins: $missing"
+            "ChainId.Eip155 is missing chain numbers referenced by shipped plugins: $missing",
         )
     }
 

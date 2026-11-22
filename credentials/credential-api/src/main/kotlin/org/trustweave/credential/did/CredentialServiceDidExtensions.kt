@@ -83,13 +83,13 @@ suspend fun CredentialService.issueForDid(
             is DidResolutionResult.Failure.InvalidFormat -> {
                 IssuanceResult.Failure.InvalidRequest(
                     field = "subjectDid",
-                    reason = "Subject DID is invalid: ${resolutionResult.reason ?: subjectDid.value}",
+                    reason = "Subject DID is invalid: ${resolutionResult.reason}",
                 )
             }
             is DidResolutionResult.Failure.ResolutionError -> {
                 IssuanceResult.Failure.AdapterError(
                     format = format,
-                    reason = "Failed to resolve subject DID: ${resolutionResult.reason ?: "Unknown error"}",
+                    reason = "Failed to resolve subject DID: ${resolutionResult.reason}",
                     cause = resolutionResult.cause,
                 )
             }

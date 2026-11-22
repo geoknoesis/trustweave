@@ -1,4 +1,5 @@
 ---
+title: Clean Architecture in TrustWeave
 redirect_from:
   - /architecture/CLEAN_ARCHITECTURE/
 parent: Architecture

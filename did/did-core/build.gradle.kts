@@ -16,8 +16,8 @@ dependencies {
     implementation(libs.kotlinx.coroutines.jdk8)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)
-    // Logging (compileOnly - implementations provide actual logger)
-    compileOnly(libs.slf4j.api)
+    // Logging (apps supply the SLF4J binding; api must be on runtime classpath)
+    implementation(libs.slf4j.api)
     // Test dependencies
     testImplementation(libs.kotlinx.coroutines.test)
     // Other test dependencies are standardized in root build.gradle.kts

@@ -4,7 +4,7 @@ import kotlinx.serialization.json.JsonObject
 import org.trustweave.credential.model.vc.VerifiableCredential
 import org.trustweave.credential.transform.CredentialTransformer
 
-/**
+/*
  * Extension methods for CredentialService to support format transformations.
  *
  * These extensions provide convenient access to credential format conversion

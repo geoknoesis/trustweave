@@ -2,7 +2,6 @@ package org.trustweave.trust.dsl.did
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.trustweave.did.DidMethod
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.identifiers.VerificationMethodId
 import org.trustweave.did.model.DidDocument
@@ -160,7 +159,7 @@ class DidDocumentBuilder(
 
             // Get DID method from provider
             val didMethod =
-                didContext.getDidMethod(methodName) as? DidMethod
+                didContext.getDidMethod(methodName)
                     ?: throw IllegalStateException(
                         "DID method '$methodName' is not configured. " +
                             "Configure it in TrustWeave.build { did { method(\"$methodName\") { ... } } }",

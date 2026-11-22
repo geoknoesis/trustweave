@@ -37,6 +37,8 @@ object Crypto {
                 privateKey.contentEquals(other.privateKey)
         override fun hashCode(): Int =
             publicKey.contentHashCode() * 31 + privateKey.contentHashCode()
+        override fun toString(): String =
+            "KeyPairBytes(publicKeySize=${publicKey.size}, privateKey=[REDACTED])"
     }
 
     /** Generate a new Ed25519 key pair. */

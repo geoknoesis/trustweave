@@ -10,7 +10,7 @@ import org.trustweave.credential.results.VerificationResult
 import org.trustweave.credential.trust.TrustEvaluator
 import org.trustweave.trust.TrustWeave
 
-/**
+/*
  * Flow-based batch operations for credentials.
  *
  * Provides reactive, backpressure-aware batch processing using Kotlin Flow.

@@ -1,4 +1,5 @@
 ---
+title: DID Method Registration via JSON
 redirect_from:
   - /integrations/did-registration/did-method-registration-guide/
 parent: Integration Modules

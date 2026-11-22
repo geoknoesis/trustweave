@@ -25,7 +25,7 @@ interface WalletFactory {
         walletId: String? = null,
         walletDid: String? = null,
         holderDid: String? = null,
-        options: WalletCreationOptions = WalletCreationOptions()
+        options: WalletCreationOptions = WalletCreationOptions(),
     ): Wallet
 
     /**
@@ -43,9 +43,6 @@ interface WalletFactory {
         walletId: String? = null,
         walletDid: String? = null,
         holderDid: String? = null,
-        options: WalletCreationOptions = WalletCreationOptions()
-    ): Wallet {
-        return create("inMemory", walletId, walletDid, holderDid, options)
-    }
+        options: WalletCreationOptions = WalletCreationOptions(),
+    ): Wallet = create("inMemory", walletId, walletDid, holderDid, options)
 }
-

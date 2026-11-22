@@ -1,21 +1,24 @@
 package org.trustweave.anchor.options
 
 import org.junit.jupiter.api.Test
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Comprehensive tests for BlockchainAnchorClientOptions API.
  */
 class BlockchainAnchorClientOptionsTest {
-
     @Test
     fun `test AlgorandOptions toMap`() {
-        val options = AlgorandOptions(
-            algodUrl = "https://testnet-api.algonode.cloud",
-            algodToken = "token123",
-            privateKey = "base64key",
-            appId = "app-123"
-        )
+        val options =
+            AlgorandOptions(
+                algodUrl = "https://testnet-api.algonode.cloud",
+                algodToken = "token123",
+                privateKey = "base64key",
+                appId = "app-123",
+            )
 
         val map = options.toMap()
 
@@ -27,12 +30,13 @@ class BlockchainAnchorClientOptionsTest {
 
     @Test
     fun `test AlgorandOptions fromMap`() {
-        val map = mapOf(
-            "algodUrl" to "https://testnet-api.algonode.cloud",
-            "algodToken" to "token123",
-            "privateKey" to "base64key",
-            "appId" to "app-123"
-        )
+        val map =
+            mapOf(
+                "algodUrl" to "https://testnet-api.algonode.cloud",
+                "algodToken" to "token123",
+                "privateKey" to "base64key",
+                "appId" to "app-123",
+            )
 
         val options = AlgorandOptions.fromMap(map)
 
@@ -56,11 +60,12 @@ class BlockchainAnchorClientOptionsTest {
 
     @Test
     fun `test PolygonOptions toMap`() {
-        val options = PolygonOptions(
-            rpcUrl = "https://polygon-rpc.com",
-            privateKey = "0x123abc",
-            contractAddress = "0xcontract"
-        )
+        val options =
+            PolygonOptions(
+                rpcUrl = "https://polygon-rpc.com",
+                privateKey = "0x123abc",
+                contractAddress = "0xcontract",
+            )
 
         val map = options.toMap()
 
@@ -71,11 +76,12 @@ class BlockchainAnchorClientOptionsTest {
 
     @Test
     fun `test PolygonOptions fromMap`() {
-        val map = mapOf(
-            "rpcUrl" to "https://polygon-rpc.com",
-            "privateKey" to "0x123abc",
-            "contractAddress" to "0xcontract"
-        )
+        val map =
+            mapOf(
+                "rpcUrl" to "https://polygon-rpc.com",
+                "privateKey" to "0x123abc",
+                "contractAddress" to "0xcontract",
+            )
 
         val options = PolygonOptions.fromMap(map)
 
@@ -86,11 +92,12 @@ class BlockchainAnchorClientOptionsTest {
 
     @Test
     fun `test GanacheOptions toMap`() {
-        val options = GanacheOptions(
-            rpcUrl = "http://localhost:8545",
-            privateKey = "0x123abc",
-            contractAddress = "0xcontract"
-        )
+        val options =
+            GanacheOptions(
+                rpcUrl = "http://localhost:8545",
+                privateKey = "0x123abc",
+                contractAddress = "0xcontract",
+            )
 
         val map = options.toMap()
 
@@ -101,11 +108,12 @@ class BlockchainAnchorClientOptionsTest {
 
     @Test
     fun `test GanacheOptions fromMap`() {
-        val map = mapOf(
-            "rpcUrl" to "http://localhost:8545",
-            "privateKey" to "0x123abc",
-            "contractAddress" to "0xcontract"
-        )
+        val map =
+            mapOf(
+                "rpcUrl" to "http://localhost:8545",
+                "privateKey" to "0x123abc",
+                "contractAddress" to "0xcontract",
+            )
 
         val options = GanacheOptions.fromMap(map)
 
@@ -125,12 +133,13 @@ class BlockchainAnchorClientOptionsTest {
 
     @Test
     fun `test IndyOptions toMap`() {
-        val options = IndyOptions(
-            poolEndpoint = "https://indy-pool.com",
-            walletName = "test-wallet",
-            walletKey = "wallet-key",
-            did = "did:indy:test"
-        )
+        val options =
+            IndyOptions(
+                poolEndpoint = "https://indy-pool.com",
+                walletName = "test-wallet",
+                walletKey = "wallet-key",
+                did = "did:indy:test",
+            )
 
         val map = options.toMap()
 
@@ -142,12 +151,13 @@ class BlockchainAnchorClientOptionsTest {
 
     @Test
     fun `test IndyOptions fromMap`() {
-        val map = mapOf(
-            "poolEndpoint" to "https://indy-pool.com",
-            "walletName" to "test-wallet",
-            "walletKey" to "wallet-key",
-            "did" to "did:indy:test"
-        )
+        val map =
+            mapOf(
+                "poolEndpoint" to "https://indy-pool.com",
+                "walletName" to "test-wallet",
+                "walletKey" to "wallet-key",
+                "did" to "did:indy:test",
+            )
 
         val options = IndyOptions.fromMap(map)
 
@@ -169,11 +179,12 @@ class BlockchainAnchorClientOptionsTest {
 
     @Test
     fun `test AlgorandOptions round-trips indexer settings`() {
-        val options = AlgorandOptions(
-            algodUrl = "https://testnet-api.algonode.cloud",
-            indexerUrl = "https://testnet-idx.algonode.cloud",
-            indexerToken = "token"
-        )
+        val options =
+            AlgorandOptions(
+                algodUrl = "https://testnet-api.algonode.cloud",
+                indexerUrl = "https://testnet-idx.algonode.cloud",
+                indexerToken = "token",
+            )
 
         val map = options.toMap()
         assertEquals("https://testnet-idx.algonode.cloud", map["indexerUrl"])
@@ -229,5 +240,3 @@ class BlockchainAnchorClientOptionsTest {
         }
     }
 }
-
-

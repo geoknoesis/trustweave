@@ -7,7 +7,7 @@ import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument
 import org.trustweave.wallet.Wallet
 
-/**
+/*
  * Extension functions for result types to provide ergonomic error handling.
  *
  * These extensions allow extracting success values with contextual error messages,

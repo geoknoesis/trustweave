@@ -9,13 +9,23 @@ import org.trustweave.kms.KeyHandle
  * Sealed hierarchy for exhaustive, type-safe error handling.
  */
 sealed class GetPublicKeyResult {
-    data class Success(val keyHandle: KeyHandle) : GetPublicKeyResult()
+    data class Success(
+        val keyHandle: KeyHandle,
+    ) : GetPublicKeyResult()
 
     sealed class Failure : GetPublicKeyResult() {
-        data class KeyNotFound(val keyId: KeyId, val reason: String? = null) : Failure() {
+        data class KeyNotFound(
+            val keyId: KeyId,
+            val reason: String? = null,
+        ) : Failure() {
             constructor(keyId: KeyId) : this(keyId, null)
         }
-        data class Error(val keyId: KeyId, val reason: String, val cause: Throwable? = null) : Failure()
+
+        data class Error(
+            val keyId: KeyId,
+            val reason: String,
+            val cause: Throwable? = null,
+        ) : Failure()
     }
 
     val isSuccess: Boolean get() = this is Success
@@ -33,13 +43,22 @@ inline fun GetPublicKeyResult.onFailure(action: (GetPublicKeyResult.Failure) -> 
     return this
 }
 
-fun GetPublicKeyResult.getOrThrow(): KeyHandle = when (this) {
-    is GetPublicKeyResult.Success -> keyHandle
-    is GetPublicKeyResult.Failure.KeyNotFound -> throw org.trustweave.kms.exception.KmsException.KeyNotFound(keyId = keyId.value)
-    is GetPublicKeyResult.Failure.Error -> throw org.trustweave.core.exception.TrustWeaveException.Unknown(message = reason, cause = cause)
-}
+fun GetPublicKeyResult.getOrThrow(): KeyHandle =
+    when (this) {
+        is GetPublicKeyResult.Success -> keyHandle
+        is GetPublicKeyResult.Failure.KeyNotFound ->
+            throw org.trustweave.kms.exception.KmsException
+                .KeyNotFound(keyId = keyId.value)
+        is GetPublicKeyResult.Failure.Error ->
+            throw org.trustweave.core.exception.TrustWeaveException
+                .Unknown(message = reason, cause = cause)
+    }
 
-inline fun <R> GetPublicKeyResult.fold(onFailure: (GetPublicKeyResult.Failure) -> R, onSuccess: (KeyHandle) -> R): R = when (this) {
-    is GetPublicKeyResult.Success -> onSuccess(keyHandle)
-    is GetPublicKeyResult.Failure -> onFailure(this)
-}
+inline fun <R> GetPublicKeyResult.fold(
+    onFailure: (GetPublicKeyResult.Failure) -> R,
+    onSuccess: (KeyHandle) -> R,
+): R =
+    when (this) {
+        is GetPublicKeyResult.Success -> onSuccess(keyHandle)
+        is GetPublicKeyResult.Failure -> onFailure(this)
+    }

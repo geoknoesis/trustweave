@@ -18,7 +18,7 @@ package org.trustweave.kms
 data class KmsCreationOptions(
     val enabled: Boolean = true,
     val priority: Int? = null,
-    val additionalProperties: Map<String, Any?> = emptyMap()
+    val additionalProperties: Map<String, Any?> = emptyMap(),
 ) {
     /**
      * Convert to legacy Map format for backward compatibility.
@@ -54,7 +54,10 @@ class KmsCreationOptionsBuilder {
     /**
      * Add a provider-specific property.
      */
-    fun property(key: String, value: Any?) {
+    fun property(
+        key: String,
+        value: Any?,
+    ) {
         properties[key] = value
     }
 
@@ -62,18 +65,15 @@ class KmsCreationOptionsBuilder {
         KmsCreationOptions(
             enabled = enabled,
             priority = priority,
-            additionalProperties = properties.toMap()
+            additionalProperties = properties.toMap(),
         )
 }
 
 /**
  * DSL builder function for KmsCreationOptions.
  */
-fun kmsCreationOptions(
-    block: KmsCreationOptionsBuilder.() -> Unit
-): KmsCreationOptions {
+fun kmsCreationOptions(block: KmsCreationOptionsBuilder.() -> Unit): KmsCreationOptions {
     val builder = KmsCreationOptionsBuilder()
     builder.block()
     return builder.build()
 }
-

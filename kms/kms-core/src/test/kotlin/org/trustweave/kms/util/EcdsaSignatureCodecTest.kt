@@ -12,7 +12,6 @@ import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class EcdsaSignatureCodecTest {
-
     // ------------------------------------------------------------------------------------
     // Known vectors
     // ------------------------------------------------------------------------------------
@@ -20,17 +19,22 @@ class EcdsaSignatureCodecTest {
     /**
      * secp256k1 group order n (SEC 2).
      */
-    private val secp256k1Order = BigInteger(
-        "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141",
-        16
-    )
+    private val secp256k1Order =
+        BigInteger(
+            "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141",
+            16,
+        )
 
     private val halfOrder = secp256k1Order.shiftRight(1)
 
     /**
      * Builds a P1363 signature from r and s, each left-padded to [fieldSize] bytes.
      */
-    private fun p1363Of(r: BigInteger, s: BigInteger, fieldSize: Int = 32): ByteArray {
+    private fun p1363Of(
+        r: BigInteger,
+        s: BigInteger,
+        fieldSize: Int = 32,
+    ): ByteArray {
         fun fixed(v: BigInteger): ByteArray {
             val raw = v.toByteArray()
             val start = if (raw.size > 1 && raw[0] == 0.toByte()) 1 else 0
@@ -50,10 +54,11 @@ class EcdsaSignatureCodecTest {
      * Known transcoding vector: r = 1, s = 2 on a 32-byte field. P1363 form is 64 bytes of
      * zeros except r[31] = 1 and s[31] = 2.
      */
-    private val minimalP1363 = ByteArray(64).also {
-        it[31] = 1
-        it[63] = 2
-    }
+    private val minimalP1363 =
+        ByteArray(64).also {
+            it[31] = 1
+            it[63] = 2
+        }
 
     // ------------------------------------------------------------------------------------
     // isDer detection
@@ -67,11 +72,19 @@ class EcdsaSignatureCodecTest {
     @Test
     fun `isDer accepts a DER signature with high-bit integers (leading zero pad)`() {
         // r and s with MSB set require a 0x00 pad byte in DER.
-        val der = byteArrayOf(
-            0x30, 0x08,
-            0x02, 0x02, 0x00, 0x80.toByte(),
-            0x02, 0x02, 0x00, 0xFF.toByte()
-        )
+        val der =
+            byteArrayOf(
+                0x30,
+                0x08,
+                0x02,
+                0x02,
+                0x00,
+                0x80.toByte(),
+                0x02,
+                0x02,
+                0x00,
+                0xFF.toByte(),
+            )
         assertTrue(EcdsaSignatureCodec.isDer(der))
         val p1363 = EcdsaSignatureCodec.derToP1363(der, 32)
         assertEquals(BigInteger.valueOf(0x80), BigInteger(1, p1363.copyOfRange(0, 32)))
@@ -137,12 +150,13 @@ class EcdsaSignatureCodecTest {
 
     @Test
     fun `round trip DER to P1363 to DER preserves the signature for every curve size`() {
-        val vectors = listOf(
-            Triple(Algorithm.P256, 32, 256),
-            Triple(Algorithm.Secp256k1, 32, 256),
-            Triple(Algorithm.P384, 48, 384),
-            Triple(Algorithm.P521, 66, 521)
-        )
+        val vectors =
+            listOf(
+                Triple(Algorithm.P256, 32, 256),
+                Triple(Algorithm.Secp256k1, 32, 256),
+                Triple(Algorithm.P384, 48, 384),
+                Triple(Algorithm.P521, 66, 521),
+            )
         for ((algorithm, fieldSize, bits) in vectors) {
             // Deterministic, near-maximal r/s for the curve size; MSB set to exercise the
             // DER sign-byte padding path.
@@ -154,12 +168,12 @@ class EcdsaSignatureCodecTest {
             assertContentEquals(
                 p1363,
                 EcdsaSignatureCodec.derToP1363(der, algorithm),
-                "DER->P1363 must invert P1363->DER for $algorithm"
+                "DER->P1363 must invert P1363->DER for $algorithm",
             )
             assertContentEquals(
                 der,
                 EcdsaSignatureCodec.p1363ToDer(EcdsaSignatureCodec.derToP1363(der, fieldSize)),
-                "P1363->DER must invert DER->P1363 for $algorithm"
+                "P1363->DER must invert DER->P1363 for $algorithm",
             )
         }
     }

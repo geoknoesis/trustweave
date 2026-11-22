@@ -19,7 +19,11 @@ data class EntraTokenResponse(
     @SerialName("token_type") val tokenType: String = "Bearer",
     @SerialName("expires_in") val expiresInSeconds: Long = 3600,
     @SerialName("ext_expires_in") val extExpiresInSeconds: Long? = null,
-)
+) {
+    override fun toString(): String =
+        "EntraTokenResponse(accessToken=[REDACTED], tokenType='$tokenType', " +
+            "expiresInSeconds=$expiresInSeconds, extExpiresInSeconds=$extExpiresInSeconds)"
+}
 
 /**
  * Error response from the token endpoint, e.g.
@@ -70,14 +74,19 @@ data class EntraCallback(
     val url: String,
     val state: String,
     val headers: Map<String, String>? = null,
-)
+) {
+    override fun toString(): String =
+        "EntraCallback(url='$url', state='$state', headers=${if (headers != null) "[REDACTED]" else "null"})"
+}
 
 @Serializable
 data class EntraPin(
     val value: String,
     val length: Int = 4,
     val type: String = "numeric",
-)
+) {
+    override fun toString(): String = "EntraPin(value=[REDACTED], length=$length, type='$type')"
+}
 
 /**
  * Response from `createIssuanceRequest`.

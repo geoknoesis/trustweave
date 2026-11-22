@@ -1,33 +1,38 @@
 package org.trustweave.core.plugin
 
 import org.junit.jupiter.api.Test
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Comprehensive tests for PluginMetadata, PluginCapabilities, PluginDependency.
  */
 class PluginMetadataTest {
-
     @Test
     fun `test PluginMetadata with all fields`() {
-        val capabilities = PluginCapabilities(
-            features = setOf("credential-storage"),
-            extensions = mapOf("customCapability" to "customValue")
-        )
-        val dependencies = listOf(
-            PluginDependency(pluginId = "kms-plugin", versionRange = ">=1.0.0", isOptional = false)
-        )
+        val capabilities =
+            PluginCapabilities(
+                features = setOf("credential-storage"),
+                extensions = mapOf("customCapability" to "customValue"),
+            )
+        val dependencies =
+            listOf(
+                PluginDependency(pluginId = "kms-plugin", versionRange = ">=1.0.0", isOptional = false),
+            )
 
-        val metadata = PluginMetadata(
-            id = "test-plugin",
-            name = "Test Plugin",
-            version = "1.0.0",
-            description = "A test plugin",
-            provider = "test",
-            capabilities = capabilities,
-            dependencies = dependencies,
-            configuration = mapOf("key" to "value")
-        )
+        val metadata =
+            PluginMetadata(
+                id = "test-plugin",
+                name = "Test Plugin",
+                version = "1.0.0",
+                description = "A test plugin",
+                provider = "test",
+                capabilities = capabilities,
+                dependencies = dependencies,
+                configuration = mapOf("key" to "value"),
+            )
 
         assertEquals("test-plugin", metadata.id)
         assertEquals("Test Plugin", metadata.name)
@@ -41,13 +46,14 @@ class PluginMetadataTest {
 
     @Test
     fun `test PluginMetadata with defaults`() {
-        val metadata = PluginMetadata(
-            id = "test-plugin",
-            name = "Test Plugin",
-            version = "1.0.0",
-            provider = "test",
-            capabilities = PluginCapabilities()
-        )
+        val metadata =
+            PluginMetadata(
+                id = "test-plugin",
+                name = "Test Plugin",
+                version = "1.0.0",
+                provider = "test",
+                capabilities = PluginCapabilities(),
+            )
 
         assertNull(metadata.description)
         assertTrue(metadata.dependencies.isEmpty())
@@ -56,14 +62,16 @@ class PluginMetadataTest {
 
     @Test
     fun `test PluginCapabilities with features and custom extensions`() {
-        val capabilities = PluginCapabilities(
-            features = setOf("selective-disclosure", "revocation", "credential-storage"),
-            extensions = mapOf(
-                // Custom capabilities not handled by domain modules
-                "customFeature" to "customValue",
-                "customList" to listOf("item1", "item2")
+        val capabilities =
+            PluginCapabilities(
+                features = setOf("selective-disclosure", "revocation", "credential-storage"),
+                extensions =
+                    mapOf(
+                        // Custom capabilities not handled by domain modules
+                        "customFeature" to "customValue",
+                        "customList" to listOf("item1", "item2"),
+                    ),
             )
-        )
 
         assertEquals(3, capabilities.features.size)
         assertEquals(2, capabilities.extensions.size)
@@ -83,11 +91,12 @@ class PluginMetadataTest {
 
     @Test
     fun `test PluginDependency with all fields`() {
-        val dependency = PluginDependency(
-            pluginId = "kms-plugin",
-            versionRange = ">=1.0.0,<2.0.0",
-            isOptional = true
-        )
+        val dependency =
+            PluginDependency(
+                pluginId = "kms-plugin",
+                versionRange = ">=1.0.0,<2.0.0",
+                isOptional = true,
+            )
 
         assertEquals("kms-plugin", dependency.pluginId)
         assertEquals(">=1.0.0,<2.0.0", dependency.versionRange)
@@ -103,4 +112,3 @@ class PluginMetadataTest {
         assertFalse(dependency.isOptional)
     }
 }
-

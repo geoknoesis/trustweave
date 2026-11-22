@@ -1,23 +1,25 @@
 package org.trustweave.anchor.exceptions
 
 import org.junit.jupiter.api.Test
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 /**
  * Comprehensive tests for Blockchain exceptions.
  */
 class BlockchainExceptionsTest {
-
     @Test
     fun `test BlockchainException TransactionFailed message formatting`() {
-        val exception = BlockchainException.TransactionFailed(
-            chainId = "eip155:137",
-            txHash = "0x123abc",
-            operation = "writePayload",
-            payloadSize = 1024L,
-            gasUsed = 21000L,
-            reason = "Transaction failed"
-        )
+        val exception =
+            BlockchainException.TransactionFailed(
+                chainId = "eip155:137",
+                txHash = "0x123abc",
+                operation = "writePayload",
+                payloadSize = 1024L,
+                gasUsed = 21000L,
+                reason = "Transaction failed",
+            )
 
         assertTrue(exception.message.contains("[Chain: eip155:137]"))
         assertTrue(exception.message.contains("[Operation: writePayload]"))
@@ -31,11 +33,12 @@ class BlockchainExceptionsTest {
     @Test
     fun `test BlockchainException TransactionFailed with cause`() {
         val cause = RuntimeException("Underlying error")
-        val exception = BlockchainException.TransactionFailed(
-            chainId = "algorand:testnet",
-            reason = "Transaction failed",
-            cause = cause
-        )
+        val exception =
+            BlockchainException.TransactionFailed(
+                chainId = "algorand:testnet",
+                reason = "Transaction failed",
+                cause = cause,
+            )
 
         assertTrue(exception.message.contains("[Chain: algorand:testnet]"))
         assertTrue(exception.message.contains("Transaction failed"))
@@ -44,11 +47,12 @@ class BlockchainExceptionsTest {
 
     @Test
     fun `test BlockchainException ConnectionFailed message formatting`() {
-        val exception = BlockchainException.ConnectionFailed(
-            chainId = "eip155:137",
-            endpoint = "https://rpc.example.com",
-            reason = "Connection failed"
-        )
+        val exception =
+            BlockchainException.ConnectionFailed(
+                chainId = "eip155:137",
+                endpoint = "https://rpc.example.com",
+                reason = "Connection failed",
+            )
 
         assertTrue(exception.message.contains("[Chain: eip155:137]"))
         assertTrue(exception.message.contains("[Endpoint: https://rpc.example.com]"))
@@ -57,11 +61,12 @@ class BlockchainExceptionsTest {
 
     @Test
     fun `test BlockchainException ConfigurationFailed message formatting`() {
-        val exception = BlockchainException.ConfigurationFailed(
-            chainId = "algorand:testnet",
-            configKey = "privateKey",
-            reason = "Invalid configuration"
-        )
+        val exception =
+            BlockchainException.ConfigurationFailed(
+                chainId = "algorand:testnet",
+                configKey = "privateKey",
+                reason = "Invalid configuration",
+            )
 
         assertTrue(exception.message.contains("[Chain: algorand:testnet]"))
         assertTrue(exception.message.contains("[Config: privateKey]"))
@@ -70,16 +75,15 @@ class BlockchainExceptionsTest {
 
     @Test
     fun `test BlockchainException UnsupportedOperation`() {
-        val exception = BlockchainException.UnsupportedOperation(
-            chainId = "indy:testnet:bcovrin",
-            operation = "customOperation",
-            reason = "Operation not supported"
-        )
+        val exception =
+            BlockchainException.UnsupportedOperation(
+                chainId = "indy:testnet:bcovrin",
+                operation = "customOperation",
+                reason = "Operation not supported",
+            )
 
         assertTrue(exception.message.contains("[Chain: indy:testnet:bcovrin]"))
         assertTrue(exception.message.contains("[Operation: customOperation]"))
         assertEquals("customOperation", exception.operation)
     }
 }
-
-

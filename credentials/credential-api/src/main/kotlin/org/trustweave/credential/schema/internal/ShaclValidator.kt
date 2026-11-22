@@ -321,8 +321,8 @@ class ShaclValidator : SchemaValidator {
             propertyShape["sh:in"]?.let {
                 when (it) {
                     is kotlinx.serialization.json.JsonArray ->
-                        it.mapNotNull { elem ->
-                            elem.jsonPrimitive?.content
+                        it.map { elem ->
+                            elem.jsonPrimitive.content
                         }
                     else -> emptyList()
                 }

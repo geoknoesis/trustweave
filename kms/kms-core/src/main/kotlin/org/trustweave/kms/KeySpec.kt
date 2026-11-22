@@ -14,7 +14,7 @@ import org.trustweave.core.identifiers.KeyId
  * when (val result = kms.getPublicKey(keyId)) {
  *     is GetPublicKeyResult.Success -> {
  *         val keySpec = KeySpec.fromKeyHandle(result.keyHandle)
- *         
+ *
  *         // Validate algorithm before signing
  *         val algorithm = Algorithm.Ed25519
  *         if (keySpec.supports(algorithm)) {
@@ -34,11 +34,10 @@ data class KeySpec(
      * The key identifier.
      */
     val id: KeyId,
-
     /**
      * The cryptographic algorithm this key supports.
      */
-    val algorithm: Algorithm
+    val algorithm: Algorithm,
 ) {
     /**
      * Checks if this key spec supports the given algorithm.
@@ -50,9 +49,7 @@ data class KeySpec(
      * @param required The algorithm to check
      * @return true if the key supports the algorithm, false otherwise
      */
-    fun supports(required: Algorithm): Boolean {
-        return algorithm == required
-    }
+    fun supports(required: Algorithm): Boolean = algorithm == required
 
     /**
      * Validates that this key spec supports the given algorithm.
@@ -64,7 +61,7 @@ data class KeySpec(
         if (!supports(required)) {
             throw UnsupportedAlgorithmException(
                 "Key ${id.value} (algorithm: ${algorithm.name}) does not support " +
-                "requested algorithm: ${required.name}"
+                    "requested algorithm: ${required.name}",
             )
         }
     }
@@ -78,12 +75,12 @@ data class KeySpec(
          * @throws IllegalArgumentException if the key handle's algorithm cannot be parsed
          */
         fun fromKeyHandle(keyHandle: KeyHandle): KeySpec {
-            val algorithm = Algorithm.parse(keyHandle.algorithm)
-                ?: throw IllegalArgumentException(
-                    "Cannot parse algorithm '${keyHandle.algorithm}' from key handle for key: ${keyHandle.id.value}"
-                )
+            val algorithm =
+                Algorithm.parse(keyHandle.algorithm)
+                    ?: throw IllegalArgumentException(
+                        "Cannot parse algorithm '${keyHandle.algorithm}' from key handle for key: ${keyHandle.id.value}",
+                    )
             return KeySpec(keyHandle.id, algorithm)
         }
     }
 }
-

@@ -53,7 +53,28 @@ class CheqdDidMethodTest {
         InMemoryKeyManagementService(),
         anchorClient,
         CheqdDidConfig(cheqdApiUrl = apiUrl, network = "mainnet"),
+        okhttp3.OkHttpClient
+            .Builder()
+            .followRedirects(false)
+            .followSslRedirects(false)
+            .build(),
     )
+
+    @Test
+    fun `default CheqdDidMethod blocks loopback API via SSRF guard and is AutoCloseable`() =
+        runBlocking<Unit> {
+            val url = api(200, """{"id":"did:cheqd:mainnet:x"}""")
+            val guarded =
+                CheqdDidMethod(
+                    InMemoryKeyManagementService(),
+                    InMemoryBlockchainAnchorClient(chainId = "cheqd:mainnet"),
+                    CheqdDidConfig(cheqdApiUrl = url, network = "mainnet"),
+                )
+            guarded.use { m ->
+                val result = m.resolveDid(Did("did:cheqd:mainnet:${UUID.randomUUID()}"))
+                assertIs<DidResolutionResult.Failure.ResolutionError>(result)
+            }
+        }
 
     @Test
     fun `an Ed25519 DID uses base58 of the first 16 public key bytes`() =

@@ -20,7 +20,6 @@ dependencies {
     api(project(":did:did-core")) // DID DSLs and services
     api(project(":kms:kms-core")) // KMS service interfaces
     api(project(":contract")) // Smart contract services
-    compileOnly(project(":credentials:plugins:status-list:database")) // StatusListManagerFactory (compileOnly to avoid circular dependency)
 
     // JAdES DSL extensions — plugin-specific types referenced only by the optional
     // org.trustweave.trust.dsl.credential.jades extensions. compileOnly so the trust
@@ -49,7 +48,6 @@ dependencies {
     testImplementation(project(":did:did-core"))
     testImplementation(project(":kms:kms-core"))
     testImplementation(project(":credentials:credential-api"))
-    testImplementation(project(":credentials:plugins:status-list:database")) // StatusListRegistryFactory for tests
 
     // JAdES extension tests need the same plugin-specific types the extensions reference.
     testImplementation(project(":signatures:jades"))

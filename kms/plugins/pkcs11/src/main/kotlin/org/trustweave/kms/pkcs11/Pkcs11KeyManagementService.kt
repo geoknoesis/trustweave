@@ -2,9 +2,13 @@ package org.trustweave.kms.pkcs11
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
 import org.slf4j.LoggerFactory
 import org.trustweave.core.identifiers.KeyId
+import org.trustweave.core.util.encodeBase58
 import org.trustweave.kms.Algorithm
+import org.trustweave.kms.JwkKeyTypes
+import org.trustweave.kms.JwkKeys
 import org.trustweave.kms.KeyHandle
 import org.trustweave.kms.KeyManagementService
 import org.trustweave.kms.results.DeleteKeyResult
@@ -13,16 +17,23 @@ import org.trustweave.kms.results.GetPublicKeyResult
 import org.trustweave.kms.results.SignResult
 import org.trustweave.kms.util.EcdsaSignatureCodec
 import java.math.BigInteger
+import java.security.AuthProvider
 import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.KeyStoreException
 import java.security.Provider
+import java.security.PublicKey
 import java.security.Security
 import java.security.Signature
 import java.security.cert.Certificate
 import java.security.cert.X509Certificate
+import java.security.interfaces.ECPublicKey
+import java.security.interfaces.RSAPublicKey
 import java.security.spec.ECGenParameterSpec
+import java.util.Base64
 import java.util.Date
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.security.auth.x500.X500Principal
 
 /**
@@ -53,8 +64,13 @@ import javax.security.auth.x500.X500Principal
  */
 class Pkcs11KeyManagementService(
     private val config: Pkcs11Config,
-) : KeyManagementService {
+) : KeyManagementService,
+    AutoCloseable {
     private val logger = LoggerFactory.getLogger(Pkcs11KeyManagementService::class.java)
+
+    private val closed = AtomicBoolean(false)
+    private val keyStoreLock = Any()
+    private val inFlightLabels = ConcurrentHashMap.newKeySet<String>()
 
     /**
      * The SunPKCS11 provider configured for this service.
@@ -69,7 +85,31 @@ class Pkcs11KeyManagementService(
      * The PKCS#11 keystore. Eagerly loaded so that PIN errors and token-not-present errors are
      * caught at construction.
      */
-    private val keyStore: KeyStore = loadKeyStore(provider, config.pin?.copyOf())
+    private val keyStore: KeyStore =
+        try {
+            loadKeyStore(provider, config.pin?.copyOf())
+        } catch (e: Throwable) {
+            releaseProvider(provider)
+            throw e
+        }
+
+    /**
+     * Logs out the PKCS#11 session (when supported by the provider), zeroes the configured PIN,
+     * and unregisters the SunPKCS11 provider once no active [Pkcs11KeyManagementService] instance
+     * references it. Safe to call multiple times.
+     */
+    override fun close() {
+        if (!closed.compareAndSet(false, true)) return
+        config.pin?.fill('\u0000')
+        if (provider is AuthProvider) {
+            try {
+                provider.logout()
+            } catch (e: Exception) {
+                logger.warn("Error logging out PKCS#11 session for provider '{}'", provider.name, e)
+            }
+        }
+        releaseProvider(provider)
+    }
 
     override suspend fun getSupportedAlgorithms(): Set<Algorithm> = SUPPORTED_ALGORITHMS
 
@@ -97,6 +137,10 @@ class Pkcs11KeyManagementService(
                         .randomUUID()
                         .toString()
 
+            if (!inFlightLabels.add(label)) {
+                return@withContext GenerateKeyResult.Failure.DuplicateKeyId(KeyId(label))
+            }
+
             try {
                 val (jcaName, paramSpec, keySize) =
                     mapAlgorithmForKeyGen(algorithm)
@@ -106,9 +150,12 @@ class Pkcs11KeyManagementService(
                         )
 
                 // setKeyEntry on an existing alias replaces the key on most tokens, destroying the old
-                // private key. Never do that silently.
-                if (keyStore.containsAlias(label)) {
-                    return@withContext GenerateKeyResult.Failure.DuplicateKeyId(KeyId(label))
+                // private key. Synchronize alias checks and writes so concurrent generateKey calls
+                // cannot race and overwrite an existing key.
+                synchronized(keyStoreLock) {
+                    if (keyStore.containsAlias(label)) {
+                        return@withContext GenerateKeyResult.Failure.DuplicateKeyId(KeyId(label))
+                    }
                 }
 
                 val kpg = KeyPairGenerator.getInstance(jcaName, provider)
@@ -124,15 +171,23 @@ class Pkcs11KeyManagementService(
                 // a trust anchor — it exists only to satisfy the JCA KeyStore contract.
                 val cert = buildPlaceholderCertificate(keyPair, jcaName, algorithm)
 
-                keyStore.setKeyEntry(label, keyPair.private, null, arrayOf<Certificate>(cert))
+                synchronized(keyStoreLock) {
+                    if (keyStore.containsAlias(label)) {
+                        return@withContext GenerateKeyResult.Failure.DuplicateKeyId(KeyId(label))
+                    }
+                    keyStore.setKeyEntry(label, keyPair.private, null, arrayOf<Certificate>(cert))
+                }
                 logger.debug("Generated PKCS#11 key: label={}, algorithm={}", label, algorithm.name)
+
+                val jwk = publicKeyToJwk(keyPair.public, algorithm)
+                val multibase = publicKeyToMultibase(keyPair.public, algorithm)
 
                 GenerateKeyResult.Success(
                     KeyHandle(
                         id = KeyId(label),
                         algorithm = algorithm.name,
-                        publicKeyJwk = null,
-                        publicKeyMultibase = null,
+                        publicKeyJwk = jwk,
+                        publicKeyMultibase = multibase,
                     ),
                 )
             } catch (e: kotlinx.coroutines.CancellationException) {
@@ -144,6 +199,8 @@ class Pkcs11KeyManagementService(
                     reason = "Failed to generate key on PKCS#11 device: ${e.message ?: e.javaClass.simpleName}",
                     cause = e,
                 )
+            } finally {
+                inFlightLabels.remove(label)
             }
         }
 
@@ -157,18 +214,17 @@ class Pkcs11KeyManagementService(
                     keyStore.getCertificate(keyId.value)
                         ?: return@withContext GetPublicKeyResult.Failure.KeyNotFound(keyId = keyId)
                 val publicKey = cert.publicKey
-                // We can't reliably round-trip the original Algorithm choice from the PKCS#11 public
-                // key alone (RSA key size is known, EC curves require ASN.1 inspection). Report the
-                // JCA algorithm name; callers that need fine-grained Algorithm matching should track
-                // the algorithm out-of-band when issuing.
-                val algorithmName = publicKey.algorithm ?: "unknown"
+                val derivedAlgorithm = deriveKeyAlgorithm(publicKey)
+                val algorithmName = derivedAlgorithm?.name ?: publicKey.algorithm ?: "unknown"
+                val jwk = publicKeyToJwk(publicKey, derivedAlgorithm)
+                val multibase = publicKeyToMultibase(publicKey, derivedAlgorithm)
 
                 GetPublicKeyResult.Success(
                     KeyHandle(
                         id = keyId,
                         algorithm = algorithmName,
-                        publicKeyJwk = null,
-                        publicKeyMultibase = null,
+                        publicKeyJwk = jwk,
+                        publicKeyMultibase = multibase,
                     ),
                 )
             } catch (e: kotlinx.coroutines.CancellationException) {
@@ -512,8 +568,179 @@ class Pkcs11KeyManagementService(
             return SigningResolution.Ready(scheme, effective)
         }
 
+        /**
+         * Converts a JCA [PublicKey] (Ed25519, EC P-256/P-384/P-521, or RSA) to a JWK map.
+         * Returns `null` when the key type or curve is unsupported.
+         */
+        internal fun publicKeyToJwk(
+            publicKey: PublicKey,
+            algorithm: Algorithm? = deriveKeyAlgorithm(publicKey),
+        ): Map<String, Any?>? {
+            val effective = algorithm ?: deriveKeyAlgorithm(publicKey) ?: return null
+            val base64Url = Base64.getUrlEncoder().withoutPadding()
+            return when (effective) {
+                Algorithm.Ed25519 -> {
+                    val rawKey = extractEd25519RawKey(publicKey) ?: return null
+                    mapOf(
+                        JwkKeys.KTY to JwkKeyTypes.OKP,
+                        JwkKeys.CRV to Algorithm.Ed25519.curveName,
+                        JwkKeys.X to base64Url.encodeToString(rawKey),
+                    )
+                }
+                Algorithm.P256, Algorithm.P384, Algorithm.P521, Algorithm.Secp256k1 -> {
+                    val ecPublicKey = publicKey as? ECPublicKey ?: return null
+                    val curveName = effective.curveName ?: return null
+                    val coordinateLength = ecCoordinateLength(effective) ?: return null
+                    val x = toFixedUnsignedBytes(ecPublicKey.w.affineX, coordinateLength)
+                    val y = toFixedUnsignedBytes(ecPublicKey.w.affineY, coordinateLength)
+                    mapOf(
+                        JwkKeys.KTY to JwkKeyTypes.EC,
+                        JwkKeys.CRV to curveName,
+                        JwkKeys.X to base64Url.encodeToString(x),
+                        JwkKeys.Y to base64Url.encodeToString(y),
+                    )
+                }
+                is Algorithm.RSA -> {
+                    val rsaPublicKey = publicKey as? RSAPublicKey ?: return null
+                    mapOf(
+                        JwkKeys.KTY to JwkKeyTypes.RSA,
+                        JwkKeys.N to base64Url.encodeToString(toUnsignedBytes(rsaPublicKey.modulus)),
+                        JwkKeys.E to base64Url.encodeToString(toUnsignedBytes(rsaPublicKey.publicExponent)),
+                    )
+                }
+                else -> null
+            }
+        }
+
+        /**
+         * Converts a JCA [PublicKey] (Ed25519, EC P-256/P-384/P-521, or RSA) to a multibase
+         * base58btc (`z`-prefixed) multicodec string.
+         */
+        internal fun publicKeyToMultibase(
+            publicKey: PublicKey,
+            algorithm: Algorithm? = deriveKeyAlgorithm(publicKey),
+        ): String? {
+            val effective = algorithm ?: deriveKeyAlgorithm(publicKey) ?: return null
+            val prefixed: ByteArray =
+                when (effective) {
+                    Algorithm.Ed25519 -> {
+                        val rawKey = extractEd25519RawKey(publicKey) ?: return null
+                        byteArrayOf(0xed.toByte(), 0x01) + rawKey
+                    }
+                    Algorithm.P256, Algorithm.P384, Algorithm.P521, Algorithm.Secp256k1 -> {
+                        val ecPublicKey = publicKey as? ECPublicKey ?: return null
+                        val coordinateLength = ecCoordinateLength(effective) ?: return null
+                        val prefix =
+                            when (effective) {
+                                Algorithm.P256 -> byteArrayOf(0x80.toByte(), 0x24)
+                                Algorithm.P384 -> byteArrayOf(0x81.toByte(), 0x24)
+                                Algorithm.P521 -> byteArrayOf(0x82.toByte(), 0x24)
+                                Algorithm.Secp256k1 -> byteArrayOf(0xe7.toByte(), 0x01)
+                                else -> return null
+                            }
+                        val x = toFixedUnsignedBytes(ecPublicKey.w.affineX, coordinateLength)
+                        val compressedTag: Byte = if (ecPublicKey.w.affineY.testBit(0)) 0x03 else 0x02
+                        prefix + byteArrayOf(compressedTag) + x
+                    }
+                    is Algorithm.RSA -> {
+                        val encoded = publicKey.encoded ?: return null
+                        val pkcs1 =
+                            try {
+                                SubjectPublicKeyInfo.getInstance(encoded).publicKeyData.bytes
+                            } catch (_: Exception) {
+                                return null
+                            }
+                        // Multicodec rsa-pub (0x1205) varint encoding: [0x85, 0x24]
+                        byteArrayOf(0x85.toByte(), 0x24) + pkcs1
+                    }
+                    else -> return null
+                }
+            return "z${prefixed.encodeBase58()}"
+        }
+
+        private fun extractEd25519RawKey(publicKey: PublicKey): ByteArray? {
+            val encoded = publicKey.encoded ?: return null
+            return when {
+                encoded.size >= 44 && encoded[0] == 0x30.toByte() ->
+                    try {
+                        SubjectPublicKeyInfo.getInstance(encoded).publicKeyData.bytes
+                    } catch (_: Exception) {
+                        null
+                    }
+                encoded.size == 32 -> encoded
+                else -> null
+            }
+        }
+
+        private fun ecCoordinateLength(algorithm: Algorithm): Int? =
+            when (algorithm) {
+                Algorithm.P256, Algorithm.Secp256k1 -> 32
+                Algorithm.P384 -> 48
+                Algorithm.P521 -> 66
+                else -> null
+            }
+
+        private fun toUnsignedBytes(bigInt: BigInteger): ByteArray {
+            val signed = bigInt.toByteArray()
+            return if (signed.isNotEmpty() && signed[0] == 0.toByte()) {
+                signed.copyOfRange(1, signed.size)
+            } else {
+                signed
+            }
+        }
+
+        private fun toFixedUnsignedBytes(
+            bigInt: BigInteger,
+            length: Int,
+        ): ByteArray {
+            val bytes = toUnsignedBytes(bigInt)
+            require(bytes.size <= length) {
+                "EC coordinate too large after sign-byte strip: ${bytes.size} > $length"
+            }
+            val result = ByteArray(length)
+            System.arraycopy(bytes, 0, result, length - bytes.size, bytes.size)
+            return result
+        }
+
         /** Providers registered by this class: effective provider name -> (library, slot). */
-        internal val registeredProviders = java.util.concurrent.ConcurrentHashMap<String, Pair<String, Int>>()
+        internal val registeredProviders = ConcurrentHashMap<String, Pair<String, Int>>()
+
+        /** Active instance reference count per effective provider name, guarded by [registeredProviders]. */
+        internal val providerRefCounts = ConcurrentHashMap<String, Int>()
+
+        /**
+         * Validates a value interpolated into the SunPKCS11 inline configuration string to prevent
+         * directive injection via line breaks or NUL bytes.
+         */
+        internal fun validateInlineConfigValue(
+            fieldName: String,
+            value: String,
+        ) {
+            if (value.isBlank() || value.any { it == '\n' || it == '\r' || it == '\u0000' }) {
+                throw Pkcs11Exception(
+                    "Invalid SunPKCS11 config value for '$fieldName': must be non-blank and contain no CR/LF or NUL characters",
+                )
+            }
+        }
+
+        /**
+         * Decrements the active instance count for [provider] and unregisters it from [Security]
+         * when no active [Pkcs11KeyManagementService] instances remain.
+         */
+        internal fun releaseProvider(provider: Provider) {
+            val effectiveName = provider.name
+            synchronized(registeredProviders) {
+                val remaining = (providerRefCounts[effectiveName] ?: 0) - 1
+                if (remaining <= 0) {
+                    providerRefCounts.remove(effectiveName)
+                    if (registeredProviders.remove(effectiveName) != null) {
+                        Security.removeProvider(effectiveName)
+                    }
+                } else {
+                    providerRefCounts[effectiveName] = remaining
+                }
+            }
+        }
 
         /**
          * A provider is bound to one library and slot. Reusing one registered under the same name for a
@@ -550,6 +777,9 @@ class Pkcs11KeyManagementService(
          * the JVM keeps a single registered instance per `Pkcs11Config.providerName`.
          */
         private fun installProvider(config: Pkcs11Config): Provider {
+            validateInlineConfigValue("providerName", config.providerName)
+            validateInlineConfigValue("libraryPath", config.libraryPath)
+
             // Use SunPKCS11's standard inline configuration format (each directive on its own line).
             // The leading "--" tells SunPKCS11 to treat the argument as inline config rather than a
             // path to a config file.
@@ -565,7 +795,10 @@ class Pkcs11KeyManagementService(
             // SunPKCS11's effective registered name is the prefix "SunPKCS11-" + configured name.
             val effectiveName = "SunPKCS11-${config.providerName}"
             synchronized(registeredProviders) {
-                reuseOrReject(effectiveName, config)?.let { return it }
+                reuseOrReject(effectiveName, config)?.let { existing ->
+                    providerRefCounts[effectiveName] = (providerRefCounts[effectiveName] ?: 0) + 1
+                    return existing
+                }
             }
 
             // JDK 17+ approach: obtain a prototype SunPKCS11 provider, then call
@@ -599,9 +832,13 @@ class Pkcs11KeyManagementService(
                 }
             synchronized(registeredProviders) {
                 // Another thread may have registered the same name while we configured ours.
-                reuseOrReject(effectiveName, config)?.let { return it }
+                reuseOrReject(effectiveName, config)?.let { existing ->
+                    providerRefCounts[effectiveName] = (providerRefCounts[effectiveName] ?: 0) + 1
+                    return existing
+                }
                 Security.addProvider(configured)
                 registeredProviders[effectiveName] = config.libraryPath to config.slot
+                providerRefCounts[effectiveName] = 1
             }
             return configured
         }

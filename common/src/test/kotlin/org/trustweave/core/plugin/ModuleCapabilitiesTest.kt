@@ -57,4 +57,40 @@ class ModuleCapabilitiesTest {
         ModuleCapabilities.requireOperations("credentials:plugins:oidc4vci", setOf("receive"))
         assertEquals(setOf("ldp_vc"), ModuleCapabilities.get("credentials:plugins:oidc4vci")!!.formats)
     }
+
+    @Test
+    fun `pure stub modules are classified as stub and core GA modules as supported`() {
+        val stubs =
+            listOf(
+                "kms:plugins:thales-luna",
+                "kms:plugins:utimaco",
+                "kms:plugins:entrust",
+                "kms:plugins:venafi",
+                "did:plugins:threebox",
+                "did:plugins:btcr",
+                "did:plugins:tezos",
+                "did:plugins:ens",
+                "anchors:plugins:starknet",
+                "credentials:plugins:platforms:salesforce",
+                "credentials:plugins:platforms:servicenow",
+                "signatures:pades",
+            )
+        for (module in stubs) {
+            assertEquals("stub", ModuleCapabilities.get(module)?.maturity, "Expected stub for $module")
+        }
+        val coreGa =
+            listOf(
+                "common",
+                "trust",
+                "contract",
+                "credentials:credential-api",
+                "did:did-core",
+                "kms:kms-core",
+                "wallet:wallet-core",
+                "anchors:anchor-core",
+            )
+        for (module in coreGa) {
+            assertEquals("supported", ModuleCapabilities.get(module)?.maturity, "Expected supported for $module")
+        }
+    }
 }

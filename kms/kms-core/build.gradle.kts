@@ -18,8 +18,8 @@ dependencies {
     // Kotlinx coroutines for suspend functions in KeyManagementService interface
     implementation(libs.kotlinx.coroutines.core)
 
-    // SLF4J for logging utilities (optional - plugins provide implementation)
-    compileOnly(libs.slf4j.api)
+    // SLF4J for logging utilities (apps supply the binding; api must be on runtime classpath)
+    implementation(libs.slf4j.api)
 
     // Test dependencies - add inmemory plugin for testing KeyManagementServices factory
     testImplementation(project(":kms:plugins:inmemory"))

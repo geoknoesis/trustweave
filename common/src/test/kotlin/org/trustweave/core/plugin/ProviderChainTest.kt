@@ -1,7 +1,6 @@
 package org.trustweave.core.plugin
 
 import kotlinx.coroutines.CancellationException
-import org.trustweave.core.exception.ProviderException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
@@ -9,7 +8,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import kotlin.test.*
+import org.trustweave.core.exception.ProviderException
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Comprehensive tests for ProviderChain.
@@ -17,7 +22,6 @@ import kotlin.test.*
  * **Test Isolation**: Each test uses its own isolated PluginRegistry instance.
  */
 class ProviderChainTest {
-
     private lateinit var registry: PluginRegistry
 
     @BeforeEach
@@ -26,89 +30,103 @@ class ProviderChainTest {
     }
 
     @Test
-    fun `test execute with successful provider`() = runBlocking<Unit> {
-        val providers = listOf(
-            TestProvider("provider-1", shouldFail = false),
-            TestProvider("provider-2", shouldFail = false)
-        )
+    fun `test execute with successful provider`() =
+        runBlocking<Unit> {
+            val providers =
+                listOf(
+                    TestProvider("provider-1", shouldFail = false),
+                    TestProvider("provider-2", shouldFail = false),
+                )
 
-        val chain = ProviderChain(providers)
+            val chain = ProviderChain(providers)
 
-        val result = chain.execute { provider ->
-            provider.getValue()
+            val result =
+                chain.execute { provider ->
+                    provider.getValue()
+                }
+
+            assertEquals("provider-1", result)
         }
 
-        assertEquals("provider-1", result)
-    }
-
     @Test
-    fun `test execute with fallback to second provider`() = runBlocking<Unit> {
-        val providers = listOf(
-            TestProvider("provider-1", shouldFail = true),
-            TestProvider("provider-2", shouldFail = false)
-        )
+    fun `test execute with fallback to second provider`() =
+        runBlocking<Unit> {
+            val providers =
+                listOf(
+                    TestProvider("provider-1", shouldFail = true),
+                    TestProvider("provider-2", shouldFail = false),
+                )
 
-        val chain = ProviderChain(providers)
+            val chain = ProviderChain(providers)
 
-        val result = chain.execute { provider ->
-            provider.getValue()
+            val result =
+                chain.execute { provider ->
+                    provider.getValue()
+                }
+
+            assertEquals("provider-2", result)
         }
 
-        assertEquals("provider-2", result)
-    }
-
     @Test
-    fun `test execute throws AllProvidersFailed when all fail`() = runBlocking<Unit> {
-        val providers = listOf(
-            TestProvider("provider-1", shouldFail = true),
-            TestProvider("provider-2", shouldFail = true)
-        )
+    fun `test execute throws AllProvidersFailed when all fail`() =
+        runBlocking<Unit> {
+            val providers =
+                listOf(
+                    TestProvider("provider-1", shouldFail = true),
+                    TestProvider("provider-2", shouldFail = true),
+                )
 
-        val chain = ProviderChain(providers)
+            val chain = ProviderChain(providers)
 
-        assertFailsWith<ProviderException.AllFailed> {
-            chain.execute { provider ->
-                provider.getValue()
+            assertFailsWith<ProviderException.AllFailed> {
+                chain.execute { provider ->
+                    provider.getValue()
+                }
             }
         }
-    }
 
     @Test
-    fun `test execute with selector`() = runBlocking<Unit> {
-        val providers = listOf(
-            TestProvider("provider-1", shouldFail = false),
-            TestProvider("provider-2", shouldFail = false)
-        )
+    fun `test execute with selector`() =
+        runBlocking<Unit> {
+            val providers =
+                listOf(
+                    TestProvider("provider-1", shouldFail = false),
+                    TestProvider("provider-2", shouldFail = false),
+                )
 
-        val chain = ProviderChain(providers) { it.name == "provider-2" }
+            val chain = ProviderChain(providers) { it.name == "provider-2" }
 
-        val result = chain.execute { provider ->
-            provider.getValue()
+            val result =
+                chain.execute { provider ->
+                    provider.getValue()
+                }
+
+            assertEquals("provider-2", result)
         }
 
-        assertEquals("provider-2", result)
-    }
-
     @Test
-    fun `test executeAndTransform`() = runBlocking<Unit> {
-        val providers = listOf(TestProvider("provider-1", shouldFail = false))
-        val chain = ProviderChain(providers)
+    fun `test executeAndTransform`() =
+        runBlocking<Unit> {
+            val providers = listOf(TestProvider("provider-1", shouldFail = false))
+            val chain = ProviderChain(providers)
 
-        val result = chain.executeAndTransform(
-            operation = { it.getValue() },
-            transform = { it.uppercase() }
-        )
+            val result =
+                chain.executeAndTransform(
+                    operation = { it.getValue() },
+                    transform = { it.uppercase() },
+                )
 
-        assertEquals("PROVIDER-1", result)
-    }
+            assertEquals("PROVIDER-1", result)
+        }
 
     @Test
     fun `test size`() {
-        val providers = listOf(
-            TestProvider("provider-1"),
-            TestProvider("provider-2"),
-            TestProvider("provider-3")
-        )
+        val providers =
+            listOf(
+                TestProvider("provider-1"),
+                TestProvider("provider-2"),
+                TestProvider("provider-3"),
+            )
 
         val chain = ProviderChain(providers)
 
@@ -117,11 +135,12 @@ class ProviderChainTest {
 
     @Test
     fun `test selectedSize`() {
-        val providers = listOf(
-            TestProvider("provider-1"),
-            TestProvider("provider-2"),
-            TestProvider("provider-3")
-        )
+        val providers =
+            listOf(
+                TestProvider("provider-1"),
+                TestProvider("provider-2"),
+                TestProvider("provider-3"),
+            )
 
         val chain = ProviderChain(providers) { it.name != "provider-2" }
 
@@ -144,22 +163,24 @@ class ProviderChainTest {
     }
 
     @Test
-    fun `test createProviderChain from plugin IDs`() = runBlocking<Unit> {
-        val metadata = PluginMetadata(
-            id = "test-plugin",
-            name = "Test Plugin",
-            version = "1.0.0",
-            provider = "test",
-            capabilities = PluginCapabilities()
-        )
-        val instance = TestProvider("test-provider")
+    fun `test createProviderChain from plugin IDs`() =
+        runBlocking<Unit> {
+            val metadata =
+                PluginMetadata(
+                    id = "test-plugin",
+                    name = "Test Plugin",
+                    version = "1.0.0",
+                    provider = "test",
+                    capabilities = PluginCapabilities(),
+                )
+            val instance = TestProvider("test-provider")
 
-        registry.register(metadata, instance)
+            registry.register(metadata, instance)
 
-        val chain = createProviderChain<TestProvider>(listOf("test-plugin"), registry)
+            val chain = createProviderChain<TestProvider>(listOf("test-plugin"), registry)
 
-        assertEquals(1, chain.size())
-    }
+            assertEquals(1, chain.size())
+        }
 
     @Test
     fun `test createProviderChain throws NoProvidersFound when no providers found`() {
@@ -171,25 +192,28 @@ class ProviderChainTest {
     }
 
     @Test
-    fun `test createProviderChainFromConfig`() = runBlocking<Unit> {
-        val metadata = PluginMetadata(
-            id = "test-plugin",
-            name = "Test Plugin",
-            version = "1.0.0",
-            provider = "test",
-            capabilities = PluginCapabilities()
-        )
-        registry.register(metadata, TestProvider("test-provider"))
+    fun `test createProviderChainFromConfig`() =
+        runBlocking<Unit> {
+            val metadata =
+                PluginMetadata(
+                    id = "test-plugin",
+                    name = "Test Plugin",
+                    version = "1.0.0",
+                    provider = "test",
+                    capabilities = PluginCapabilities(),
+                )
+            registry.register(metadata, TestProvider("test-provider"))
 
-        val config = PluginConfiguration(
-            providerChains = mapOf("credential-service" to listOf("test-plugin"))
-        )
+            val config =
+                PluginConfiguration(
+                    providerChains = mapOf("credential-service" to listOf("test-plugin")),
+                )
 
-        val chain = createProviderChainFromConfig<TestProvider>("credential-service", config, registry)
+            val chain = createProviderChainFromConfig<TestProvider>("credential-service", config, registry)
 
-        assertNotNull(chain)
-        assertEquals(1, chain?.size())
-    }
+            assertNotNull(chain)
+            assertEquals(1, chain?.size())
+        }
 
     @Test
     fun `test createProviderChainFromConfig returns null when chain not found`() {
@@ -201,101 +225,116 @@ class ProviderChainTest {
     }
 
     @Test
-    fun `test execute with selector that filters some providers`() = runBlocking<Unit> {
-        val providers = listOf(
-            TestProvider("provider-1", shouldFail = true),
-            TestProvider("provider-2", shouldFail = false),
-            TestProvider("provider-3", shouldFail = false)
-        )
+    fun `test execute with selector that filters some providers`() =
+        runBlocking<Unit> {
+            val providers =
+                listOf(
+                    TestProvider("provider-1", shouldFail = true),
+                    TestProvider("provider-2", shouldFail = false),
+                    TestProvider("provider-3", shouldFail = false),
+                )
 
-        // Selector filters out provider-1, so execution starts with provider-2
-        val chain = ProviderChain(providers) { it.name != "provider-1" }
+            // Selector filters out provider-1, so execution starts with provider-2
+            val chain = ProviderChain(providers) { it.name != "provider-1" }
 
-        val result = chain.execute { provider ->
-            provider.getValue()
-        }
-
-        assertEquals("provider-2", result)
-    }
-
-    @Test
-    fun `test execute with selector where first selected fails`() = runBlocking<Unit> {
-        val providers = listOf(
-            TestProvider("provider-1", shouldFail = false),
-            TestProvider("provider-2", shouldFail = true),
-            TestProvider("provider-3", shouldFail = false)
-        )
-
-        // Selector filters out provider-1, so execution starts with provider-2 (fails), then provider-3
-        val chain = ProviderChain(providers) { it.name != "provider-1" }
-
-        val result = chain.execute { provider ->
-            provider.getValue()
-        }
-
-        assertEquals("provider-3", result)
-    }
-
-    @Test
-    fun `test executeAndTransform when operation fails`() = runBlocking<Unit> {
-        val providers = listOf(
-            TestProvider("provider-1", shouldFail = true),
-            TestProvider("provider-2", shouldFail = false)
-        )
-        val chain = ProviderChain(providers)
-
-        val result = chain.executeAndTransform(
-            operation = { it.getValue() },
-            transform = { it.uppercase() }
-        )
-
-        // Should succeed with second provider
-        assertEquals("PROVIDER-2", result)
-    }
-
-    @Test
-    fun `test execute rethrows CancellationException instead of trying next provider`() = runBlocking<Unit> {
-        var secondAttempted = false
-        val chain = ProviderChain(listOf("first", "second"))
-
-        assertFailsWith<CancellationException> {
-            chain.execute { provider ->
-                if (provider == "first") {
-                    throw CancellationException("cancelled")
+            val result =
+                chain.execute { provider ->
+                    provider.getValue()
                 }
-                secondAttempted = true
-                provider
-            }
-        }
 
-        assertFalse(secondAttempted, "Chain must not continue with next provider after cancellation")
-    }
+            assertEquals("provider-2", result)
+        }
 
     @Test
-    fun `test execute propagates cancellation of the calling coroutine`() = runBlocking<Unit> {
-        val firstStarted = CompletableDeferred<Unit>()
-        var secondAttempted = false
-        val chain = ProviderChain(listOf("first", "second"))
+    fun `test execute with selector where first selected fails`() =
+        runBlocking<Unit> {
+            val providers =
+                listOf(
+                    TestProvider("provider-1", shouldFail = false),
+                    TestProvider("provider-2", shouldFail = true),
+                    TestProvider("provider-3", shouldFail = false),
+                )
 
-        val job = launch {
-            chain.execute { provider ->
-                if (provider == "first") {
-                    firstStarted.complete(Unit)
-                    awaitCancellation()
+            // Selector filters out provider-1, so execution starts with provider-2 (fails), then provider-3
+            val chain = ProviderChain(providers) { it.name != "provider-1" }
+
+            val result =
+                chain.execute { provider ->
+                    provider.getValue()
                 }
-                secondAttempted = true
-                provider
-            }
+
+            assertEquals("provider-3", result)
         }
 
-        firstStarted.await()
-        job.cancelAndJoin()
+    @Test
+    fun `test executeAndTransform when operation fails`() =
+        runBlocking<Unit> {
+            val providers =
+                listOf(
+                    TestProvider("provider-1", shouldFail = true),
+                    TestProvider("provider-2", shouldFail = false),
+                )
+            val chain = ProviderChain(providers)
 
-        assertTrue(job.isCancelled)
-        assertFalse(secondAttempted, "Cancelled chain must not fall through to the next provider")
-    }
+            val result =
+                chain.executeAndTransform(
+                    operation = { it.getValue() },
+                    transform = { it.uppercase() },
+                )
 
-    private class TestProvider(val name: String, val shouldFail: Boolean = false) {
+            // Should succeed with second provider
+            assertEquals("PROVIDER-2", result)
+        }
+
+    @Test
+    fun `test execute rethrows CancellationException instead of trying next provider`() =
+        runBlocking<Unit> {
+            var secondAttempted = false
+            val chain = ProviderChain(listOf("first", "second"))
+
+            assertFailsWith<CancellationException> {
+                chain.execute { provider ->
+                    if (provider == "first") {
+                        throw CancellationException("cancelled")
+                    }
+                    secondAttempted = true
+                    provider
+                }
+            }
+
+            assertFalse(secondAttempted, "Chain must not continue with next provider after cancellation")
+        }
+
+    @Test
+    fun `test execute propagates cancellation of the calling coroutine`() =
+        runBlocking<Unit> {
+            val firstStarted = CompletableDeferred<Unit>()
+            var secondAttempted = false
+            val chain = ProviderChain(listOf("first", "second"))
+
+            val job =
+                launch {
+                    chain.execute { provider ->
+                        if (provider == "first") {
+                            firstStarted.complete(Unit)
+                            awaitCancellation()
+                        }
+                        secondAttempted = true
+                        provider
+                    }
+                }
+
+            firstStarted.await()
+            job.cancelAndJoin()
+
+            assertTrue(job.isCancelled)
+            assertFalse(secondAttempted, "Cancelled chain must not fall through to the next provider")
+        }
+
+    private class TestProvider(
+        val name: String,
+        val shouldFail: Boolean = false,
+    ) {
         suspend fun getValue(): String {
             if (shouldFail) {
                 throw RuntimeException("Provider failed")
@@ -304,4 +343,3 @@ class ProviderChainTest {
         }
     }
 }
-

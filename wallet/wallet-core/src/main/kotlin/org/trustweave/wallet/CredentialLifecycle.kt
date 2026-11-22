@@ -60,4 +60,3 @@ interface CredentialLifecycle {
      */
     suspend fun refreshCredential(credentialId: String): VerifiableCredential?
 }
-

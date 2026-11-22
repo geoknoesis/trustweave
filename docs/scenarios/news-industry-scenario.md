@@ -6,7 +6,7 @@ nav_order: 34
 
 # News Industry & Content Provenance Scenario
 
-> **Runnable companion:** [news-industry example](../../distribution/examples/scenarios/news-industry/README.md). It demonstrates local signed claims and tamper rejection; this guide discusses a broader workflow.
+> **Runnable companion:** [news-industry example](https://github.com/geoknoesis/trustweave/blob/main/distribution/examples/scenarios/news-industry/README.md). It demonstrates local signed claims and tamper rejection; this guide discusses a broader workflow.
 
 
 This guide demonstrates how to build a news content provenance system using TrustWeave to track and verify the authenticity, authorship, and processing history of news articles, images, and multimedia content.
@@ -122,8 +122,8 @@ flowchart TD
 ## Prerequisites
 
 - Java 21+
-- Kotlin 2.3.21
-- Gradle 9.5.0
+- Kotlin 2.4.21
+- Gradle 9.8.1
 - Basic understanding of Kotlin and coroutines
 
 ## Step 1: Add Dependencies

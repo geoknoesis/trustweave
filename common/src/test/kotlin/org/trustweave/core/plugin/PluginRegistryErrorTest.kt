@@ -1,9 +1,14 @@
 package org.trustweave.core.plugin
 
-import org.trustweave.core.exception.PluginException
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import kotlin.test.*
+import org.trustweave.core.exception.PluginException
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Error handling tests for PluginRegistry.
@@ -11,7 +16,6 @@ import kotlin.test.*
  * **Test Isolation**: Each test uses its own isolated PluginRegistry instance.
  */
 class PluginRegistryErrorTest {
-
     private lateinit var registry: PluginRegistry
 
     @BeforeEach
@@ -21,53 +25,59 @@ class PluginRegistryErrorTest {
 
     @Test
     fun `test register throws BlankPluginId when ID is blank`() {
-        val metadata = PluginMetadata(
-            id = "",
-            name = "Test Plugin",
-            version = "1.0.0",
-            provider = "test",
-            capabilities = PluginCapabilities()
-        )
+        val metadata =
+            PluginMetadata(
+                id = "",
+                name = "Test Plugin",
+                version = "1.0.0",
+                provider = "test",
+                capabilities = PluginCapabilities(),
+            )
 
-        val exception = assertFailsWith<PluginException.BlankId> {
-            registry.register(metadata, Any())
-        }
+        val exception =
+            assertFailsWith<PluginException.BlankId> {
+                registry.register(metadata, Any())
+            }
 
         assertEquals("BLANK_PLUGIN_ID", exception.code)
     }
 
     @Test
     fun `test register throws BlankPluginId when ID is whitespace`() {
-        val metadata = PluginMetadata(
-            id = "   ",
-            name = "Test Plugin",
-            version = "1.0.0",
-            provider = "test",
-            capabilities = PluginCapabilities()
-        )
+        val metadata =
+            PluginMetadata(
+                id = "   ",
+                name = "Test Plugin",
+                version = "1.0.0",
+                provider = "test",
+                capabilities = PluginCapabilities(),
+            )
 
-        val exception = assertFailsWith<PluginException.BlankId> {
-            registry.register(metadata, Any())
-        }
+        val exception =
+            assertFailsWith<PluginException.BlankId> {
+                registry.register(metadata, Any())
+            }
 
         assertEquals("BLANK_PLUGIN_ID", exception.code)
     }
 
     @Test
     fun `test register throws PluginAlreadyRegistered when plugin already exists`() {
-        val metadata = PluginMetadata(
-            id = "test-plugin",
-            name = "Test Plugin",
-            version = "1.0.0",
-            provider = "test",
-            capabilities = PluginCapabilities()
-        )
+        val metadata =
+            PluginMetadata(
+                id = "test-plugin",
+                name = "Test Plugin",
+                version = "1.0.0",
+                provider = "test",
+                capabilities = PluginCapabilities(),
+            )
 
         registry.register(metadata, Any())
 
-        val exception = assertFailsWith<PluginException.AlreadyRegistered> {
-            registry.register(metadata, Any())
-        }
+        val exception =
+            assertFailsWith<PluginException.AlreadyRegistered> {
+                registry.register(metadata, Any())
+            }
 
         assertEquals("PLUGIN_ALREADY_REGISTERED", exception.code)
         assertEquals("test-plugin", exception.pluginId)
@@ -76,13 +86,14 @@ class PluginRegistryErrorTest {
 
     @Test
     fun `test getInstance returns null for wrong type`() {
-        val metadata = PluginMetadata(
-            id = "test-plugin",
-            name = "Test Plugin",
-            version = "1.0.0",
-            provider = "test",
-            capabilities = PluginCapabilities()
-        )
+        val metadata =
+            PluginMetadata(
+                id = "test-plugin",
+                name = "Test Plugin",
+                version = "1.0.0",
+                provider = "test",
+                capabilities = PluginCapabilities(),
+            )
 
         registry.register(metadata, "string-instance")
 
@@ -93,13 +104,14 @@ class PluginRegistryErrorTest {
 
     @Test
     fun `test getInstance returns instance for correct type`() {
-        val metadata = PluginMetadata(
-            id = "test-plugin",
-            name = "Test Plugin",
-            version = "1.0.0",
-            provider = "test",
-            capabilities = PluginCapabilities()
-        )
+        val metadata =
+            PluginMetadata(
+                id = "test-plugin",
+                name = "Test Plugin",
+                version = "1.0.0",
+                provider = "test",
+                capabilities = PluginCapabilities(),
+            )
 
         val instance = listOf(1, 2, 3)
         registry.register(metadata, instance)
@@ -119,40 +131,44 @@ class PluginRegistryErrorTest {
 
     @Test
     fun `test findByCapability throws exception for blank capability`() {
-        val exception = assertFailsWith<IllegalArgumentException> {
-            registry.findByCapability("")
-        }
+        val exception =
+            assertFailsWith<IllegalArgumentException> {
+                registry.findByCapability("")
+            }
 
         assertTrue(exception.message?.contains("blank") == true)
     }
 
     @Test
     fun `test findByProvider throws exception for blank provider`() {
-        val exception = assertFailsWith<IllegalArgumentException> {
-            registry.findByProvider("")
-        }
+        val exception =
+            assertFailsWith<IllegalArgumentException> {
+                registry.findByProvider("")
+            }
 
         assertTrue(exception.message?.contains("blank") == true)
     }
 
     @Test
     fun `test selectProvider throws exception for blank capability`() {
-        val exception = assertFailsWith<IllegalArgumentException> {
-            registry.selectProvider("")
-        }
+        val exception =
+            assertFailsWith<IllegalArgumentException> {
+                registry.selectProvider("")
+            }
 
         assertTrue(exception.message?.contains("blank") == true)
     }
 
     @Test
     fun `test selectProvider handles blank preferences gracefully`() {
-        val metadata = PluginMetadata(
-            id = "test-plugin",
-            name = "Test Plugin",
-            version = "1.0.0",
-            provider = "test",
-            capabilities = PluginCapabilities(features = setOf("test-capability"))
-        )
+        val metadata =
+            PluginMetadata(
+                id = "test-plugin",
+                name = "Test Plugin",
+                version = "1.0.0",
+                provider = "test",
+                capabilities = PluginCapabilities(features = setOf("test-capability")),
+            )
 
         registry.register(metadata, Any())
 
@@ -164,9 +180,10 @@ class PluginRegistryErrorTest {
 
     @Test
     fun `test unregister throws exception for blank plugin ID`() {
-        val exception = assertFailsWith<IllegalArgumentException> {
-            registry.unregister("")
-        }
+        val exception =
+            assertFailsWith<IllegalArgumentException> {
+                registry.unregister("")
+            }
 
         assertTrue(exception.message?.contains("blank") == true)
     }
@@ -182,13 +199,14 @@ class PluginRegistryErrorTest {
 
     @Test
     fun `test unregister removes all plugin data`() {
-        val metadata = PluginMetadata(
-            id = "test-plugin",
-            name = "Test Plugin",
-            version = "1.0.0",
-            provider = "test",
-            capabilities = PluginCapabilities()
-        )
+        val metadata =
+            PluginMetadata(
+                id = "test-plugin",
+                name = "Test Plugin",
+                version = "1.0.0",
+                provider = "test",
+                capabilities = PluginCapabilities(),
+            )
         val instance = "test-instance"
         registry.register(metadata, instance)
 
@@ -206,4 +224,3 @@ class PluginRegistryErrorTest {
         assertNull(registry.getInstance<String>("test-plugin"))
     }
 }
-

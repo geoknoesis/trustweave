@@ -11,7 +11,9 @@ import org.trustweave.testkit.kms.InMemoryKeyManagementService
 import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.wallet.organize
 import org.trustweave.trust.types.getOrThrow
-import kotlin.test.*
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Instant
 
 /**

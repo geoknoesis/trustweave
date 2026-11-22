@@ -41,7 +41,13 @@ data class Oidc4VciCredentialRequest(
     val redirectUri: String? = null,
     val accessToken: String? = null,
     val txCodeValue: String? = null,
-)
+) {
+    override fun toString(): String =
+        "Oidc4VciCredentialRequest(requestId='$requestId', holderDid='$holderDid', offerId='$offerId', " +
+            "credentialIssuer='$credentialIssuer', credentialTypes=$credentialTypes, redirectUri=$redirectUri, " +
+            "accessToken=${if (accessToken != null) "[REDACTED]" else "null"}, " +
+            "txCodeValue=${if (txCodeValue != null) "[REDACTED]" else "null"})"
+}
 
 /**
  * OIDC4VCI credential issue result.
@@ -72,7 +78,11 @@ data class DeferredCredentialRequest(
      * actually returns a credential - polling fails closed without it.
      */
     val holderDid: String? = null,
-)
+) {
+    override fun toString(): String =
+        "DeferredCredentialRequest(transactionId='$transactionId', accessToken=[REDACTED], " +
+            "issuerDid=$issuerDid, holderDid=$holderDid)"
+}
 
 /**
  * Notification event sent to the issuer's notification endpoint.
@@ -132,7 +142,10 @@ data class CredentialDefinition(
 data class BatchCredentialRequest(
     val credentialRequests: List<Oidc4VciCredentialRequest>,
     val accessToken: String,
-)
+) {
+    override fun toString(): String =
+        "BatchCredentialRequest(credentialRequestsCount=${credentialRequests.size}, accessToken=[REDACTED])"
+}
 
 /**
  * A single item within a [BatchCredentialResponse].

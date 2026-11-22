@@ -2,13 +2,14 @@ package org.trustweave.did.identifiers
 
 import org.trustweave.did.model.VerificationMethod
 
-/**
+/*
  * Extension functions for safe parsing of DID-related identifiers.
  */
 
 /**
  * Safe parsing: Convert String to Did, returns null if invalid.
  */
+@Suppress("NOTHING_TO_INLINE")
 inline fun String.toDidOrNull(): Did? =
     try {
         Did(this)
@@ -19,6 +20,7 @@ inline fun String.toDidOrNull(): Did? =
 /**
  * Safe parsing: Convert String to VerificationMethodId, returns null if invalid.
  */
+@Suppress("NOTHING_TO_INLINE")
 inline fun String.toVerificationMethodIdOrNull(baseDid: Did? = null): VerificationMethodId? =
     try {
         VerificationMethodId.parse(this, baseDid)

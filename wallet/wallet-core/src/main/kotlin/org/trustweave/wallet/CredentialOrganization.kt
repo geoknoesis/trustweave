@@ -16,7 +16,10 @@ interface CredentialCollections {
      * @param description Optional description
      * @return Collection ID
      */
-    suspend fun createCollection(name: String, description: String? = null): String
+    suspend fun createCollection(
+        name: String,
+        description: String? = null,
+    ): String
 
     /**
      * Get a collection by ID.
@@ -48,7 +51,10 @@ interface CredentialCollections {
      * @param collectionId Collection ID
      * @return true if added, false if credential or collection not found
      */
-    suspend fun addToCollection(credentialId: String, collectionId: String): Boolean
+    suspend fun addToCollection(
+        credentialId: String,
+        collectionId: String,
+    ): Boolean
 
     /**
      * Remove a credential from a collection.
@@ -57,7 +63,10 @@ interface CredentialCollections {
      * @param collectionId Collection ID
      * @return true if removed, false if not found
      */
-    suspend fun removeFromCollection(credentialId: String, collectionId: String): Boolean
+    suspend fun removeFromCollection(
+        credentialId: String,
+        collectionId: String,
+    ): Boolean
 
     /**
      * Get all credentials in a collection.
@@ -82,7 +91,10 @@ interface CredentialTagging {
      * @param tags Set of tags to add
      * @return true if tags were added, false if credential not found
      */
-    suspend fun tagCredential(credentialId: String, tags: Set<String>): Boolean
+    suspend fun tagCredential(
+        credentialId: String,
+        tags: Set<String>,
+    ): Boolean
 
     /**
      * Remove tags from a credential.
@@ -91,7 +103,10 @@ interface CredentialTagging {
      * @param tags Set of tags to remove
      * @return true if tags were removed, false if credential not found
      */
-    suspend fun untagCredential(credentialId: String, tags: Set<String>): Boolean
+    suspend fun untagCredential(
+        credentialId: String,
+        tags: Set<String>,
+    ): Boolean
 
     /**
      * Get all tags for a credential.
@@ -123,7 +138,10 @@ interface CredentialTagging {
      * @param metadata Metadata map
      * @return true if metadata was added, false if credential not found
      */
-    suspend fun addMetadata(credentialId: String, metadata: Map<String, Any>): Boolean
+    suspend fun addMetadata(
+        credentialId: String,
+        metadata: Map<String, Any>,
+    ): Boolean
 
     /**
      * Get metadata for a credential.
@@ -140,7 +158,10 @@ interface CredentialTagging {
      * @param notes Notes text, or null to clear notes
      * @return true if notes were updated, false if credential not found
      */
-    suspend fun updateNotes(credentialId: String, notes: String?): Boolean
+    suspend fun updateNotes(
+        credentialId: String,
+        notes: String?,
+    ): Boolean
 }
 
 /**
@@ -171,5 +192,6 @@ interface CredentialTagging {
  * }
  * ```
  */
-interface CredentialOrganization : CredentialCollections, CredentialTagging
-
+interface CredentialOrganization :
+    CredentialCollections,
+    CredentialTagging

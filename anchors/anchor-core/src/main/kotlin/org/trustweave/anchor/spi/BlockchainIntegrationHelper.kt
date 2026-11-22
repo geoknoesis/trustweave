@@ -1,6 +1,5 @@
 package org.trustweave.anchor.spi
 
-import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.anchor.BlockchainAnchorRegistry
 import java.util.ServiceLoader
 
@@ -27,7 +26,6 @@ import java.util.ServiceLoader
  * **Thread Safety**: This utility is thread-safe for concurrent access.
  */
 object BlockchainIntegrationHelper {
-
     /**
      * Discovers and registers blockchain anchor clients via SPI.
      * Registers all supported chains for the given provider name.
@@ -40,14 +38,15 @@ object BlockchainIntegrationHelper {
     fun discoverAndRegister(
         providerName: String,
         registry: BlockchainAnchorRegistry,
-        options: Map<String, Any?> = emptyMap()
+        options: Map<String, Any?> = emptyMap(),
     ): List<String> {
         val providers = ServiceLoader.load(BlockchainAnchorClientProvider::class.java)
-        val provider = providers.find { it.name == providerName }
-            ?: throw IllegalStateException(
-                "$providerName blockchain provider not found. " +
-                "Ensure TrustWeave-$providerName is on classpath."
-            )
+        val provider =
+            providers.find { it.name == providerName }
+                ?: throw IllegalStateException(
+                    "$providerName blockchain provider not found. " +
+                        "Ensure TrustWeave-$providerName is on classpath.",
+                )
 
         val registeredChains = mutableListOf<String>()
         for (chainId in provider.supportedChains) {
@@ -78,14 +77,15 @@ object BlockchainIntegrationHelper {
         chainIds: List<String>,
         defaultChainIds: List<String>,
         options: Map<String, Any?> = emptyMap(),
-        allowCustomChains: Boolean = false
+        allowCustomChains: Boolean = false,
     ): List<String> {
         val providers = ServiceLoader.load(BlockchainAnchorClientProvider::class.java)
-        val provider = providers.find { it.name == providerName }
-            ?: throw IllegalStateException(
-                "$providerName blockchain provider not found. " +
-                "Ensure TrustWeave-$providerName is on classpath."
-            )
+        val provider =
+            providers.find { it.name == providerName }
+                ?: throw IllegalStateException(
+                    "$providerName blockchain provider not found. " +
+                        "Ensure TrustWeave-$providerName is on classpath.",
+                )
 
         val chainsToRegister = if (chainIds.isEmpty()) defaultChainIds else chainIds
         val registeredChains = mutableListOf<String>()
@@ -106,4 +106,3 @@ object BlockchainIntegrationHelper {
         return registeredChains
     }
 }
-

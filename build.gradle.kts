@@ -25,6 +25,7 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint")
     alias(libs.plugins.kover)
     alias(libs.plugins.cyclonedx)
+    alias(libs.plugins.dokka) apply false
     alias(libs.plugins.dokka.javadoc) apply false
 }
 
@@ -49,6 +50,45 @@ val dokkaJavadoc =
     (findProperty("trustweave.dokka") as? String)?.equals("true", ignoreCase = true) == true ||
         gradle.startParameter.taskNames.any { it.substringAfterLast(':').contains("publish", ignoreCase = true) }
 
+// Multi-module Dokka HTML API reference for core GA modules (published to trustweave.org/api/).
+// Enabled on demand with -Ptrustweave.dokka=true or when invoking any dokka* task so regular
+// builds stay fast.
+val dokkaHtml =
+    (findProperty("trustweave.dokka") as? String)?.equals("true", ignoreCase = true) == true ||
+        gradle.startParameter.taskNames.any { it.substringAfterLast(':').contains("dokka", ignoreCase = true) }
+
+val coreApiDocModules =
+    setOf(
+        ":common",
+        ":trust",
+        ":contract",
+        ":observability",
+        ":kms:kms-core",
+        ":kms:plugins:inmemory",
+        ":did:did-core",
+        ":did:plugins:base",
+        ":did:plugins:key",
+        ":did:plugins:web",
+        ":credentials:credential-api",
+        ":wallet:wallet-core",
+        ":anchors:anchor-core",
+    )
+
+if (dokkaHtml) {
+    apply(plugin = "org.jetbrains.dokka")
+    extensions.configure<org.jetbrains.dokka.gradle.DokkaExtension> {
+        moduleName.set("TrustWeave SDK")
+        val customOut = (findProperty("trustweave.dokkaOutputDir") as? String)?.takeIf { it.isNotBlank() }
+        dokkaPublications.named("html") {
+            if (customOut != null) {
+                outputDirectory.set(file(customOut))
+            } else {
+                outputDirectory.set(layout.buildDirectory.dir("dokka/html"))
+            }
+        }
+    }
+}
+
 // Read here, not inside subprojects {}: there `libs` would resolve against each subproject.
 val kotlinVersion = libs.versions.kotlin.get()
 val jackson2Version = libs.versions.jackson.get()
@@ -59,6 +99,27 @@ val bouncyCastleLtsVersion = libs.versions.bclts.get()
 val netty41Version = libs.versions.netty41.get()
 val netty42Version = libs.versions.netty42.get()
 
+// Modules built and tested in CI but deliberately excluded from Maven Central publication.
+// Mirror their produced binary JAR filenames in config/release-unpublished-jars.json so
+// scripts/verify-staged-jars.py stays consistent with the staged repository.
+val unpublishedModules =
+    setOf(
+        ":distribution:examples",
+        ":distribution:conformance",
+        ":kms:plugins:thales-luna",
+        ":kms:plugins:utimaco",
+        ":kms:plugins:entrust",
+        ":kms:plugins:venafi",
+        ":did:plugins:threebox",
+        ":did:plugins:btcr",
+        ":did:plugins:tezos",
+        ":did:plugins:ens",
+        ":anchors:plugins:starknet",
+        ":credentials:plugins:platforms:salesforce",
+        ":credentials:plugins:platforms:servicenow",
+        ":signatures:pades",
+    )
+
 subprojects {
 
     plugins.withId("org.jetbrains.kotlin.jvm") {
@@ -67,6 +128,13 @@ subprojects {
         rootProject.dependencies.add("kover", project)
         if (dokkaJavadoc) {
             apply(plugin = "org.jetbrains.dokka-javadoc")
+        }
+        if (dokkaHtml && project.path in coreApiDocModules) {
+            apply(plugin = "org.jetbrains.dokka")
+            extensions.configure<org.jetbrains.dokka.gradle.DokkaExtension> {
+                moduleName.set(project.path.removePrefix(":").replace(":", "-"))
+            }
+            rootProject.dependencies.add("dokka", project)
         }
     }
     plugins.withId("org.jetbrains.kotlin.multiplatform") {
@@ -87,7 +155,7 @@ subprojects {
         }
         extensions.getByType<org.gradle.api.publish.PublishingExtension>().publications.all {
             signing.sign(this)
-            if (this is org.gradle.api.publish.maven.MavenPublication) {
+            if (this is org.gradle.api.publish.maven.MavenPublication && tasks.findByName("cyclonedxDirectBom") != null) {
                 val sbom = tasks.named<org.cyclonedx.gradle.CyclonedxDirectTask>("cyclonedxDirectBom")
                 artifact(sbom.flatMap { it.jsonOutput }) {
                     classifier = "cyclonedx"
@@ -95,6 +163,12 @@ subprojects {
                     builtBy(sbom)
                 }
             }
+        }
+        // Multi-publication modules (e.g. KMP) share artifacts like the CycloneDX SBOM across
+        // publications; ordering all publish tasks after all Sign tasks satisfies Gradle's
+        // implicit-dependency validation.
+        tasks.withType<org.gradle.api.publish.maven.tasks.AbstractPublishToMaven>().configureEach {
+            mustRunAfter(tasks.withType<org.gradle.plugins.signing.Sign>())
         }
         tasks.withType<org.gradle.api.publish.maven.tasks.PublishToMavenRepository>().configureEach {
             doFirst {
@@ -337,11 +411,90 @@ subprojects {
             enableAssertions = true
         }
 
-        // Apply maven-publish plugin and configure publishing for all subprojects that produce JAR files
-        // Skip java-platform projects (like BOM) as they configure their own publishing
-        if ((plugins.hasPlugin("org.jetbrains.kotlin.jvm") || plugins.hasPlugin("java")) &&
-            !plugins.hasPlugin("java-platform")
-        ) {
+        fun org.gradle.api.publish.PublishingExtension.configureTrustWeaveRepositories() {
+            // Without a declared repository Gradle never creates a PublishToMavenRepository
+            // task, so `publishToMavenLocal` is the only thing that works and the signing
+            // requirement below is unreachable. The repository is always declared; the
+            // credentials are read from the environment so an unconfigured machine fails with
+            // a clear message instead of silently having no publish task at all.
+            //
+            // TRUSTWEAVE_PUBLISH_URL points at a staging repository for dry runs. Snapshots go
+            // to TRUSTWEAVE_SNAPSHOT_URL. Both default to Sonatype Central.
+            repositories {
+                // The release workflow publishes ONLY here (no Central credentials), checksums and attests this
+                // directory, then uploads it to Central with scripts/upload-to-central.py as its last step, so
+                // the attested bytes are the uploaded bytes. `central` below serves snapshots and manual runs.
+                maven {
+                    name = "releaseStaging"
+                    url = uri(rootProject.layout.buildDirectory.dir("release-staging"))
+                }
+                maven {
+                    name = "central"
+                    val release =
+                        providers.environmentVariable("TRUSTWEAVE_PUBLISH_URL").getOrElse(
+                            "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/",
+                        )
+                    val snapshot =
+                        providers.environmentVariable("TRUSTWEAVE_SNAPSHOT_URL").getOrElse(
+                            "https://central.sonatype.com/repository/maven-snapshots/",
+                        )
+                    url = uri(if (project.version.toString().endsWith("SNAPSHOT")) snapshot else release)
+                    credentials {
+                        username = providers.environmentVariable("TRUSTWEAVE_PUBLISH_USERNAME").orNull
+                        password = providers.environmentVariable("TRUSTWEAVE_PUBLISH_PASSWORD").orNull
+                    }
+                }
+            }
+        }
+
+        fun org.gradle.api.publish.maven.MavenPom.configureTrustWeavePom() {
+            name.set(project.name)
+            description.set(
+                project.description
+                    ?: "TrustWeave ${project.name} module. " +
+                    "See docs/api-reference/module-maturity.md for GA vs experimental guidance.",
+            )
+            url.set("https://github.com/geoknoesis/trustweave")
+
+            licenses {
+                license {
+                    name.set("AGPL-3.0")
+                    url.set("https://www.gnu.org/licenses/agpl-3.0.txt")
+                }
+            }
+
+            developers {
+                developer {
+                    id.set("trustweave-team")
+                    name.set("TrustWeave Team")
+                    email.set("info@geoknoesis.com")
+                }
+            }
+
+            // Maven Central validation rejects a POM without scm. Publication
+            // fails at the staging step rather than at build time, so this is
+            // easy to lose track of; the publishing smoke test asserts it.
+            scm {
+                connection.set("scm:git:https://github.com/geoknoesis/trustweave.git")
+                developerConnection.set("scm:git:ssh://git@github.com/geoknoesis/trustweave.git")
+                url.set("https://github.com/geoknoesis/trustweave")
+            }
+
+            issueManagement {
+                system.set("GitHub Issues")
+                url.set("https://github.com/geoknoesis/trustweave/issues")
+            }
+        }
+
+        // Apply maven-publish plugin and configure publishing for all publishable subprojects that produce JAR files.
+        // Skip java-platform projects (like BOM, which configure their own publishing) and unpublishedModules.
+        val isJvmPublishable =
+            (plugins.hasPlugin("org.jetbrains.kotlin.jvm") || plugins.hasPlugin("java")) &&
+                !plugins.hasPlugin("java-platform") &&
+                !plugins.hasPlugin("org.jetbrains.kotlin.multiplatform")
+        val isKmpPublishable = plugins.hasPlugin("org.jetbrains.kotlin.multiplatform")
+
+        if (isJvmPublishable && project.path !in unpublishedModules) {
             // Apply maven-publish plugin if not already applied
             if (!plugins.hasPlugin("maven-publish")) {
                 apply(plugin = "maven-publish")
@@ -366,39 +519,7 @@ subprojects {
 
             // Configure Maven publishing
             configure<org.gradle.api.publish.PublishingExtension> {
-                // Without a declared repository Gradle never creates a PublishToMavenRepository
-                // task, so `publishToMavenLocal` is the only thing that works and the signing
-                // requirement below is unreachable. The repository is always declared; the
-                // credentials are read from the environment so an unconfigured machine fails with
-                // a clear message instead of silently having no publish task at all.
-                //
-                // TRUSTWEAVE_PUBLISH_URL points at a staging repository for dry runs. Snapshots go
-                // to TRUSTWEAVE_SNAPSHOT_URL. Both default to Sonatype Central.
-                repositories {
-                    // The release workflow publishes ONLY here (no Central credentials), checksums and attests this
-                    // directory, then uploads it to Central with scripts/upload-to-central.py as its last step, so
-                    // the attested bytes are the uploaded bytes. `central` below serves snapshots and manual runs.
-                    maven {
-                        name = "releaseStaging"
-                        url = uri(rootProject.layout.buildDirectory.dir("release-staging"))
-                    }
-                    maven {
-                        name = "central"
-                        val release =
-                            providers.environmentVariable("TRUSTWEAVE_PUBLISH_URL").getOrElse(
-                                "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/",
-                            )
-                        val snapshot =
-                            providers.environmentVariable("TRUSTWEAVE_SNAPSHOT_URL").getOrElse(
-                                "https://central.sonatype.com/repository/maven-snapshots/",
-                            )
-                        url = uri(if (project.version.toString().endsWith("SNAPSHOT")) snapshot else release)
-                        credentials {
-                            username = providers.environmentVariable("TRUSTWEAVE_PUBLISH_USERNAME").orNull
-                            password = providers.environmentVariable("TRUSTWEAVE_PUBLISH_PASSWORD").orNull
-                        }
-                    }
-                }
+                configureTrustWeaveRepositories()
                 publications {
                     create<org.gradle.api.publish.maven.MavenPublication>("maven") {
                         from(components["java"])
@@ -409,48 +530,58 @@ subprojects {
                                 .removePrefix(":")
                                 .replace(":", "-")
                         artifactId = artifactName
-                        tasks.named<org.cyclonedx.gradle.CyclonedxDirectTask>("cyclonedxDirectBom") {
-                            componentName = artifactName
+                        if (tasks.findByName("cyclonedxDirectBom") != null) {
+                            tasks.named<org.cyclonedx.gradle.CyclonedxDirectTask>("cyclonedxDirectBom") {
+                                componentName = artifactName
+                            }
                         }
 
                         pom {
-                            name.set(project.name)
-                            description.set(
-                                project.description
-                                    ?: "TrustWeave ${project.name} module. " +
-                                    "See docs/api-reference/module-maturity.md for GA vs experimental guidance.",
-                            )
-                            url.set("https://github.com/geoknoesis/trustweave")
+                            configureTrustWeavePom()
+                        }
+                    }
+                }
+            }
+        } else if (isKmpPublishable && project.path !in unpublishedModules) {
+            if (!plugins.hasPlugin("maven-publish")) {
+                apply(plugin = "maven-publish")
+            }
 
-                            licenses {
-                                license {
-                                    name.set("AGPL-3.0")
-                                    url.set("https://www.gnu.org/licenses/agpl-3.0.txt")
-                                }
-                            }
+            val artifactName =
+                project.path
+                    .removePrefix(":")
+                    .replace(":", "-")
+            if (tasks.findByName("cyclonedxDirectBom") != null) {
+                tasks.named<org.cyclonedx.gradle.CyclonedxDirectTask>("cyclonedxDirectBom") {
+                    componentName = artifactName
+                }
+            }
 
-                            developers {
-                                developer {
-                                    id.set("trustweave-team")
-                                    name.set("TrustWeave Team")
-                                    email.set("info@geoknoesis.com")
-                                }
-                            }
+            configure<org.gradle.api.publish.PublishingExtension> {
+                configureTrustWeaveRepositories()
+                publications.withType<org.gradle.api.publish.maven.MavenPublication>().configureEach {
+                    val pubName = name
+                    val resolvedArtifactId =
+                        if (pubName == "kotlinMultiplatform") artifactName else "$artifactName-$pubName"
+                    artifactId = resolvedArtifactId
 
-                            // Maven Central validation rejects a POM without scm. Publication
-                            // fails at the staging step rather than at build time, so this is
-                            // easy to lose track of; the publishing smoke test asserts it.
-                            scm {
-                                connection.set("scm:git:https://github.com/geoknoesis/trustweave.git")
-                                developerConnection.set("scm:git:ssh://git@github.com/geoknoesis/trustweave.git")
-                                url.set("https://github.com/geoknoesis/trustweave")
-                            }
-
-                            issueManagement {
-                                system.set("GitHub Issues")
-                                url.set("https://github.com/geoknoesis/trustweave/issues")
+                    // Maven Central requires a -javadoc jar on every publication carrying a jar.
+                    // Each KMP publication gets its own javadoc Jar task so signing tasks have
+                    // disjoint outputs.
+                    val javadocTaskName = "${pubName}JavadocJar"
+                    val pubJavadocJar =
+                        if (tasks.findByName(javadocTaskName) != null) {
+                            tasks.named<Jar>(javadocTaskName)
+                        } else {
+                            tasks.register<Jar>(javadocTaskName) {
+                                archiveBaseName.set(resolvedArtifactId)
+                                archiveClassifier.set("javadoc")
                             }
                         }
+                    artifact(pubJavadocJar)
+
+                    pom {
+                        configureTrustWeavePom()
                     }
                 }
             }

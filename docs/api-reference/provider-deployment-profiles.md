@@ -1,10 +1,17 @@
+---
+layout: default
+title: Provider deployment and wallet custody profiles
+parent: API Reference
+nav_order: 318
+---
+
 # Provider deployment and wallet custody profiles
 
 ## Round 9 implementation update
 
 Both passkey and managed-KMS profiles are selected. Experimental adapters and
 their validation boundaries are documented in
-[the dual custody contract](../../reference-wallet/CUSTODY.md). They are not yet
+[the dual custody contract](https://github.com/geoknoesis/trustweave/blob/main/reference-wallet/CUSTODY.md). They are not yet
 wired into the existing Ed25519 wallet UI; physical-device qualification and a
 production managed service remain open. No provider maturity was promoted.
 

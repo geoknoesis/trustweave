@@ -179,6 +179,21 @@ The module provides structured exception handling:
 
 **Outcome:** Enables better error messages and easier troubleshooting.
 
+## Package Structure
+
+Key packages under `anchors/anchor-core/src/main/kotlin/org/trustweave/anchor/`:
+
+| Package | Contents |
+|---------|----------|
+| `org.trustweave.anchor` | `BlockchainAnchorClient`, `AbstractBlockchainAnchorClient`, `AnchorRef`, `AnchorResult`, `AnchorDigest`, `ChainId`, `BlockchainAnchorRegistry`, `DefaultBlockchainAnchorRegistry` |
+| `org.trustweave.anchor.evm` | `EvmGas` calldata floor and gas limit helpers |
+| `org.trustweave.anchor.exceptions` | `BlockchainException` and `TreasuryExceptions` |
+| `org.trustweave.anchor.options` | Typed `BlockchainAnchorClientOptions` (`AlgorandOptions`, `PolygonOptions`, `GanacheOptions`, `IndyOptions`, …) |
+| `org.trustweave.anchor.payment` | `PaymentContext`, `OperationDescriptor`, `TokenAmount` |
+| `org.trustweave.anchor.services` | `BlockchainService` |
+| `org.trustweave.anchor.spi` | `BlockchainAnchorClientProvider`, `BlockchainIntegrationHelper` |
+| `org.trustweave.anchor.validation` | `ChainIdValidator` |
+
 ## Dependencies
 
 - Depends on [`common`](trustweave-common.md) for core types, exceptions, and SPI interfaces (JSON utilities are included in `common`)
@@ -188,6 +203,4 @@ The module provides structured exception handling:
 - Review [Blockchain Anchoring Concepts](../../core-concepts/blockchain-anchoring.md) for understanding anchoring
 - Explore [Blockchain Anchor Integration Guides](../../how-to/integrations/README.md) for specific adapter setups
 - Check [Creating Plugins](../../contributing/creating-plugins.md) to implement custom blockchain adapters
-
-> **TODO:** Add a per-package README under `anchors/anchor-core/` for deeper documentation.
 

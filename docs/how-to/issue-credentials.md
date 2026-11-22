@@ -160,9 +160,10 @@ subject {
 
 ### Step 3: Issue the Credential
 
-Use the `issue` DSL to create and sign the credential:
+Use the `issue` DSL to create and sign the credential. `trustWeave.issue { ... }` returns a sealed `IssuanceResult`, which you can handle exhaustively with `when` or unwrap with `.getOrThrow()`:
 
 ```kotlin
+import org.trustweave.credential.results.getOrThrow
 import org.trustweave.did.identifiers.Did
 
 val credential = trustWeave.issue {
@@ -176,17 +177,27 @@ val credential = trustWeave.issue {
         }
     }
     signedBy(issuerDid)
-}
+}.getOrThrow()
 ```
 
-### Step 4: Use the Credential
+### Step 4: Verify and Use the Credential
 
-The credential is now ready to be stored, presented, or verified:
+Confirm the issued credential verifies cleanly, then store or present it:
 
 ```kotlin
+import org.trustweave.credential.results.VerificationResult
+
 println("Credential ID: ${credential.id}")
 println("Issuer: ${credential.issuer}")
 println("Issuance Date: ${credential.issuanceDate}")
+
+when (val verification = trustWeave.verify {
+    credential(credential)
+    checkExpiration()
+}) {
+    is VerificationResult.Valid -> println("✅ Credential verified successfully")
+    is VerificationResult.Invalid -> println("❌ Verification failed: ${verification.allErrors.joinToString("; ")}")
+}
 ```
 
 ## Credential Types and Structures
@@ -247,7 +258,7 @@ val credential = trustWeave.issue {
         expires(Clock.System.now().plus(30.days))
     }
     signedBy(issuerDid)
-}
+}.getOrThrow()
 ```
 
 ### Custom Credential ID
@@ -312,31 +323,34 @@ val credentials = subjects.map { subjectData ->
             }
         }
         signedBy(issuerDid)
-    }
+    }.getOrThrow()
 }
 ```
 
-### Pattern 2: Issue with Error Handling
+### Pattern 2: Issue with Sealed Result Handling
 
-Handle errors gracefully:
+Handle issuance failures explicitly with `IssuanceResult`:
 
 ```kotlin
-val credential = try {
-    trustWeave.issue {
-        credential {
-            type("VerifiableCredential", "PersonCredential")
-            issuer(issuerDid)
-            subject {
-                id("did:key:holder")
-                "name" to "Alice"
-            }
+import org.trustweave.credential.results.IssuanceResult
+
+when (val result = trustWeave.issue {
+    credential {
+        type("VerifiableCredential", "PersonCredential")
+        issuer(issuerDid)
+        subject {
+            id("did:key:holder")
+            "name" to "Alice"
         }
-        signedBy(issuerDid)
     }
-} catch (error: Exception) {
-    println("Issuance failed: ${error.message}")
-    error.printStackTrace()
-    return@runBlocking
+    signedBy(issuerDid)
+}) {
+    is IssuanceResult.Success -> {
+        println("Issued: ${result.credential.id}")
+    }
+    is IssuanceResult.Failure -> {
+        println("Issuance failed: $result")
+    }
 }
 ```
 
@@ -361,34 +375,45 @@ val credential = trustWeave.issue {
         }
     }
     signedBy(issuerDid)
-}
+}.getOrThrow()
 ```
 
-## Error Handling
+## Error Handling & Troubleshooting
 
-Credential issuance operations may throw exceptions on failure. Always wrap in try-catch:
+`trustWeave.issue { ... }` returns a sealed `IssuanceResult` rather than throwing on domain failures. Use exhaustive `when` matching in production code (or `.getOrThrow()` when you want failures to propagate as exceptions):
 
 ```kotlin
-try {
-    val credential = trustWeave.issue { ... }
-    // Use credential
-} catch (error: Exception) {
-    when (error) {
-        is IllegalStateException -> {
-            // Configuration or validation error
-            println("Error: ${error.message}")
-        }
-        is IllegalArgumentException -> {
-            // Invalid parameter
-            println("Invalid parameter: ${error.message}")
-        }
-        else -> {
-            println("Unexpected error: ${error.message}")
-            error.printStackTrace()
-        }
+import org.trustweave.credential.results.IssuanceResult
+
+when (val result = trustWeave.issue { /* ... */ }) {
+    is IssuanceResult.Success -> {
+        val credential = result.credential
+        // Use credential
+    }
+    is IssuanceResult.Failure.InvalidRequest -> {
+        println("Invalid credential request: ${result.field} - ${result.reason}")
+    }
+    is IssuanceResult.Failure.UnsupportedFormat -> {
+        println("Unsupported proof format: ${result.format}")
+    }
+    is IssuanceResult.Failure.AdapterNotReady -> {
+        println("Proof engine not ready: ${result.reason}")
+    }
+    is IssuanceResult.Failure.AdapterError -> {
+        println("Issuance adapter error: ${result.reason}")
+    }
+    is IssuanceResult.Failure.MultipleFailures -> {
+        println("Multiple issuance errors: ${result.errors.joinToString("; ")}")
     }
 }
 ```
+
+Common pitfalls:
+- **Missing `signedBy(...)`:** Every `issue { ... }` call must specify the signing identity (e.g., `signedBy(issuerDid)` or `signedBy(issuerDid = issuerDid, keyId = keyId)`).
+- **Unconfigured KMS or DID method:** When using `TrustWeave.build { ... }`, register both a `keys { ... }` KMS provider and a `did { method(...) }` implementation (for local demos, `TrustWeave.quickStart()` configures in-memory defaults automatically).
+- **Custom JSON-LD contexts:** Register custom vocabularies via `JsonLdContexts.register(...)` and pass `JsonLdContexts.CONTEXTS_PROOF_OPTION` if your credential uses types outside the built-in W3C VC context.
+
+See [Result Types Guide](../api-reference/result-types-guide.md) and [Error Handling](../api-reference/advanced/error-handling.md) for full details.
 
 ## What TrustWeave Does Automatically
 

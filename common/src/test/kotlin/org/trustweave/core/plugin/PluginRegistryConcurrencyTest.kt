@@ -17,11 +17,11 @@ import kotlin.test.assertTrue
  * holds on both sides of the lifecycle.
  */
 class PluginRegistryConcurrencyTest {
-
-    private fun metadataFor(id: String) = createTestPluginMetadata(
-        id = id,
-        capabilities = PluginCapabilities(features = setOf("race-capability"))
-    )
+    private fun metadataFor(id: String) =
+        createTestPluginMetadata(
+            id = id,
+            capabilities = PluginCapabilities(features = setOf("race-capability")),
+        )
 
     @Test
     fun `concurrent register never exposes metadata without an instance`() {
@@ -31,25 +31,27 @@ class PluginRegistryConcurrencyTest {
             val start = CountDownLatch(1)
             val violation = AtomicReference<String>(null)
 
-            val reader = thread(name = "reader-$round") {
-                start.await()
-                // Spin (with a deadline) until the plugin becomes visible, then assert the invariant.
-                val deadline = System.nanoTime() + 10_000_000_000L
-                while (System.nanoTime() < deadline) {
-                    val metadata = registry.getMetadata(id)
-                    if (metadata != null) {
-                        if (registry.getInstance(id, String::class.java) == null) {
-                            violation.set("round $round: metadata visible but instance was null")
+            val reader =
+                thread(name = "reader-$round") {
+                    start.await()
+                    // Spin (with a deadline) until the plugin becomes visible, then assert the invariant.
+                    val deadline = System.nanoTime() + 10_000_000_000L
+                    while (System.nanoTime() < deadline) {
+                        val metadata = registry.getMetadata(id)
+                        if (metadata != null) {
+                            if (registry.getInstance(id, String::class.java) == null) {
+                                violation.set("round $round: metadata visible but instance was null")
+                            }
+                            return@thread
                         }
-                        return@thread
                     }
+                    violation.set("round $round: plugin never became visible to the reader")
                 }
-                violation.set("round $round: plugin never became visible to the reader")
-            }
-            val writer = thread(name = "writer-$round") {
-                start.await()
-                registry.register(metadataFor(id), "instance-$round")
-            }
+            val writer =
+                thread(name = "writer-$round") {
+                    start.await()
+                    registry.register(metadataFor(id), "instance-$round")
+                }
 
             start.countDown()
             reader.join(15_000)
@@ -69,33 +71,35 @@ class PluginRegistryConcurrencyTest {
             val start = CountDownLatch(1)
             val violation = AtomicReference<String>(null)
 
-            val reader = thread(name = "reader-$round") {
-                start.await()
-                // Spin (with a deadline) until the plugin disappears; while metadata is
-                // visible the instance must be visible too (metadata is retracted FIRST).
-                val deadline = System.nanoTime() + 10_000_000_000L
-                while (System.nanoTime() < deadline) {
-                    val metadata = registry.getMetadata(id)
-                    if (metadata == null) {
-                        return@thread
-                    }
-                    if (registry.getInstance(id, String::class.java) == null) {
-                        // The two reads are not atomic: unregister (metadata first, then
-                        // instance) may have completed entirely between them. Re-read the
-                        // metadata — only a STILL-visible metadata with a missing instance
-                        // violates the publication invariant.
-                        if (registry.getMetadata(id) != null) {
-                            violation.set("round $round: metadata still visible but instance already removed")
+            val reader =
+                thread(name = "reader-$round") {
+                    start.await()
+                    // Spin (with a deadline) until the plugin disappears; while metadata is
+                    // visible the instance must be visible too (metadata is retracted FIRST).
+                    val deadline = System.nanoTime() + 10_000_000_000L
+                    while (System.nanoTime() < deadline) {
+                        val metadata = registry.getMetadata(id)
+                        if (metadata == null) {
+                            return@thread
                         }
-                        return@thread
+                        if (registry.getInstance(id, String::class.java) == null) {
+                            // The two reads are not atomic: unregister (metadata first, then
+                            // instance) may have completed entirely between them. Re-read the
+                            // metadata — only a STILL-visible metadata with a missing instance
+                            // violates the publication invariant.
+                            if (registry.getMetadata(id) != null) {
+                                violation.set("round $round: metadata still visible but instance already removed")
+                            }
+                            return@thread
+                        }
                     }
+                    violation.set("round $round: plugin never disappeared for the reader")
                 }
-                violation.set("round $round: plugin never disappeared for the reader")
-            }
-            val writer = thread(name = "writer-$round") {
-                start.await()
-                registry.unregister(id)
-            }
+            val writer =
+                thread(name = "writer-$round") {
+                    start.await()
+                    registry.unregister(id)
+                }
 
             start.countDown()
             reader.join(15_000)
@@ -108,16 +112,18 @@ class PluginRegistryConcurrencyTest {
     @Test
     fun `unregister prunes capability and provider lookups`() {
         val registry = DefaultPluginRegistry()
-        val first = createTestPluginMetadata(
-            id = "plugin-a",
-            provider = "shared-provider",
-            capabilities = PluginCapabilities(features = setOf("shared-capability"))
-        )
-        val second = createTestPluginMetadata(
-            id = "plugin-b",
-            provider = "shared-provider",
-            capabilities = PluginCapabilities(features = setOf("shared-capability"))
-        )
+        val first =
+            createTestPluginMetadata(
+                id = "plugin-a",
+                provider = "shared-provider",
+                capabilities = PluginCapabilities(features = setOf("shared-capability")),
+            )
+        val second =
+            createTestPluginMetadata(
+                id = "plugin-b",
+                provider = "shared-provider",
+                capabilities = PluginCapabilities(features = setOf("shared-capability")),
+            )
         registry.register(first, "instance-a")
         registry.register(second, "instance-b")
 

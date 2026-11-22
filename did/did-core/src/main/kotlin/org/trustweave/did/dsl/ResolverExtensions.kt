@@ -6,7 +6,7 @@ import org.trustweave.did.model.DidDocument
 import org.trustweave.did.resolver.DidResolutionResult
 import org.trustweave.did.resolver.DidResolver
 
-/**
+/*
  * Extension functions for [DidResolver] to improve ergonomics.
  *
  * These extensions provide convenient methods for common resolution patterns.

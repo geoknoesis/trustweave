@@ -1,21 +1,20 @@
 package org.trustweave.credential
 
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.JsonPrimitive
+import org.trustweave.core.identifiers.Iri
 import org.trustweave.credential.model.CredentialType
 import org.trustweave.credential.model.vc.CredentialSubject
 import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.credential.model.vc.VerifiableCredential
-// Extension functions are in the same package, no import needed
-import org.trustweave.core.identifiers.Iri
 import org.trustweave.did.identifiers.Did
-import org.trustweave.did.resolver.DidResolver
 import org.trustweave.did.resolver.DidResolutionResult
-import kotlinx.coroutines.runBlocking
-import kotlin.time.Clock
-import kotlinx.serialization.json.*
+import org.trustweave.did.resolver.DidResolver
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlin.test.assertEquals
+import kotlin.time.Clock
 
 /**
  * Tests for CredentialServiceExtensions extension functions.

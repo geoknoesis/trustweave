@@ -7,7 +7,7 @@ import org.trustweave.wallet.CredentialOrganization
 import org.trustweave.wallet.CredentialQueryBuilder
 import org.trustweave.wallet.Wallet
 
-/**
+/*
  * Wallet Query DSL.
  *
  * Provides query capabilities including tag and collection filtering.

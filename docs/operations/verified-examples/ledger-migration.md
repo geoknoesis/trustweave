@@ -1,3 +1,11 @@
+---
+layout: default
+title: Persistent ledger migration
+parent: Verified Examples
+grand_parent: Operations
+nav_order: 10
+---
+
 # Persistent ledger migration
 
 This complete test uses disposable PostgreSQL to migrate the earlier schema twice and preserve spending, reservations and unknown legacy ages. Run `:credentials:plugins:verifiable-intent:test --tests "*LedgerMigrationDocumentationTest"` with Docker available. The fixture CREATE/INSERT statements belong only in the disposable test database. Production deployment calls initializeSchema using a migration identity; runtime uses restricted DML credentials. Backup/PITR and authenticated payment-journal recovery require separate operational qualification.

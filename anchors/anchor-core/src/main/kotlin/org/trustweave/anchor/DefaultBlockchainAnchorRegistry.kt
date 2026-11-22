@@ -7,7 +7,10 @@ class DefaultBlockchainAnchorRegistry : BlockchainAnchorRegistry {
     private val clients = mutableMapOf<String, BlockchainAnchorClient>()
 
     @Synchronized
-    override fun register(chainId: String, client: BlockchainAnchorClient) {
+    override fun register(
+        chainId: String,
+        client: BlockchainAnchorClient,
+    ) {
         clients[chainId] = client
     }
 
@@ -46,5 +49,3 @@ class DefaultBlockchainAnchorRegistry : BlockchainAnchorRegistry {
         return copy
     }
 }
-
-

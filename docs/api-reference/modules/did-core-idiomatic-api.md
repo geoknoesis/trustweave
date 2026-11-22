@@ -1,4 +1,5 @@
 ---
+title: Idiomatic Kotlin API Guide
 redirect_from:
   - /modules/did-core-idiomatic-api/
 parent: Module Reference

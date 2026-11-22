@@ -18,7 +18,7 @@ import org.trustweave.core.exception.TrustWeaveException
  */
 internal class ProviderChain<T>(
     private val providers: List<T>,
-    private val selector: (T) -> Boolean = { true }
+    private val selector: (T) -> Boolean = { true },
 ) {
     // Cache selected providers to avoid repeated filtering
     // This provides O(1) access to selected providers after initial filtering
@@ -27,8 +27,8 @@ internal class ProviderChain<T>(
     }
 
     init {
-        require(providers.isNotEmpty()) { 
-            "Provider chain must contain at least one provider" 
+        require(providers.isNotEmpty()) {
+            "Provider chain must contain at least one provider"
         }
         // Validate that selector doesn't filter out all providers
         // Access selectedProviders to trigger lazy initialization and validation
@@ -95,15 +95,16 @@ internal class ProviderChain<T>(
 
         if (attemptedProviders.isEmpty()) {
             throw TrustWeaveException.InvalidState(
-                message = "No providers were selected by the selector function. " +
-                    "At least one provider must be available for execution."
+                message =
+                    "No providers were selected by the selector function. " +
+                        "At least one provider must be available for execution.",
             )
         }
 
         throw ProviderException.AllFailed(
             attemptedProviders = attemptedProviders,
             providerErrors = providerErrors,
-            lastException = lastException
+            lastException = lastException,
         )
     }
 
@@ -119,7 +120,7 @@ internal class ProviderChain<T>(
      */
     suspend fun <R, T2> executeAndTransform(
         operation: suspend (T) -> R,
-        transform: (R) -> T2
+        transform: (R) -> T2,
     ): T2 {
         val result = execute(operation)
         return transform(result)
@@ -132,7 +133,7 @@ internal class ProviderChain<T>(
 
     /**
      * Get the number of selected providers (after applying selector).
-     * 
+     *
      * Performance: O(1) - uses cached selected providers list.
      */
     fun selectedSize(): Int = selectedProviders.size
@@ -155,12 +156,12 @@ internal class ProviderChain<T>(
  */
 internal inline fun <reified T> createProviderChain(
     pluginIds: List<String>,
-    registry: PluginRegistry
+    registry: PluginRegistry,
 ): ProviderChain<T> {
     // Pre-size collections for better performance
     val found = ArrayList<Pair<String, T>>(pluginIds.size)
     val foundIdsSet = HashSet<String>(pluginIds.size)
-    
+
     // Map each plugin ID to its instance, preserving the original order.
     for (pluginId in pluginIds) {
         registry.getInstance(pluginId, T::class.java)?.let { instance ->
@@ -174,7 +175,7 @@ internal inline fun <reified T> createProviderChain(
     if (found.isEmpty()) {
         throw ProviderException.NoneFound(
             pluginIds = pluginIds,
-            availablePlugins = registry.getAllPlugins().map { it.id }
+            availablePlugins = registry.getAllPlugins().map { it.id },
         )
     }
 
@@ -183,12 +184,12 @@ internal inline fun <reified T> createProviderChain(
     // maintaining predictable behavior and preventing partial configurations.
     // Performance: O(n) using Set lookup instead of O(n²) with list.contains()
     val missingIds = pluginIds.filterNot { it in foundIdsSet }
-    
+
     if (missingIds.isNotEmpty()) {
         throw ProviderException.PartiallyFound(
             requestedIds = pluginIds,
             foundIds = found.map { it.first },
-            missingIds = missingIds
+            missingIds = missingIds,
         )
     }
 
@@ -206,7 +207,7 @@ internal inline fun <reified T> createProviderChain(
 internal inline fun <reified T> createProviderChainFromConfig(
     chainName: String,
     config: PluginConfiguration,
-    registry: PluginRegistry
+    registry: PluginRegistry,
 ): ProviderChain<T>? {
     val pluginIds = config.providerChains[chainName] ?: return null
     // Call createProviderChain with the same reified type parameter.

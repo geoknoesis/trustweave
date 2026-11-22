@@ -1,6 +1,7 @@
 ---
 title: Migration Guides
-nav_exclude: true
+parent: How-To Guides
+has_children: true
 redirect_from:
   - /migration/README/
 nav_order: 220
@@ -14,7 +15,7 @@ This section provides migration guides for upgrading between TrustWeave versions
 
 | TrustWeave Version | Kotlin | Java | Gradle | Status |
 |------------------|--------|------|--------|--------|
-| 0.7.0 | 2.2.0+ | 21+ | 8.5+ | Current |
+| 0.7.0 | 2.4.21 | 21+ | 9.8.1 | Current |
 
 ## Deprecation Policy
 
@@ -38,6 +39,14 @@ TrustWeave follows semantic versioning (SemVer) principles:
 4. **Plan Migration**: Schedule migration before major version upgrade
 
 ## Migration Guides
+
+### Migrating to 0.7.0
+
+See [Migrating to 0.7.0](migrating-to-0.7.0.md) for upgrading from `0.6.x` to `0.7.0`:
+- Toolchain upgrades (Kotlin 2.4.21, Gradle 9.8.1, Ktor 3.6.0, Coroutines 1.11.0)
+- BOM (`org.trustweave:distribution-bom:0.7.0`), `distribution-all` bundling `kms-plugins-inmemory`, and removal of 12 pure stubs from publishing
+- Sealed result APIs (`revokeResult`, `trustResult`, `getKeyIdResult`) and `KmsProviders.*` canonical SPI names
+- Wallet storage schema/prefix upgrades (`DatabaseWallet` v2, `CloudWalletFactory`) and KMS/security hardening
 
 ### Migrating to Phase 4 API (Service Layer Removal)
 

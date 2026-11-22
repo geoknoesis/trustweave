@@ -57,6 +57,7 @@ internal class DatabaseWalletTagging(
                         conn.commit()
                         true
                     } catch (cancelled: CancellationException) {
+                        runCatching { conn.rollback() }
                         throw cancelled
                     } catch (e: Exception) {
                         runCatching { conn.rollback() }
@@ -222,6 +223,7 @@ internal class DatabaseWalletTagging(
                         conn.commit()
                         true
                     } catch (cancelled: CancellationException) {
+                        runCatching { conn.rollback() }
                         throw cancelled
                     } catch (e: Exception) {
                         runCatching { conn.rollback() }

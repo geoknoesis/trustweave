@@ -7,10 +7,15 @@ import org.trustweave.core.identifiers.KeyId
  */
 sealed class DeleteKeyResult {
     data object Deleted : DeleteKeyResult()
+
     data object NotFound : DeleteKeyResult()
 
     sealed class Failure : DeleteKeyResult() {
-        data class Error(val keyId: KeyId, val reason: String, val cause: Throwable? = null) : Failure()
+        data class Error(
+            val keyId: KeyId,
+            val reason: String,
+            val cause: Throwable? = null,
+        ) : Failure()
     }
 
     val isSuccess: Boolean get() = this is Deleted || this is NotFound
@@ -28,14 +33,21 @@ inline fun DeleteKeyResult.onFailure(action: (DeleteKeyResult.Failure) -> Unit):
     return this
 }
 
-fun DeleteKeyResult.getOrThrow(): Boolean = when (this) {
-    is DeleteKeyResult.Deleted -> true
-    is DeleteKeyResult.NotFound -> false
-    is DeleteKeyResult.Failure.Error -> throw org.trustweave.core.exception.TrustWeaveException.Unknown(message = reason, cause = cause)
-}
+fun DeleteKeyResult.getOrThrow(): Boolean =
+    when (this) {
+        is DeleteKeyResult.Deleted -> true
+        is DeleteKeyResult.NotFound -> false
+        is DeleteKeyResult.Failure.Error ->
+            throw org.trustweave.core.exception.TrustWeaveException
+                .Unknown(message = reason, cause = cause)
+    }
 
-inline fun <R> DeleteKeyResult.fold(onFailure: (DeleteKeyResult.Failure) -> R, onSuccess: (Boolean) -> R): R = when (this) {
-    is DeleteKeyResult.Deleted -> onSuccess(true)
-    is DeleteKeyResult.NotFound -> onSuccess(false)
-    is DeleteKeyResult.Failure -> onFailure(this)
-}
+inline fun <R> DeleteKeyResult.fold(
+    onFailure: (DeleteKeyResult.Failure) -> R,
+    onSuccess: (Boolean) -> R,
+): R =
+    when (this) {
+        is DeleteKeyResult.Deleted -> onSuccess(true)
+        is DeleteKeyResult.NotFound -> onSuccess(false)
+        is DeleteKeyResult.Failure -> onFailure(this)
+    }

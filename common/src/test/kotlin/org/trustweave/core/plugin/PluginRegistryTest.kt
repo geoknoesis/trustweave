@@ -2,7 +2,11 @@ package org.trustweave.core.plugin
 
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Comprehensive tests for PluginRegistry.
@@ -10,7 +14,6 @@ import kotlin.test.*
  * **Test Isolation**: Each test uses its own isolated PluginRegistry instance.
  */
 class PluginRegistryTest {
-
     private lateinit var registry: PluginRegistry
 
     @BeforeEach
@@ -20,13 +23,14 @@ class PluginRegistryTest {
 
     @Test
     fun `test register plugin`() {
-        val metadata = PluginMetadata(
-            id = "test-plugin",
-            name = "Test Plugin",
-            version = "1.0.0",
-            provider = "test",
-            capabilities = PluginCapabilities()
-        )
+        val metadata =
+            PluginMetadata(
+                id = "test-plugin",
+                name = "Test Plugin",
+                version = "1.0.0",
+                provider = "test",
+                capabilities = PluginCapabilities(),
+            )
         val instance = Any()
 
         registry.register(metadata, instance)
@@ -37,13 +41,14 @@ class PluginRegistryTest {
 
     @Test
     fun `test unregister plugin`() {
-        val metadata = PluginMetadata(
-            id = "test-plugin",
-            name = "Test Plugin",
-            version = "1.0.0",
-            provider = "test",
-            capabilities = PluginCapabilities()
-        )
+        val metadata =
+            PluginMetadata(
+                id = "test-plugin",
+                name = "Test Plugin",
+                version = "1.0.0",
+                provider = "test",
+                capabilities = PluginCapabilities(),
+            )
         registry.register(metadata, Any())
 
         registry.unregister("test-plugin")
@@ -54,20 +59,22 @@ class PluginRegistryTest {
 
     @Test
     fun `test findByCapability`() {
-        val metadata1 = PluginMetadata(
-            id = "plugin-1",
-            name = "Plugin 1",
-            version = "1.0.0",
-            provider = "test",
-            capabilities = PluginCapabilities(features = setOf("credential-storage"))
-        )
-        val metadata2 = PluginMetadata(
-            id = "plugin-2",
-            name = "Plugin 2",
-            version = "1.0.0",
-            provider = "test",
-            capabilities = PluginCapabilities(features = setOf("revocation"))
-        )
+        val metadata1 =
+            PluginMetadata(
+                id = "plugin-1",
+                name = "Plugin 1",
+                version = "1.0.0",
+                provider = "test",
+                capabilities = PluginCapabilities(features = setOf("credential-storage")),
+            )
+        val metadata2 =
+            PluginMetadata(
+                id = "plugin-2",
+                name = "Plugin 2",
+                version = "1.0.0",
+                provider = "test",
+                capabilities = PluginCapabilities(features = setOf("revocation")),
+            )
 
         registry.register(metadata1, Any())
         registry.register(metadata2, Any())
@@ -79,27 +86,30 @@ class PluginRegistryTest {
 
     @Test
     fun `test findByProvider`() {
-        val metadata1 = PluginMetadata(
-            id = "waltid-1",
-            name = "WaltID Plugin 1",
-            version = "1.0.0",
-            provider = "waltid",
-            capabilities = PluginCapabilities()
-        )
-        val metadata2 = PluginMetadata(
-            id = "waltid-2",
-            name = "WaltID Plugin 2",
-            version = "1.0.0",
-            provider = "waltid",
-            capabilities = PluginCapabilities()
-        )
-        val metadata3 = PluginMetadata(
-            id = "godiddy-1",
-            name = "GoDiddy Plugin",
-            version = "1.0.0",
-            provider = "godiddy",
-            capabilities = PluginCapabilities()
-        )
+        val metadata1 =
+            PluginMetadata(
+                id = "waltid-1",
+                name = "WaltID Plugin 1",
+                version = "1.0.0",
+                provider = "waltid",
+                capabilities = PluginCapabilities(),
+            )
+        val metadata2 =
+            PluginMetadata(
+                id = "waltid-2",
+                name = "WaltID Plugin 2",
+                version = "1.0.0",
+                provider = "waltid",
+                capabilities = PluginCapabilities(),
+            )
+        val metadata3 =
+            PluginMetadata(
+                id = "godiddy-1",
+                name = "GoDiddy Plugin",
+                version = "1.0.0",
+                provider = "godiddy",
+                capabilities = PluginCapabilities(),
+            )
 
         registry.register(metadata1, Any())
         registry.register(metadata2, Any())
@@ -111,20 +121,22 @@ class PluginRegistryTest {
 
     @Test
     fun `test selectProvider with preferences`() {
-        val metadata1 = PluginMetadata(
-            id = "waltid-plugin",
-            name = "WaltID",
-            version = "1.0.0",
-            provider = "waltid",
-            capabilities = PluginCapabilities(features = setOf("credential-storage"))
-        )
-        val metadata2 = PluginMetadata(
-            id = "godiddy-plugin",
-            name = "GoDiddy",
-            version = "1.0.0",
-            provider = "godiddy",
-            capabilities = PluginCapabilities(features = setOf("credential-storage"))
-        )
+        val metadata1 =
+            PluginMetadata(
+                id = "waltid-plugin",
+                name = "WaltID",
+                version = "1.0.0",
+                provider = "waltid",
+                capabilities = PluginCapabilities(features = setOf("credential-storage")),
+            )
+        val metadata2 =
+            PluginMetadata(
+                id = "godiddy-plugin",
+                name = "GoDiddy",
+                version = "1.0.0",
+                provider = "godiddy",
+                capabilities = PluginCapabilities(features = setOf("credential-storage")),
+            )
 
         registry.register(metadata1, Any())
         registry.register(metadata2, Any())
@@ -135,13 +147,14 @@ class PluginRegistryTest {
 
     @Test
     fun `test selectProvider without preferences`() {
-        val metadata = PluginMetadata(
-            id = "plugin-1",
-            name = "Plugin 1",
-            version = "1.0.0",
-            provider = "test",
-            capabilities = PluginCapabilities(features = setOf("credential-storage"))
-        )
+        val metadata =
+            PluginMetadata(
+                id = "plugin-1",
+                name = "Plugin 1",
+                version = "1.0.0",
+                provider = "test",
+                capabilities = PluginCapabilities(features = setOf("credential-storage")),
+            )
 
         registry.register(metadata, Any())
 
@@ -151,20 +164,22 @@ class PluginRegistryTest {
 
     @Test
     fun `test getAllPlugins`() {
-        val metadata1 = PluginMetadata(
-            id = "plugin-1",
-            name = "Plugin 1",
-            version = "1.0.0",
-            provider = "test",
-            capabilities = PluginCapabilities()
-        )
-        val metadata2 = PluginMetadata(
-            id = "plugin-2",
-            name = "Plugin 2",
-            version = "1.0.0",
-            provider = "test",
-            capabilities = PluginCapabilities()
-        )
+        val metadata1 =
+            PluginMetadata(
+                id = "plugin-1",
+                name = "Plugin 1",
+                version = "1.0.0",
+                provider = "test",
+                capabilities = PluginCapabilities(),
+            )
+        val metadata2 =
+            PluginMetadata(
+                id = "plugin-2",
+                name = "Plugin 2",
+                version = "1.0.0",
+                provider = "test",
+                capabilities = PluginCapabilities(),
+            )
 
         registry.register(metadata1, Any())
         registry.register(metadata2, Any())
@@ -175,13 +190,14 @@ class PluginRegistryTest {
 
     @Test
     fun `test isRegistered`() {
-        val metadata = PluginMetadata(
-            id = "test-plugin",
-            name = "Test Plugin",
-            version = "1.0.0",
-            provider = "test",
-            capabilities = PluginCapabilities()
-        )
+        val metadata =
+            PluginMetadata(
+                id = "test-plugin",
+                name = "Test Plugin",
+                version = "1.0.0",
+                provider = "test",
+                capabilities = PluginCapabilities(),
+            )
 
         assertFalse(registry.isRegistered("test-plugin"))
 
@@ -192,13 +208,14 @@ class PluginRegistryTest {
 
     @Test
     fun `test clear`() {
-        val metadata = PluginMetadata(
-            id = "test-plugin",
-            name = "Test Plugin",
-            version = "1.0.0",
-            provider = "test",
-            capabilities = PluginCapabilities()
-        )
+        val metadata =
+            PluginMetadata(
+                id = "test-plugin",
+                name = "Test Plugin",
+                version = "1.0.0",
+                provider = "test",
+                capabilities = PluginCapabilities(),
+            )
 
         registry.register(metadata, Any())
         registry.clear()
@@ -208,13 +225,14 @@ class PluginRegistryTest {
 
     @Test
     fun `test getInstance returns correct type`() {
-        val metadata = PluginMetadata(
-            id = "test-plugin",
-            name = "Test Plugin",
-            version = "1.0.0",
-            provider = "test",
-            capabilities = PluginCapabilities()
-        )
+        val metadata =
+            PluginMetadata(
+                id = "test-plugin",
+                name = "Test Plugin",
+                version = "1.0.0",
+                provider = "test",
+                capabilities = PluginCapabilities(),
+            )
 
         val instance = listOf(1, 2, 3)
         registry.register(metadata, instance)
@@ -226,13 +244,14 @@ class PluginRegistryTest {
 
     @Test
     fun `test getInstance returns null for wrong type`() {
-        val metadata = PluginMetadata(
-            id = "test-plugin",
-            name = "Test Plugin",
-            version = "1.0.0",
-            provider = "test",
-            capabilities = PluginCapabilities()
-        )
+        val metadata =
+            PluginMetadata(
+                id = "test-plugin",
+                name = "Test Plugin",
+                version = "1.0.0",
+                provider = "test",
+                capabilities = PluginCapabilities(),
+            )
 
         registry.register(metadata, "string-instance")
 
@@ -242,15 +261,17 @@ class PluginRegistryTest {
 
     @Test
     fun `test findBlockchainPlugins using features`() {
-        val metadata = PluginMetadata(
-            id = "algorand-plugin",
-            name = "Algorand Plugin",
-            version = "1.0.0",
-            provider = "algorand",
-            capabilities = PluginCapabilities(
-                features = setOf("blockchain-anchoring")
+        val metadata =
+            PluginMetadata(
+                id = "algorand-plugin",
+                name = "Algorand Plugin",
+                version = "1.0.0",
+                provider = "algorand",
+                capabilities =
+                    PluginCapabilities(
+                        features = setOf("blockchain-anchoring"),
+                    ),
             )
-        )
 
         registry.register(metadata, Any())
 
@@ -265,13 +286,14 @@ class PluginRegistryTest {
 
     @Test
     fun `test findCredentialStorePlugins using findByCapability`() {
-        val metadata = PluginMetadata(
-            id = "store-plugin",
-            name = "Store Plugin",
-            version = "1.0.0",
-            provider = "test",
-            capabilities = PluginCapabilities(features = setOf("credential-storage"))
-        )
+        val metadata =
+            PluginMetadata(
+                id = "store-plugin",
+                name = "Store Plugin",
+                version = "1.0.0",
+                provider = "test",
+                capabilities = PluginCapabilities(features = setOf("credential-storage")),
+            )
 
         registry.register(metadata, Any())
 
@@ -282,15 +304,17 @@ class PluginRegistryTest {
 
     @Test
     fun `test credential plugin capabilities`() {
-        val metadata = PluginMetadata(
-            id = "ed25519-plugin",
-            name = "Ed25519 Plugin",
-            version = "1.0.0",
-            provider = "test",
-            capabilities = PluginCapabilities(
-                features = setOf("credential-issuance", "credential-verification")
+        val metadata =
+            PluginMetadata(
+                id = "ed25519-plugin",
+                name = "Ed25519 Plugin",
+                version = "1.0.0",
+                provider = "test",
+                capabilities =
+                    PluginCapabilities(
+                        features = setOf("credential-issuance", "credential-verification"),
+                    ),
             )
-        )
 
         registry.register(metadata, Any())
 
@@ -303,4 +327,3 @@ class PluginRegistryTest {
         // and supportedSchemaFormats properties), not stored in PluginCapabilities
     }
 }
-

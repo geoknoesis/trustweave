@@ -6,7 +6,7 @@ nav_order: 3
 
 # Healthcare & Medical Records Scenario
 
-> **Runnable companion:** [healthcare example](../../distribution/examples/scenarios/healthcare/README.md). It demonstrates local signed claims and tamper rejection; this guide discusses a broader workflow.
+> **Runnable companion:** [healthcare example](https://github.com/geoknoesis/trustweave/blob/main/distribution/examples/scenarios/healthcare/README.md). It demonstrates local signed claims and tamper rejection; this guide discusses a broader workflow.
 
 
 This guide demonstrates how to build a healthcare credential system using TrustWeave that enables patient privacy, secure medical record sharing, HIPAA compliance, and cross-provider interoperability.
@@ -163,8 +163,8 @@ flowchart TD
 ## Prerequisites
 
 - Java 21+
-- Kotlin 2.3.21
-- Gradle 9.5.0
+- Kotlin 2.4.21
+- Gradle 9.8.1
 - Basic understanding of Kotlin and coroutines
 - Familiarity with healthcare data concepts (HL7, FHIR helpful but not required)
 - Understanding of HIPAA basics (helpful but not required)

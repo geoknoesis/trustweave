@@ -43,14 +43,56 @@ data class S3PublisherConfig(
  * val url = publisher.publish("sl-001", bytes, "application/json")
  * ```
  */
-class S3StatusListPublisher(
+class S3StatusListPublisher private constructor(
     private val config: S3PublisherConfig,
-    private val s3Client: S3AsyncClient = S3AsyncClient.builder()
-        .region(Region.of(config.region))
-        .build(),
-) : StatusListPublisher {
+    private val s3Client: S3AsyncClient,
+    private val ownsClient: Boolean,
+) : StatusListPublisher,
+    AutoCloseable {
+    constructor(config: S3PublisherConfig) : this(
+        config = config,
+        s3Client =
+            S3AsyncClient
+                .builder()
+                .region(Region.of(config.region))
+                .build(),
+        ownsClient = true,
+    )
 
-    private fun objectKey(statusListId: String): String = "${config.keyPrefix}$statusListId"
+    constructor(
+        config: S3PublisherConfig,
+        s3Client: S3AsyncClient,
+    ) : this(
+        config = config,
+        s3Client = s3Client,
+        ownsClient = false,
+    )
+
+    private fun validateStatusListId(statusListId: String) {
+        require(
+            SAFE_STATUS_LIST_ID.matches(statusListId) &&
+                statusListId != "." &&
+                statusListId != ".." &&
+                !statusListId.contains(".."),
+        ) {
+            "Invalid statusListId '$statusListId': must match ${SAFE_STATUS_LIST_ID.pattern} and contain no path traversal sequences"
+        }
+    }
+
+    private fun objectKey(statusListId: String): String {
+        validateStatusListId(statusListId)
+        return "${config.keyPrefix}$statusListId"
+    }
+
+    override fun close() {
+        if (ownsClient) {
+            s3Client.close()
+        }
+    }
+
+    companion object {
+        private val SAFE_STATUS_LIST_ID = Regex("^[A-Za-z0-9._-]+$")
+    }
 
     override suspend fun publish(statusListId: String, content: ByteArray, contentType: String): String {
         val request = PutObjectRequest.builder()

@@ -2,6 +2,7 @@ package org.trustweave.trust
 
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
+import org.trustweave.did.telemetry.TelemetryDidMethod
 import org.trustweave.trust.spi.SPI_ISOLATION_ANCHOR_PROVIDER
 import org.trustweave.trust.spi.SPI_ISOLATION_CHAIN_ID
 import org.trustweave.trust.spi.SPI_ISOLATION_DID_METHOD
@@ -10,7 +11,6 @@ import org.trustweave.trust.types.getOrThrowDid
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import org.trustweave.did.telemetry.TelemetryDidMethod
 
 /**
  * Verifies SPI error isolation in TrustWeaveFactory: a provider whose `create(...)` throws

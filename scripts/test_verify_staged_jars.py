@@ -106,7 +106,9 @@ class VerifyStagedJarsTest(unittest.TestCase):
                 verifyjars.load_allowlist(path)
             path.write_text('{"allowed":[{"name":"x-1.jar","reason":"why"}]}')
             self.assertEqual({"x-1.jar": "why"}, verifyjars.load_allowlist(path))
-            self.assertEqual({}, verifyjars.load_allowlist(Path(__file__).parent.parent / "config/release-unpublished-jars.json"))
+            repo_allowlist = verifyjars.load_allowlist(Path(__file__).parent.parent / "config/release-unpublished-jars.json")
+            self.assertEqual(14, len(repo_allowlist))
+            self.assertTrue(all(reason.strip() for reason in repo_allowlist.values()))
 
     def test_main_requires_commit_binding(self):
         import json, os

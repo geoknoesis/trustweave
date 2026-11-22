@@ -742,6 +742,7 @@ class TrustWeaveConfigBranchCoverageTest {
     // ========== Schema Config Branches ==========
 
     @Test
+    @Suppress("DEPRECATION")
     fun `test branch schemas with default JSON_SCHEMA format is accepted`() =
         runBlocking<Unit> {
             val trustWeaveConfig =
@@ -759,6 +760,7 @@ class TrustWeaveConfigBranchCoverageTest {
         }
 
     @Test
+    @Suppress("DEPRECATION")
     fun `test branch schemas with non-default format fails instead of being silently ignored`() =
         runBlocking<Unit> {
             val exception =
@@ -777,6 +779,32 @@ class TrustWeaveConfigBranchCoverageTest {
             assertEquals("schemas.defaultFormat", exception.field)
             assertEquals("SHACL", exception.value)
             assertTrue(exception.message.contains("not yet supported"))
+        }
+
+    @Test
+    fun `test branch custom trust provider without factory includes actionable factories snippet`() =
+        runBlocking<Unit> {
+            val exception =
+                assertFailsWith<IllegalStateException> {
+                    TrustWeave.build {
+                        keys {
+                            provider("inMemory")
+                        }
+                        did {
+                            method("key") {}
+                        }
+                        trust {
+                            provider("postgres")
+                        }
+                    }
+                }
+
+            val message = exception.message.orEmpty()
+            assertTrue(message.contains("postgres"), "Expected provider name in error: $message")
+            assertTrue(
+                message.contains("factories(trustRegistryFactory ="),
+                "Expected actionable factories(trustRegistryFactory = ...) snippet in error: $message",
+            )
         }
 
     @Test

@@ -1,3 +1,11 @@
+---
+layout: default
+title: Testing and documentation acceptance
+parent: Testing
+grand_parent: Contributing to TrustWeave
+nav_order: 10
+---
+
 # Testing and documentation acceptance
 
 The review uses one combined **Testing and documentation** category. A 10/10 is a
@@ -33,15 +41,15 @@ raises this category to **9.5/10** with retained evidence and explicit limits.
 
 ## Automated checks and limits
 
-The [test contract](../../../config/testing-contract.json) maps a scoped set of critical
+The [test contract](https://github.com/geoknoesis/trustweave/blob/main/config/testing-contract.json) maps a scoped set of critical
 requirements to concrete methods. `check-test-evidence.py` rejects missing/failed/skipped
 required tests. `check-junit-contract.py` examines direct JVM test annotations; custom
 composed annotations, dynamic factories, JavaScript/native targets and framework lifecycle
 rules need their own discovery checks. Neither script proves that an old build directory
 matches the current source without a preceding successful build.
 
-The [coverage policy](../../../config/coverage-policy.json) retains repository-wide floors;
-the [host policy](../../../config/host-coverage-policy.json) adds measured local floors.
+The [coverage policy](https://github.com/geoknoesis/trustweave/blob/main/config/coverage-policy.json) retains repository-wide floors;
+the [host policy](https://github.com/geoknoesis/trustweave/blob/main/config/host-coverage-policy.json) adds measured local floors.
 The documentation checker verifies maintained local paths, selected API patterns, fences
 and exact source copies. It inventories other Kotlin blocks and explicitly does not certify
 their compilation, external URLs or historical designs.
@@ -56,7 +64,7 @@ when a gate fails. A successful job writes `build/reports/validation-manifest.js
 with the exact Git commit/tree, source and JUnit/coverage hashes and test counters.
 The manifest refuses dirty source and a mismatched `GITHUB_SHA`.
 
-The [skip policy](../../../config/test-skip-policy.json) enumerates the exact optional
+The [skip policy](https://github.com/geoknoesis/trustweave/blob/main/config/test-skip-policy.json) enumerates the exact optional
 external-service/HSM/example cases allowed in the credential-free SDK gate. An
 unlisted skipped test fails candidate qualification. Each retained skip carries its
 reason; none is counted as executed provider coverage. Required named regressions

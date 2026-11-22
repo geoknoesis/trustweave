@@ -3,7 +3,10 @@ package org.trustweave.did.exception
 import org.junit.jupiter.api.Test
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.identifiers.Did
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 /**
  * Tests for DID exception types and conversion utilities.

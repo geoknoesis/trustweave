@@ -242,6 +242,14 @@ tasks.register<JavaExec>("runWebOfTrust") {
     javaLauncher.set(javaToolchain)
 }
 
+tasks.register<JavaExec>("runProductionWiring") {
+    group = "examples"
+    description = "Run production-shaped wiring example with KmsProviders, factories, revokeResult, and VerificationResult"
+    mainClass.set("org.trustweave.examples.production.ProductionWiringExampleKt")
+    classpath = sourceSets["main"].runtimeClasspath
+    javaLauncher.set(javaToolchain)
+}
+
 // Compile and execute every registered local example.
 tasks.register("checkDocumentationExamples") {
     group = "verification"

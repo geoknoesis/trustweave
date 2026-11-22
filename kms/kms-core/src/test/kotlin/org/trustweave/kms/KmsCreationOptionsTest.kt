@@ -3,7 +3,6 @@ package org.trustweave.kms
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -18,11 +17,12 @@ class KmsCreationOptionsTest {
 
     @Test
     fun `test KmsCreationOptions with all values`() {
-        val options = KmsCreationOptions(
-            enabled = false,
-            priority = 10,
-            additionalProperties = mapOf("region" to "us-east-1", "key" to "value")
-        )
+        val options =
+            KmsCreationOptions(
+                enabled = false,
+                priority = 10,
+                additionalProperties = mapOf("region" to "us-east-1", "key" to "value"),
+            )
         assertFalse(options.enabled)
         assertEquals(10, options.priority)
         assertEquals(2, options.additionalProperties.size)
@@ -31,11 +31,12 @@ class KmsCreationOptionsTest {
 
     @Test
     fun `test KmsCreationOptions toMap with all values`() {
-        val options = KmsCreationOptions(
-            enabled = false,
-            priority = 10,
-            additionalProperties = mapOf("region" to "us-east-1")
-        )
+        val options =
+            KmsCreationOptions(
+                enabled = false,
+                priority = 10,
+                additionalProperties = mapOf("region" to "us-east-1"),
+            )
         val map = options.toMap()
         assertTrue(map.containsKey("enabled"))
         assertEquals(false, map["enabled"])
@@ -47,10 +48,11 @@ class KmsCreationOptionsTest {
 
     @Test
     fun `test KmsCreationOptions toMap with default enabled`() {
-        val options = KmsCreationOptions(
-            priority = 10,
-            additionalProperties = mapOf("region" to "us-east-1")
-        )
+        val options =
+            KmsCreationOptions(
+                priority = 10,
+                additionalProperties = mapOf("region" to "us-east-1"),
+            )
         val map = options.toMap()
         // enabled=true is not included in map (only false is included)
         assertFalse(map.containsKey("enabled"))
@@ -65,7 +67,7 @@ class KmsCreationOptionsTest {
         builder.priority = 5
         builder.property("region", "us-east-1")
         builder.property("key", "value")
-        
+
         val options = builder.build()
         assertFalse(options.enabled)
         assertEquals(5, options.priority)
@@ -75,13 +77,14 @@ class KmsCreationOptionsTest {
 
     @Test
     fun `test kmsCreationOptions DSL`() {
-        val options = kmsCreationOptions {
-            enabled = false
-            priority = 10
-            property("region", "us-east-1")
-            property("key", "value")
-        }
-        
+        val options =
+            kmsCreationOptions {
+                enabled = false
+                priority = 10
+                property("region", "us-east-1")
+                property("key", "value")
+            }
+
         assertFalse(options.enabled)
         assertEquals(10, options.priority)
         assertEquals(2, options.additionalProperties.size)
@@ -104,13 +107,15 @@ class KmsCreationOptionsTest {
     @Test
     fun `test toString redacts additionalProperties values`() {
         val secret = "super-secret-access-key"
-        val options = KmsCreationOptions(
-            priority = 5,
-            additionalProperties = mapOf(
-                "secretAccessKey" to secret,
-                "region" to "us-east-1"
+        val options =
+            KmsCreationOptions(
+                priority = 5,
+                additionalProperties =
+                    mapOf(
+                        "secretAccessKey" to secret,
+                        "region" to "us-east-1",
+                    ),
             )
-        )
 
         val rendered = options.toString()
         assertFalse(rendered.contains(secret), "toString must not leak secret values")
@@ -122,4 +127,3 @@ class KmsCreationOptionsTest {
         assertEquals(secret, options.toMap()["secretAccessKey"])
     }
 }
-

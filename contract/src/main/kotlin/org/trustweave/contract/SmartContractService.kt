@@ -1,25 +1,37 @@
 package org.trustweave.contract
 
+import kotlinx.serialization.json.JsonElement
 import org.trustweave.anchor.AnchorRef
-import org.trustweave.contract.models.*
+import org.trustweave.contract.models.BoundContract
+import org.trustweave.contract.models.ConditionEvaluation
+import org.trustweave.contract.models.ContractDraftBuilder
+import org.trustweave.contract.models.ContractParties
+import org.trustweave.contract.models.ContractStatus
+import org.trustweave.contract.models.ContractTerms
+import org.trustweave.contract.models.ContractType
+import org.trustweave.contract.models.ExecutionContext
+import org.trustweave.contract.models.ExecutionContextBuilder
+import org.trustweave.contract.models.ExecutionModel
+import org.trustweave.contract.models.ExecutionResult
+import org.trustweave.contract.models.SmartContract
+import org.trustweave.contract.models.contractDraft
+import org.trustweave.contract.models.eventContext
+import org.trustweave.contract.models.executionContext
+import org.trustweave.contract.models.parametricContext
 import org.trustweave.core.json.JsonDataBuilder
 import org.trustweave.core.json.jsonData
 import org.trustweave.credential.model.vc.VerifiableCredential
 import kotlin.Result
-import kotlinx.serialization.json.JsonElement
 
 /**
  * Service for managing SmartContracts.
  * Integrates with TrustWeave for verifiable credentials and blockchain anchoring.
  */
 interface SmartContractService {
-
     /**
      * Create a contract draft.
      */
-    suspend fun createDraft(
-        request: ContractDraftRequest
-    ): Result<SmartContract>
+    suspend fun createDraft(request: ContractDraftRequest): Result<SmartContract>
 
     /**
      * Issue verifiable credential for the contract.
@@ -27,7 +39,7 @@ interface SmartContractService {
     suspend fun issueContractCredential(
         contract: SmartContract,
         issuerDid: String,
-        issuerKeyId: String
+        issuerKeyId: String,
     ): Result<VerifiableCredential>
 
     /**
@@ -36,7 +48,7 @@ interface SmartContractService {
     suspend fun anchorContract(
         contract: SmartContract,
         credential: VerifiableCredential,
-        chainId: String = "algorand:mainnet"
+        chainId: String = "algorand:mainnet",
     ): Result<AnchorRef>
 
     /**
@@ -46,22 +58,20 @@ interface SmartContractService {
         contractId: String,
         issuerDid: String,
         issuerKeyId: String,
-        chainId: String = "algorand:mainnet"
+        chainId: String = "algorand:mainnet",
     ): Result<BoundContract>
 
     /**
      * Activate a contract (move from PENDING to ACTIVE).
      */
-    suspend fun activateContract(
-        contractId: String
-    ): Result<SmartContract>
+    suspend fun activateContract(contractId: String): Result<SmartContract>
 
     /**
      * Execute contract based on execution model.
      */
     suspend fun executeContract(
         contract: SmartContract,
-        executionContext: ExecutionContext
+        executionContext: ExecutionContext,
     ): Result<ExecutionResult>
 
     /**
@@ -69,7 +79,7 @@ interface SmartContractService {
      */
     suspend fun evaluateConditions(
         contract: SmartContract,
-        inputData: JsonElement
+        inputData: JsonElement,
     ): Result<ConditionEvaluation>
 
     /**
@@ -79,7 +89,7 @@ interface SmartContractService {
         contractId: String,
         newStatus: ContractStatus,
         reason: String? = null,
-        metadata: JsonElement? = null
+        metadata: JsonElement? = null,
     ): Result<SmartContract>
 
     /**
@@ -90,9 +100,7 @@ interface SmartContractService {
     /**
      * Verify contract credential.
      */
-    suspend fun verifyContract(
-        credentialId: String
-    ): Result<Boolean>
+    suspend fun verifyContract(credentialId: String): Result<Boolean>
 }
 
 // ─── Convenience extension functions ────────────────────────────────────────
@@ -103,9 +111,7 @@ interface SmartContractService {
  * Allows callers to write `service.draft(request)` instead of
  * `service.createDraft(request)`.
  */
-suspend fun SmartContractService.draft(
-    request: ContractDraftRequest
-): Result<SmartContract> = createDraft(request)
+suspend fun SmartContractService.draft(request: ContractDraftRequest): Result<SmartContract> = createDraft(request)
 
 /**
  * DSL form of [SmartContractService.createDraft].
@@ -124,9 +130,7 @@ suspend fun SmartContractService.draft(
  * }
  * ```
  */
-suspend fun SmartContractService.draft(
-    block: ContractDraftBuilder.() -> Unit
-): Result<SmartContract> = createDraft(contractDraft(block))
+suspend fun SmartContractService.draft(block: ContractDraftBuilder.() -> Unit): Result<SmartContract> = createDraft(contractDraft(block))
 
 /**
  * Convenience alias for [SmartContractService.issueContractCredential].
@@ -137,7 +141,7 @@ suspend fun SmartContractService.draft(
 suspend fun SmartContractService.issueCredential(
     contract: SmartContract,
     issuerDid: String,
-    issuerKeyId: String
+    issuerKeyId: String,
 ): Result<VerifiableCredential> = issueContractCredential(contract, issuerDid, issuerKeyId)
 
 /**
@@ -156,7 +160,7 @@ suspend fun SmartContractService.issueCredential(
  */
 suspend fun SmartContractService.executeParametric(
     contract: SmartContract,
-    vararg triggerData: Pair<String, Any?>
+    vararg triggerData: Pair<String, Any?>,
 ): Result<ExecutionResult> = executeContract(contract, parametricContext(*triggerData))
 
 /**
@@ -166,7 +170,7 @@ suspend fun SmartContractService.executeParametric(
  */
 suspend fun SmartContractService.executeEvent(
     contract: SmartContract,
-    vararg eventData: Pair<String, Any?>
+    vararg eventData: Pair<String, Any?>,
 ): Result<ExecutionResult> = executeContract(contract, eventContext(*eventData))
 
 /**
@@ -183,7 +187,7 @@ suspend fun SmartContractService.executeEvent(
  */
 suspend fun SmartContractService.executeContract(
     contract: SmartContract,
-    block: ExecutionContextBuilder.() -> Unit
+    block: ExecutionContextBuilder.() -> Unit,
 ): Result<ExecutionResult> = executeContract(contract, executionContext(block))
 
 /**
@@ -197,7 +201,7 @@ suspend fun SmartContractService.executeContract(
  */
 suspend fun SmartContractService.evaluateConditions(
     contract: SmartContract,
-    block: JsonDataBuilder.() -> Unit
+    block: JsonDataBuilder.() -> Unit,
 ): Result<ConditionEvaluation> = evaluateConditions(contract, jsonData(block))
 
 /**
@@ -210,6 +214,5 @@ data class ContractDraftRequest(
     val terms: ContractTerms,
     val effectiveDate: String, // ISO 8601 timestamp
     val expirationDate: String? = null, // ISO 8601 timestamp
-    val contractData: JsonElement
+    val contractData: JsonElement,
 )
-

@@ -1,11 +1,8 @@
 package org.trustweave.kms
 
-import org.trustweave.kms.internal.ConfigCacheKey
-import org.trustweave.kms.spi.KeyManagementServiceProvider
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -20,7 +17,6 @@ import kotlin.test.assertTrue
  * Tests for KeyManagementServices factory, including instance caching behavior.
  */
 class KeyManagementServicesTest {
-
     @BeforeEach
     fun setUp() {
         // Clear cache before each test
@@ -133,14 +129,16 @@ class KeyManagementServicesTest {
         if (providers.isEmpty()) return
 
         val providerName = providers.first()
-        val options1 = KmsCreationOptions(
-            enabled = true,
-            additionalProperties = mapOf("region" to "us-east-1")
-        )
-        val options2 = KmsCreationOptions(
-            enabled = true,
-            additionalProperties = mapOf("region" to "us-east-1")
-        )
+        val options1 =
+            KmsCreationOptions(
+                enabled = true,
+                additionalProperties = mapOf("region" to "us-east-1"),
+            )
+        val options2 =
+            KmsCreationOptions(
+                enabled = true,
+                additionalProperties = mapOf("region" to "us-east-1"),
+            )
 
         val kms1 = KeyManagementServices.create(providerName, options1)
         val kms2 = KeyManagementServices.create(providerName, options2)
@@ -193,11 +191,11 @@ class KeyManagementServicesTest {
             }
 
             latch.await()
-            
+
             // All threads should get the same instance (cached)
             assertEquals(1, instances.size, "All concurrent calls should return the same cached instance")
             assertEquals(threadCount * iterations, instanceCounter.get(), "All iterations should complete")
-            
+
             // Cache should contain only one instance
             assertEquals(1, KeyManagementServices.getCacheSize(), "Cache should contain one instance")
         } finally {
@@ -220,10 +218,11 @@ class KeyManagementServicesTest {
             repeat(threadCount) { index ->
                 executor.submit {
                     try {
-                        val kms = KeyManagementServices.create(
-                            providerName,
-                            mapOf("thread" to index)
-                        )
+                        val kms =
+                            KeyManagementServices.create(
+                                providerName,
+                                mapOf("thread" to index),
+                            )
                         instances.add(kms)
                     } finally {
                         latch.countDown()
@@ -232,7 +231,7 @@ class KeyManagementServicesTest {
             }
 
             latch.await()
-            
+
             // Each different configuration should create a different instance
             assertEquals(threadCount, instances.size, "Different configurations should create different instances")
             assertEquals(threadCount, KeyManagementServices.getCacheSize(), "Cache should contain all instances")
@@ -247,14 +246,22 @@ class KeyManagementServicesTest {
         if (providers.isEmpty()) return
 
         val providerName = providers.first()
-        val kms1 = KeyManagementServices.create(providerName, mapOf(
-            "key1" to "value1",
-            "key2" to "value2"
-        ))
-        val kms2 = KeyManagementServices.create(providerName, mapOf(
-            "key2" to "value2",
-            "key1" to "value1"
-        ))
+        val kms1 =
+            KeyManagementServices.create(
+                providerName,
+                mapOf(
+                    "key1" to "value1",
+                    "key2" to "value2",
+                ),
+            )
+        val kms2 =
+            KeyManagementServices.create(
+                providerName,
+                mapOf(
+                    "key2" to "value2",
+                    "key1" to "value1",
+                ),
+            )
 
         // Same key-value pairs in different order should return same instance
         assertSame(kms1, kms2, "Same configuration in different order should return cached instance")
@@ -269,19 +276,50 @@ class KeyManagementServicesTest {
 
     @Test
     fun `should throw exception for unknown provider`() {
-        val exception = assertThrows<IllegalArgumentException> {
-            KeyManagementServices.create("unknown-provider", emptyMap())
-        }
+        val exception =
+            assertThrows<IllegalArgumentException> {
+                KeyManagementServices.create("unknown-provider", emptyMap())
+            }
         assertTrue(exception.message?.contains("unknown-provider") == true, "Error should mention provider name")
         assertTrue(exception.message?.contains("Available providers") == true, "Error should list available providers")
+    }
+
+    @Test
+    fun `should normalize provider aliases and case-insensitive names`() {
+        assertEquals("inmemory", KeyManagementServices.normalizeProviderName("inMemory"))
+        assertEquals("inmemory", KeyManagementServices.normalizeProviderName("INMEMORY"))
+        assertEquals("inmemory", KeyManagementServices.normalizeProviderName("in-memory"))
+        assertEquals("aws", KeyManagementServices.normalizeProviderName("awsKms"))
+        assertEquals("aws", KeyManagementServices.normalizeProviderName("AWS"))
+        assertEquals("azure", KeyManagementServices.normalizeProviderName("azureKms"))
+        assertEquals("azure", KeyManagementServices.normalizeProviderName("Azure"))
+        assertEquals("google-cloud-kms", KeyManagementServices.normalizeProviderName("googleKms"))
+        assertEquals("google-cloud-kms", KeyManagementServices.normalizeProviderName("GOOGLE-CLOUD-KMS"))
+        assertEquals("vault", KeyManagementServices.normalizeProviderName("hashicorp"))
+        assertEquals("vault", KeyManagementServices.normalizeProviderName("Vault"))
+    }
+
+    @Test
+    fun `should resolve inmemory provider via case-insensitive and camelCase aliases and share cache entry`() {
+        assertNotNull(KeyManagementServices.getProvider("inmemory"))
+        assertNotNull(KeyManagementServices.getProvider("inMemory"))
+        assertNotNull(KeyManagementServices.getProvider("INMEMORY"))
+
+        val kmsCanonical = KeyManagementServices.create("inmemory", emptyMap())
+        val kmsCamel = KeyManagementServices.create("inMemory", emptyMap())
+        val kmsUpper = KeyManagementServices.create("INMEMORY", emptyMap())
+
+        assertSame(kmsCanonical, kmsCamel, "Alias lookup should share cached instance with canonical name")
+        assertSame(kmsCanonical, kmsUpper, "Case-insensitive lookup should share cached instance")
+        assertEquals(1, KeyManagementServices.getCacheSize(), "Aliases should not create duplicate cache entries")
     }
 }
 
 /**
  * Helper function to assert that an exception is thrown.
  */
-private inline fun <reified T : Throwable> assertThrows(block: () -> Unit): T {
-    return try {
+private inline fun <reified T : Throwable> assertThrows(block: () -> Unit): T =
+    try {
         block()
         throw AssertionError("Expected exception ${T::class.simpleName} was not thrown")
     } catch (e: Throwable) {
@@ -291,5 +329,3 @@ private inline fun <reified T : Throwable> assertThrows(block: () -> Unit): T {
             throw AssertionError("Expected exception ${T::class.simpleName}, but got ${e::class.simpleName}", e)
         }
     }
-}
-

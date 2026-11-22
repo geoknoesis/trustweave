@@ -1,6 +1,7 @@
 ---
-title: TrustWeave Features
-nav_exclude: true
+title: Feature Reference
+parent: API Reference
+has_children: true
 redirect_from:
   - /features/README/
 nav_order: 210

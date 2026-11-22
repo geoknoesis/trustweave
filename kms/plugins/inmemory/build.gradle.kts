@@ -8,7 +8,7 @@ dependencies {
     // API dependencies - exposed transitively to consumers
     api(project(":common"))
     api(project(":kms:kms-core"))
-    
+
     // Implementation dependencies - internal only
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.slf4j.api)
@@ -22,4 +22,3 @@ dependencies {
     testImplementation(libs.kotlin.test)
     testImplementation(libs.kotlinx.coroutines.test)
 }
-

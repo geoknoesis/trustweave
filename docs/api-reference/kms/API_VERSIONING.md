@@ -1,7 +1,8 @@
 ---
+title: KMS API Versioning
 redirect_from:
   - /kms/API_VERSIONING/
-parent: KMS Reference
+parent: KMS Documentation
 grand_parent: API Reference
 nav_order: 30
 ---

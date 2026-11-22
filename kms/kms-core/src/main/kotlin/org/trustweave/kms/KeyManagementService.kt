@@ -18,7 +18,7 @@ data class KeyHandle(
     val id: KeyId,
     val algorithm: String,
     val publicKeyJwk: Map<String, Any?>? = null,
-    val publicKeyMultibase: String? = null
+    val publicKeyMultibase: String? = null,
 )
 
 /**
@@ -52,9 +52,7 @@ interface KeyManagementService {
      * @param algorithm The algorithm to check
      * @return true if supported, false otherwise
      */
-    suspend fun supportsAlgorithm(algorithm: Algorithm): Boolean {
-        return getSupportedAlgorithms().contains(algorithm)
-    }
+    suspend fun supportsAlgorithm(algorithm: Algorithm): Boolean = getSupportedAlgorithms().contains(algorithm)
 
     /**
      * Checks if an algorithm by name is supported.
@@ -100,7 +98,7 @@ interface KeyManagementService {
      */
     suspend fun generateKey(
         algorithm: Algorithm,
-        options: Map<String, Any?> = emptyMap()
+        options: Map<String, Any?> = emptyMap(),
     ): GenerateKeyResult
 
     /**
@@ -114,20 +112,22 @@ interface KeyManagementService {
      */
     suspend fun generateKey(
         algorithmName: String,
-        options: Map<String, Any?> = emptyMap()
+        options: Map<String, Any?> = emptyMap(),
     ): GenerateKeyResult {
-        val algorithm = Algorithm.parse(algorithmName)
-            ?: return GenerateKeyResult.Failure.UnsupportedAlgorithm(
-                algorithm = Algorithm.Custom(algorithmName), // Will be rejected by validation
-                supportedAlgorithms = getSupportedAlgorithms(),
-                reason = "Unknown or invalid algorithm: $algorithmName. " +
-                    "Algorithm name must be a recognized standard algorithm or a valid custom algorithm name."
-            )
+        val algorithm =
+            Algorithm.parse(algorithmName)
+                ?: return GenerateKeyResult.Failure.UnsupportedAlgorithm(
+                    algorithm = Algorithm.Custom(algorithmName), // Will be rejected by validation
+                    supportedAlgorithms = getSupportedAlgorithms(),
+                    reason =
+                        "Unknown or invalid algorithm: $algorithmName. " +
+                            "Algorithm name must be a recognized standard algorithm or a valid custom algorithm name.",
+                )
 
         if (!supportsAlgorithm(algorithm)) {
             return GenerateKeyResult.Failure.UnsupportedAlgorithm(
                 algorithm = algorithm,
-                supportedAlgorithms = getSupportedAlgorithms()
+                supportedAlgorithms = getSupportedAlgorithms(),
             )
         }
 
@@ -219,7 +219,7 @@ interface KeyManagementService {
     suspend fun sign(
         keyId: KeyId,
         data: ByteArray,
-        algorithm: Algorithm? = null
+        algorithm: Algorithm? = null,
     ): SignResult
 
     /**
@@ -235,7 +235,7 @@ interface KeyManagementService {
     suspend fun sign(
         keyId: KeyId,
         data: ByteArray,
-        algorithmName: String?
+        algorithmName: String?,
     ): SignResult {
         val algorithm = algorithmName?.let { Algorithm.parse(it) }
         return sign(keyId, data, algorithm)
@@ -276,6 +276,5 @@ interface KeyManagementService {
  */
 class UnsupportedAlgorithmException(
     message: String,
-    cause: Throwable? = null
+    cause: Throwable? = null,
 ) : IllegalArgumentException(message, cause)
-

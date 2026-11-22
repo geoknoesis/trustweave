@@ -14,7 +14,10 @@ interface BlockchainAnchorClientProvider {
      * @param options Configuration options for the client
      * @return A BlockchainAnchorClient instance, or null if this provider doesn't support the chain
      */
-    fun create(chainId: String, options: Map<String, Any?> = emptyMap()): BlockchainAnchorClient?
+    fun create(
+        chainId: String,
+        options: Map<String, Any?> = emptyMap(),
+    ): BlockchainAnchorClient?
 
     /**
      * The name/identifier of this provider (e.g., "algorand", "polygon").
@@ -50,12 +53,10 @@ interface BlockchainAnchorClientProvider {
      *
      * @return true if all required env vars are set, false otherwise
      */
-    fun hasRequiredEnvironmentVariables(): Boolean {
-        return requiredEnvironmentVariables.all { envVar ->
+    fun hasRequiredEnvironmentVariables(): Boolean =
+        requiredEnvironmentVariables.all { envVar ->
             val isOptional = envVar.startsWith("?")
             val actualVar = if (isOptional) envVar.substring(1) else envVar
             if (isOptional) true else System.getenv(actualVar) != null
         }
-    }
 }
-

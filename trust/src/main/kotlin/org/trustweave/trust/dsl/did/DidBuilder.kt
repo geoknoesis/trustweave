@@ -133,7 +133,7 @@ class DidBuilder(
                     }
                     else -> {
                         DidCreationResult.Failure.Other(
-                            reason = e.message ?: "DID creation failed",
+                            reason = e.message,
                             cause = e,
                         )
                     }

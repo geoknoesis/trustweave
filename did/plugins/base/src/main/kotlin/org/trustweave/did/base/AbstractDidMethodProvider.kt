@@ -26,7 +26,6 @@ import java.util.ServiceLoader
  * ```
  */
 abstract class AbstractDidMethodProvider : DidMethodProvider {
-
     /**
      * Resolves a [KeyManagementService] from the given [options].
      *
@@ -36,16 +35,16 @@ abstract class AbstractDidMethodProvider : DidMethodProvider {
      *
      * @throws IllegalStateException if no KMS can be found by either mechanism
      */
-    protected fun resolveKms(options: DidCreationOptions): KeyManagementService {
-        return (options.additionalProperties["kms"] as? KeyManagementService)
+    protected fun resolveKms(options: DidCreationOptions): KeyManagementService =
+        (options.additionalProperties["kms"] as? KeyManagementService)
             ?: run {
-                ServiceLoader.load(KeyManagementServiceProvider::class.java)
+                ServiceLoader
+                    .load(KeyManagementServiceProvider::class.java)
                     .firstOrNull()
                     ?.create(options.additionalProperties)
                     ?: throw IllegalStateException(
                         "No KeyManagementService available. " +
-                            "Provide 'kms' in options or ensure a KMS provider is on the classpath."
+                            "Provide 'kms' in options or ensure a KMS provider is on the classpath.",
                     )
             }
-    }
 }

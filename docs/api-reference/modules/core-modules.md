@@ -1,10 +1,10 @@
 ---
 title: Core Modules
 nav_order: 1
-parent: Reference
+parent: Module Reference
+grand_parent: API Reference
 redirect_from:
   - /modules/core-modules/
-
 ---
 
 # Core Modules
@@ -32,9 +32,7 @@ For production deployments requiring minimal bundle size, use individual modules
 - **[did:did-core](trustweave-did.md)** – DID and DID document management with pluggable DID methods. Enables DID creation/resolution across modules.
 - **[did:registrar](trustweave-did-registrar.md)** – DID Registrar implementations for creating, updating, and deactivating DIDs through Universal Registrar services or local KMS.
 - **[did:registrar-server-ktor](trustweave-did-registrar-server.md)** – Universal Registrar HTTP server implementation (Ktor) for hosting your own registrar service.
-- **`did:registrar-server-spring`** – Universal Registrar HTTP server implementation (Spring Boot) for hosting your own registrar service.
-
-> **TODO:** A dedicated reference page for `did:registrar-server-spring` is not yet published.
+- **`did:registrar-server-spring`** (`org.trustweave:did-registrar-server-spring`) – Universal Registrar HTTP server implementation for Spring Boot WebFlux (`DidRegistrarConfiguration`, `DidRegistrarController`, `DidRegistrarService`, `RegistrarAuthentication`, and `RegistrarRequestBodyLimit` bounded by `trustweave.registrar.max-request-bytes`, default 1 MiB). Shares the same `did:registrar` backend and `JobStorage` implementations as `did:registrar-server-ktor`; see `did/registrar-server-spring/` for Spring Boot wiring details.
 - **[anchors:anchor-core](trustweave-anchor.md)** – Blockchain anchoring abstraction with chain-agnostic interfaces. Use it to notarise digests on Algorand, Polygon, etc.
 - **[contract](trustweave-contract.md)** – Smart Contract abstraction for executable agreements with verifiable credentials and blockchain anchoring.
 - **[testkit](trustweave-testkit.md)** – In-memory mocks for every SPI. Import this in unit tests or quick-start prototypes.

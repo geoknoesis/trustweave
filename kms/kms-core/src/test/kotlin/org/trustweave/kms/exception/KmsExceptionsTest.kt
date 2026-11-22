@@ -40,4 +40,3 @@ class KmsExceptionsTest {
         assertNotNull(exception)
     }
 }
-

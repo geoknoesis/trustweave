@@ -17,14 +17,14 @@ Docker must be running and able to pull the pinned images before the test begins
 Do not catch startup errors and return success, and do not substitute H2 for PostgreSQL
 locking, migration or recovery claims. Missing required infrastructure is a failed gate.
 
-Use the existing [PostgreSQL ledger test](../../../credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/PostgresIntentLedgerTest.kt)
-and [status mutation test](../../../credentials/plugins/status-list/database/src/test/kotlin/org/trustweave/revocation/database/PostgresStatusMutationTest.kt)
+Use the existing [PostgreSQL ledger test](https://github.com/geoknoesis/trustweave/blob/main/credentials/plugins/verifiable-intent/src/test/kotlin/org/trustweave/credential/vi/PostgresIntentLedgerTest.kt)
+and [status mutation test](https://github.com/geoknoesis/trustweave/blob/main/credentials/plugins/status-list/database/src/test/kotlin/org/trustweave/revocation/database/PostgresStatusMutationTest.kt)
 as working references. Each creates isolated state and exercises the actual database
 semantics. Image versions and connection setup are maintained in the test sources.
 
 ## Local integration tests
 
-The shared host [export integration test](../../../observability/src/test/kotlin/org/trustweave/observability/HostExportIntegrationTest.kt)
+The shared host [export integration test](https://github.com/geoknoesis/trustweave/blob/main/observability/src/test/kotlin/org/trustweave/observability/HostExportIntegrationTest.kt)
 starts two actual Netty servers and a loopback OTLP collector. It verifies exported wire
 spans and authenticated delivery. Hikari/H2 tests qualify connection-pool instrumentation
 and transaction preservation, not PostgreSQL transaction-isolation behavior.

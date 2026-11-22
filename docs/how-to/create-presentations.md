@@ -1,4 +1,5 @@
 ---
+title: How to Create Verifiable Presentations
 parent: How-To Guides
 nav_order: 70
 ---
@@ -24,7 +25,7 @@ Verifiable Presentations allow credential holders to share credentials selective
 
 ## Prerequisites
 
-- **Kotlin**: 2.3.21+ or higher
+- **Kotlin**: 2.4.21+ or higher
 - **Java**: 21 or higher
 - **TrustWeave SDK**: Latest version
 - **Dependencies**: `distribution-all` and `testkit`

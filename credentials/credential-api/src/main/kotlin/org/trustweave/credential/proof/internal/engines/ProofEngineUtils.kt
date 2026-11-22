@@ -2,8 +2,8 @@ package org.trustweave.credential.proof.internal.engines
 
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jwt.SignedJWT
-import kotlinx.serialization.json.JsonElement
 import kotlinx.coroutines.CancellationException
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray

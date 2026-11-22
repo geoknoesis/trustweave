@@ -1,3 +1,11 @@
+---
+layout: default
+title: Credential verification and tamper rejection
+parent: Verified Examples
+grand_parent: Operations
+nav_order: 30
+---
+
 # Credential verification and tamper rejection
 
 This reusable function issues a credential, verifies it before and after JSON serialization, and rejects a modified signed claim. Local domain examples invoke it through `:distribution:examples:checkDocumentationExamples`; their JUnit wrappers propagate failed assertions. The context is registered locally. This does not qualify remote context resolution or a hosted KMS.

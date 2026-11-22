@@ -1,15 +1,14 @@
 package org.trustweave.trust.benchmarks
 
-import org.trustweave.trust.types.getOrThrowDid
-import org.trustweave.credential.results.getOrThrow
-import org.trustweave.trust.types.getOrThrow
-import org.trustweave.did.resolver.getOrThrow
-import org.trustweave.trust.TrustWeave
-import org.trustweave.trust.types.*
-import org.trustweave.credential.results.VerificationResult
-import org.trustweave.testkit.kms.InMemoryKeyManagementService
-import org.trustweave.testkit.did.DidKeyMockMethod
 import kotlinx.coroutines.runBlocking
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.credential.results.getOrThrow
+import org.trustweave.did.resolver.getOrThrow
+import org.trustweave.testkit.did.DidKeyMockMethod
+import org.trustweave.testkit.kms.InMemoryKeyManagementService
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.types.getOrThrow
+import org.trustweave.trust.types.getOrThrowDid
 // JMH imports - uncomment when JMH plugin is configured:
 // import org.openjdk.jmh.annotations.*
 // import org.openjdk.jmh.runner.Runner

@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:filename")
+
 package org.trustweave.trust.types
 
 import org.trustweave.wallet.Wallet

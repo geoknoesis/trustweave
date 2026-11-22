@@ -1,3 +1,10 @@
+---
+layout: default
+title: "Live custody and key-loss qualification"
+parent: Operations
+nav_order: 20
+---
+
 # Live custody and key-loss qualification
 
 Status: **software PKCS#11 boundary qualified in CI; executable AWS KMS live
@@ -13,7 +20,7 @@ client restart, and replacement-key continuity with immutable resource IDs. It d
 not become qualification evidence until it passes against recorded non-production
 resources. Accountly billing validation does not qualify custody. The reference
 wallet's managed and passkey adapters remain experimental; see [the implemented
-contract](../../reference-wallet/CUSTODY.md).
+contract](https://github.com/geoknoesis/trustweave/blob/main/reference-wallet/CUSTODY.md).
 
 ## Identify the test boundary
 

@@ -91,6 +91,43 @@ class SdJwtSignedStatusTest {
         }
 
     @Test
+    fun `verification skips revocation check when checkRevocation is false`() =
+        runBlocking<Unit> {
+            val sdJwtEngine = engine()
+            val issuedSdJwt = issueWithStatus(sdJwtEngine)
+            sdJwtEngine
+                .verify(issuedSdJwt, VerificationOptions(checkRevocation = false))
+                .shouldBeInstanceOf<VerificationResult.Valid>()
+
+            val vcLdEngine =
+                VcLdProofEngine(
+                    config =
+                        ProofEngineConfig(
+                            properties = mapOf("kms" to kms),
+                            didResolver = resolver,
+                        ),
+                    statusChecker = revokedChecker,
+                )
+            val issuedVcLd =
+                vcLdEngine.issue(
+                    IssuanceRequest(
+                        format = ProofSuiteId.VC_LD,
+                        issuer = Issuer.IriIssuer(Iri(issuer.id.value)),
+                        issuerKeyId = issuer.verificationMethod.first().id,
+                        credentialSubject = CredentialSubject(id = Iri(holder.id.value)),
+                        type = listOf(CredentialType.fromString("VerifiableCredential")),
+                        credentialStatus = status,
+                    ),
+                )
+            vcLdEngine
+                .verify(issuedVcLd, VerificationOptions(checkRevocation = true))
+                .shouldBeInstanceOf<VerificationResult.Invalid.Revoked>()
+            vcLdEngine
+                .verify(issuedVcLd, VerificationOptions(checkRevocation = false))
+                .shouldBeInstanceOf<VerificationResult.Valid>()
+        }
+
+    @Test
     fun `stripping the envelope credentialStatus does not hide the signed status`() =
         runBlocking<Unit> {
             val engine = engine()

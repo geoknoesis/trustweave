@@ -2,7 +2,10 @@ package org.trustweave.did.registrar
 
 import org.trustweave.core.exception.TrustWeaveException
 import org.trustweave.did.model.DidDocument
-import org.trustweave.did.registrar.model.*
+import org.trustweave.did.registrar.model.CreateDidOptions
+import org.trustweave.did.registrar.model.DeactivateDidOptions
+import org.trustweave.did.registrar.model.DidRegistrationResponse
+import org.trustweave.did.registrar.model.UpdateDidOptions
 
 /**
  * Interface for DID Registrar implementations.

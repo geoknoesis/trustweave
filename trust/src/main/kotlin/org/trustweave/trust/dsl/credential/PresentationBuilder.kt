@@ -124,25 +124,30 @@ class PresentationBuilder(
             }
 
             val challengeValue = challenge
+            val domainValue = domain
+            val vmValue = verificationMethod
+            val proofOptions =
+                when {
+                    challengeValue != null ->
+                        proofOptionsForPresentation(
+                            challenge = challengeValue,
+                            domain = domainValue,
+                            verificationMethod = vmValue,
+                        )
+                    domainValue != null || vmValue != null ->
+                        ProofOptions(
+                            purpose = ProofPurpose.Authentication,
+                            challenge = null,
+                            domain = domainValue,
+                            verificationMethod = vmValue,
+                        )
+                    else -> null
+                }
             val request =
                 PresentationRequest(
                     disclosedClaims = if (disclosedClaims.isNotEmpty()) disclosedClaims else null,
                     predicates = emptyList(),
-                    proofOptions =
-                        if (challengeValue != null) {
-                            proofOptionsForPresentation(
-                                challenge = challengeValue,
-                                domain = domain,
-                                verificationMethod = verificationMethod,
-                            )
-                        } else {
-                            ProofOptions(
-                                purpose = ProofPurpose.Authentication,
-                                challenge = null,
-                                domain = domain,
-                                verificationMethod = verificationMethod,
-                            )
-                        },
+                    proofOptions = proofOptions,
                 )
 
             try {

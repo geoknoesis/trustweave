@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:filename")
+
 package org.trustweave.credential
 
 import org.trustweave.credential.model.vc.VerifiableCredential
@@ -6,7 +8,7 @@ import org.trustweave.credential.trust.TrustEvaluator
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.resolver.DidResolver
 
-/**
+/*
  * Examples demonstrating trust evaluator usage in credential verification.
  */
 

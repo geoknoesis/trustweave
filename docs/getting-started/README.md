@@ -19,8 +19,8 @@ Welcome to TrustWeave! This section will help you get up and running quickly.
 ## Prerequisites
 
 - **Java 21+**
-- **Kotlin 2.3.21**
-- **Gradle 9.5.0** (or compatible build tool)
+- **Kotlin 2.4.21**
+- **Gradle 9.8.1** (or compatible build tool)
 
 ## How to Use This Section
 

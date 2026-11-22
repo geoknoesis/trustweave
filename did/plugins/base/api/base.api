@@ -61,9 +61,10 @@ public abstract class org/trustweave/did/base/AbstractDidMethodProvider : org/tr
 	protected final fun resolveKms (Lorg/trustweave/did/DidCreationOptions;)Lorg/trustweave/kms/KeyManagementService;
 }
 
-public abstract class org/trustweave/did/base/AbstractWebDidMethod : org/trustweave/did/base/AbstractDidMethod {
+public abstract class org/trustweave/did/base/AbstractWebDidMethod : org/trustweave/did/base/AbstractDidMethod, java/lang/AutoCloseable {
 	public fun <init> (Ljava/lang/String;Lorg/trustweave/kms/KeyManagementService;Lokhttp3/OkHttpClient;)V
 	protected final fun assertHostAllowed (Ljava/lang/String;)V
+	public fun close ()V
 	protected fun configureResolutionClient (Lokhttp3/OkHttpClient$Builder;)V
 	protected final fun createPublishRequest (Ljava/lang/String;Lorg/trustweave/did/model/DidDocument;)Lokhttp3/Request;
 	protected final fun deactivateDocumentOnHttp (Ljava/lang/String;Lorg/trustweave/did/model/DidDocument;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

@@ -112,6 +112,7 @@ public class HostObservability
             val METHODS = setOf("GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS", "CONNECT", "TRACE")
             val TRACE_GETTER =
                 object : TextMapGetter<String> {
+                    @Suppress("OVERRIDE_DEPRECATION")
                     override fun keys(carrier: String): Iterable<String> = listOf("traceparent")
 
                     override fun get(

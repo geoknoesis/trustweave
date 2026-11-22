@@ -4,7 +4,7 @@ import org.trustweave.signatures.jades.JadesProfile
 import org.trustweave.signatures.trustlists.TrustAnchorResolver
 import org.trustweave.trust.dsl.credential.VerificationBuilder
 
-/**
+/*
  * Ergonomic DSL extensions for verifying JAdES-protected credentials via
  * [org.trustweave.trust.dsl.credential.VerificationBuilder].
  *

@@ -1,8 +1,7 @@
 package org.trustweave.contract.evaluation
 
-import org.trustweave.contract.models.ConditionType
-import org.trustweave.contract.models.ContractCondition
 import kotlinx.serialization.json.JsonElement
+import org.trustweave.contract.models.ContractCondition
 
 /**
  * Base class for evaluation engines that provides hash calculation.
@@ -28,14 +27,11 @@ import kotlinx.serialization.json.JsonElement
  * ```
  */
 abstract class BaseEvaluationEngine : ContractEvaluationEngine {
-
     /**
      * Computes implementation hash from class file.
      * Override this if you need a different hash calculation method.
      */
-    protected open fun computeImplementationHash(): String {
-        return EngineHash.fromClassFile(this::class.java)
-    }
+    protected open fun computeImplementationHash(): String = EngineHash.fromClassFile(this::class.java)
 
     /**
      * Lazy initialization of hash to avoid computation during object construction.
@@ -51,11 +47,9 @@ abstract class BaseEvaluationEngine : ContractEvaluationEngine {
     override suspend fun evaluateConditions(
         conditions: List<ContractCondition>,
         inputData: JsonElement,
-        context: EvaluationContext
-    ): Map<String, Boolean> {
-        return conditions.associate { condition ->
+        context: EvaluationContext,
+    ): Map<String, Boolean> =
+        conditions.associate { condition ->
             condition.id to evaluateCondition(condition, inputData, context)
         }
-    }
 }
-

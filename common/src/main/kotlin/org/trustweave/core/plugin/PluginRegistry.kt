@@ -8,8 +8,11 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import org.trustweave.core.exception.PluginException
+import org.trustweave.core.exception.TrustWeaveException
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Internal interface for plugin registry operations.
@@ -47,8 +50,8 @@ internal interface PluginRegistry {
     /**
      * Suspending variant of [register]: the plugin lifecycle is awaited without blocking a
      * thread. Same contract and exceptions as [register]. Prefer this from coroutines; the
-     * blocking [register] parks the calling thread (via `runBlocking`) until the plugin's
-     * `initialize`/`start` complete.
+     * blocking [register] drives a [PluginLifecycle] on a dedicated daemon thread with a
+     * bounded timeout so caller dispatchers cannot deadlock.
      */
     suspend fun registerSuspending(
         metadata: PluginMetadata,
@@ -168,8 +171,10 @@ internal interface PluginRegistry {
  * [PluginLifecycle.cleanup] during [unregister]/[clear] (ordinary teardown failures are logged;
  * cancellation propagates after cleanup completes). Lifecycle methods are suspend
  * functions. The `...Suspending` variants await them without blocking; the plain `register` /
- * `unregister` / `clear` are BLOCKING (they park the calling thread in [runBlocking] until the
- * lifecycle finishes) and exist for synchronous callers only. Lifecycle methods run
+ * `unregister` / `clear` are BLOCKING (non-lifecycle plugins run synchronously, while
+ * [PluginLifecycle] callbacks are isolated onto a dedicated daemon thread with its own
+ * [runBlocking] event loop and a bounded timeout so single-threaded or bounded coroutine
+ * dispatchers cannot deadlock) and exist for synchronous callers only. Lifecycle methods run
  * OUTSIDE the mutation lock (the plugin ID is reserved while it initializes), so a slow or
  * suspending lifecycle never blocks other registry mutations while holding a monitor, and a
  * lifecycle method may safely call back into the registry.
@@ -187,6 +192,7 @@ internal interface PluginRegistry {
 internal class DefaultPluginRegistry(
     private val requiredCapabilities: Map<String, Set<String>> = emptyMap(),
     private val requireSupportedProviders: Boolean = false,
+    private val blockingLifecycleTimeoutMillis: Long = DEFAULT_BLOCKING_LIFECYCLE_TIMEOUT_MILLIS,
 ) : PluginRegistry {
     private val logger = LoggerFactory.getLogger(DefaultPluginRegistry::class.java)
 
@@ -228,8 +234,25 @@ internal class DefaultPluginRegistry(
         metadata: PluginMetadata,
         instance: Any,
     ) {
-        // Blocking entry point: drives the (suspending) lifecycle with runBlocking.
-        runBlocking { registerSuspending(metadata, instance) }
+        if (instance !is PluginLifecycle) {
+            registerNonLifecycle(metadata, instance)
+            return
+        }
+        // Blocking entry point: isolate suspending lifecycle execution onto a dedicated daemon thread.
+        runLifecycleBlocking("register-${metadata.id}") { registerSuspending(metadata, instance) }
+    }
+
+    private fun registerNonLifecycle(
+        metadata: PluginMetadata,
+        instance: Any,
+    ) {
+        if (metadata.id.isBlank()) {
+            throw PluginException.BlankId
+        }
+        synchronized(mutationLock) {
+            validateRegistrationLocked(metadata)
+            publish(metadata, instance)
+        }
     }
 
     override suspend fun registerSuspending(
@@ -243,53 +266,7 @@ internal class DefaultPluginRegistry(
         // Phase 1 (locked): validate and reserve the ID so no concurrent register can claim it.
         val token =
             synchronized(mutationLock) {
-                val existing = plugins[metadata.id]
-                if (existing != null) {
-                    throw PluginException.AlreadyRegistered(
-                        pluginId = metadata.id,
-                        existingPlugin = existing.name,
-                    )
-                }
-                if (metadata.id in pendingRegistrations.keys) {
-                    throw PluginException.AlreadyRegistered(
-                        pluginId = metadata.id,
-                        existingPlugin = "${metadata.name} (registration in progress)",
-                    )
-                }
-
-                val module = metadata.moduleId ?: metadata.id
-                val assessed = ModuleCapabilities.get(module)
-                if (requireSupportedProviders) {
-                    ModuleCapabilities.requireDeployment(module, metadata.capabilities.features)
-                }
-                if (assessed != null) {
-                    require(assessed.maturity != "stub") { "$module is an unimplemented provider" }
-                    require(metadata.maturity == PluginMaturity.valueOf(assessed.maturity.uppercase())) {
-                        "Plugin ${metadata.id} advertises maturity outside the assessed catalog"
-                    }
-                    require(assessed.operations.containsAll(metadata.capabilities.features)) {
-                        "Plugin ${metadata.id} advertises operations outside the assessed catalog"
-                    }
-                }
-                requiredCapabilities[metadata.id]?.let { required ->
-                    ModuleCapabilities.requireOperations(module, required)
-                    require(
-                        metadata.capabilities.features.containsAll(required),
-                    ) { "Plugin ${metadata.id} lacks application-required operations" }
-                }
-                val required = metadata.configuration["requiredCapabilities"]
-                if (required != null) {
-                    require(
-                        required is Collection<*> && required.all { it is String },
-                    ) { "requiredCapabilities must be a collection of feature names" }
-                    require(
-                        metadata.maturity != PluginMaturity.STUB &&
-                            metadata.capabilities.features.containsAll(required.filterIsInstance<String>()),
-                    ) {
-                        "Plugin ${metadata.id} cannot supply required capabilities $required"
-                    }
-                }
-                checkDependencyVersionRanges(metadata)
+                validateRegistrationLocked(metadata)
                 registrationGenerations.incrementAndGet().also { pendingRegistrations[metadata.id] = it }
             }
 
@@ -356,6 +333,60 @@ internal class DefaultPluginRegistry(
                 reason = "registry was cleared while the plugin was initializing",
             )
         }
+    }
+
+    /**
+     * Validate registration invariants and catalog/dependency constraints.
+     * Must be called while holding [mutationLock].
+     */
+    private fun validateRegistrationLocked(metadata: PluginMetadata) {
+        val existing = plugins[metadata.id]
+        if (existing != null) {
+            throw PluginException.AlreadyRegistered(
+                pluginId = metadata.id,
+                existingPlugin = existing.name,
+            )
+        }
+        if (metadata.id in pendingRegistrations.keys) {
+            throw PluginException.AlreadyRegistered(
+                pluginId = metadata.id,
+                existingPlugin = "${metadata.name} (registration in progress)",
+            )
+        }
+
+        val module = metadata.moduleId ?: metadata.id
+        val assessed = ModuleCapabilities.get(module)
+        if (requireSupportedProviders) {
+            ModuleCapabilities.requireDeployment(module, metadata.capabilities.features)
+        }
+        if (assessed != null) {
+            require(assessed.maturity != "stub") { "$module is an unimplemented provider" }
+            require(metadata.maturity == PluginMaturity.valueOf(assessed.maturity.uppercase())) {
+                "Plugin ${metadata.id} advertises maturity outside the assessed catalog"
+            }
+            require(assessed.operations.containsAll(metadata.capabilities.features)) {
+                "Plugin ${metadata.id} advertises operations outside the assessed catalog"
+            }
+        }
+        requiredCapabilities[metadata.id]?.let { required ->
+            ModuleCapabilities.requireOperations(module, required)
+            require(
+                metadata.capabilities.features.containsAll(required),
+            ) { "Plugin ${metadata.id} lacks application-required operations" }
+        }
+        val required = metadata.configuration["requiredCapabilities"]
+        if (required != null) {
+            require(
+                required is Collection<*> && required.all { it is String },
+            ) { "requiredCapabilities must be a collection of feature names" }
+            require(
+                metadata.maturity != PluginMaturity.STUB &&
+                    metadata.capabilities.features.containsAll(required.filterIsInstance<String>()),
+            ) {
+                "Plugin ${metadata.id} cannot supply required capabilities $required"
+            }
+        }
+        checkDependencyVersionRanges(metadata)
     }
 
     /**
@@ -481,45 +512,53 @@ internal class DefaultPluginRegistry(
         return failures
     }
 
-    /** Blocking: parks the calling thread until the plugin's stop/cleanup complete. */
+    /**
+     * Blocking: retracts the plugin synchronously and, if it implements [PluginLifecycle],
+     * runs stop/cleanup on a dedicated daemon thread with a bounded timeout.
+     */
     override fun unregister(pluginId: String) {
-        runBlocking { unregisterSuspending(pluginId) }
+        val retracted = retractPlugin(pluginId)
+        if (retracted is PluginLifecycle) {
+            runLifecycleBlocking("unregister-$pluginId") { teardownQuietly(pluginId, retracted) }
+        }
     }
 
     override suspend fun unregisterSuspending(pluginId: String) {
-        require(pluginId.isNotBlank()) { "Plugin ID cannot be blank" }
-        val retracted =
-            synchronized(mutationLock) {
-                // Idempotent operation: silently return if plugin not found
-                val metadata = plugins[pluginId] ?: return
-
-                // Mirror of register: retract metadata FIRST so readers never observe
-                // metadata for a plugin whose instance has already been removed.
-                plugins.remove(pluginId)
-
-                // Remove from capability index, pruning empty sets to avoid unbounded growth.
-                metadata.capabilities.features.forEach { capability ->
-                    capabilityIndex.computeIfPresent(capability) { _, ids ->
-                        ids.remove(pluginId)
-                        if (ids.isEmpty()) null else ids
-                    }
-                }
-
-                // Remove from provider index, pruning empty sets.
-                providerIndex.computeIfPresent(metadata.provider) { _, ids ->
-                    ids.remove(pluginId)
-                    if (ids.isEmpty()) null else ids
-                }
-
-                val instance = instances.remove(pluginId)
-                instanceTypes.remove(pluginId)
-                instance
-            }
-
+        val retracted = retractPlugin(pluginId)
         // Teardown AFTER full retraction and outside the lock: the plugin is no longer
         // observable. Ordinary failures are logged; cancellation follows cleanup.
         if (retracted is PluginLifecycle) {
             teardownQuietly(pluginId, retracted)
+        }
+    }
+
+    private fun retractPlugin(pluginId: String): Any? {
+        require(pluginId.isNotBlank()) { "Plugin ID cannot be blank" }
+        return synchronized(mutationLock) {
+            // Idempotent operation: silently return null if plugin not found
+            val metadata = plugins[pluginId] ?: return null
+
+            // Mirror of register: retract metadata FIRST so readers never observe
+            // metadata for a plugin whose instance has already been removed.
+            plugins.remove(pluginId)
+
+            // Remove from capability index, pruning empty sets to avoid unbounded growth.
+            metadata.capabilities.features.forEach { capability ->
+                capabilityIndex.computeIfPresent(capability) { _, ids ->
+                    ids.remove(pluginId)
+                    if (ids.isEmpty()) null else ids
+                }
+            }
+
+            // Remove from provider index, pruning empty sets.
+            providerIndex.computeIfPresent(metadata.provider) { _, ids ->
+                ids.remove(pluginId)
+                if (ids.isEmpty()) null else ids
+            }
+
+            val instance = instances.remove(pluginId)
+            instanceTypes.remove(pluginId)
+            instance
         }
     }
 
@@ -586,33 +625,44 @@ internal class DefaultPluginRegistry(
 
     override fun getAllPlugins(): List<PluginMetadata> = plugins.values.toList()
 
-    /** Blocking: parks the calling thread until every plugin's stop/cleanup complete. */
+    /**
+     * Blocking: retracts all plugins synchronously and, if any implement [PluginLifecycle],
+     * runs their stop/cleanup on a dedicated daemon thread with a bounded timeout.
+     */
     override fun clear() {
-        runBlocking { clearSuspending() }
+        val lifecycleInstances = retractAllPlugins()
+        if (lifecycleInstances.isNotEmpty()) {
+            runLifecycleBlocking("clear") { teardownAll(lifecycleInstances) }
+        }
     }
 
     override suspend fun clearSuspending() {
-        val lifecycleInstances =
-            synchronized(mutationLock) {
-                // Snapshot lifecycle-bearing instances before retraction so they can be
-                // torn down once they are no longer observable.
-                val snapshot =
-                    instances.mapNotNull { (id, instance) ->
-                        (instance as? PluginLifecycle)?.let { id to it }
-                    }
+        val lifecycleInstances = retractAllPlugins()
+        teardownAll(lifecycleInstances)
+    }
 
-                // Retract metadata first (mirrors unregister) so readers never observe
-                // metadata without a corresponding instance.
-                plugins.clear()
-                capabilityIndex.clear()
-                providerIndex.clear()
-                instances.clear()
-                instanceTypes.clear()
-                // In-flight registrations must not resurrect plugins after a clear().
-                pendingRegistrations.clear()
-                snapshot
-            }
+    private fun retractAllPlugins(): List<Pair<String, PluginLifecycle>> =
+        synchronized(mutationLock) {
+            // Snapshot lifecycle-bearing instances before retraction so they can be
+            // torn down once they are no longer observable.
+            val snapshot =
+                instances.mapNotNull { (id, instance) ->
+                    (instance as? PluginLifecycle)?.let { id to it }
+                }
 
+            // Retract metadata first (mirrors unregister) so readers never observe
+            // metadata without a corresponding instance.
+            plugins.clear()
+            capabilityIndex.clear()
+            providerIndex.clear()
+            instances.clear()
+            instanceTypes.clear()
+            // In-flight registrations must not resurrect plugins after a clear().
+            pendingRegistrations.clear()
+            snapshot
+        }
+
+    private suspend fun teardownAll(lifecycleInstances: List<Pair<String, PluginLifecycle>>) {
         // Finish every teardown before propagating cancellation, so no retracted plugin leaks.
         var cancellation: CancellationException? = null
         lifecycleInstances.forEach { (id, lifecycle) ->
@@ -631,7 +681,73 @@ internal class DefaultPluginRegistry(
         currentCoroutineContext().ensureActive()
     }
 
+    /**
+     * Bridges a suspending [PluginLifecycle] operation from a blocking entry point (`register`,
+     * `unregister`, `clear`) onto a dedicated daemon thread with its own [runBlocking] event loop.
+     *
+     * Running `runBlocking` directly on the caller's thread would nest an event loop inside a
+     * coroutine dispatcher (risking deadlocks on single-threaded or bounded dispatchers) and could
+     * hang indefinitely if a lifecycle callback never returns. Isolating it on a daemon thread with
+     * a bounded `timedJoin` mirrors `TrustWeaveShutdown.closeBlocking` while propagating lifecycle
+     * exceptions and throwing [TrustWeaveException.OperationTimedOut] if the deadline expires.
+     */
+    private fun runLifecycleBlocking(
+        operation: String,
+        block: suspend () -> Unit,
+    ) {
+        val failure = AtomicReference<Throwable?>(null)
+        val worker =
+            Thread({
+                try {
+                    runBlocking { block() }
+                } catch (t: Throwable) {
+                    failure.set(t)
+                }
+            }, "trustweave-plugin-$operation")
+        worker.isDaemon = true
+        worker.start()
+
+        var interrupted = false
+        val deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(blockingLifecycleTimeoutMillis)
+        while (worker.isAlive) {
+            val remaining = deadline - System.nanoTime()
+            if (remaining <= 0) break
+            try {
+                TimeUnit.NANOSECONDS.timedJoin(worker, remaining)
+            } catch (_: InterruptedException) {
+                interrupted = true
+            }
+        }
+        if (interrupted) {
+            Thread.currentThread().interrupt()
+        }
+
+        if (worker.isAlive) {
+            worker.interrupt()
+            logger.error(
+                "Plugin lifecycle operation '{}' did not finish within {} ms; interrupting and abandoning worker thread. " +
+                    "Use registerSuspending/unregisterSuspending/clearSuspending from coroutines instead.",
+                operation,
+                blockingLifecycleTimeoutMillis,
+            )
+            throw TrustWeaveException.OperationTimedOut(
+                operation = "plugin.$operation",
+                timeout = "${blockingLifecycleTimeoutMillis}ms",
+            )
+        }
+
+        failure.get()?.let { throw it }
+    }
+
     override fun isRegistered(pluginId: String): Boolean = plugins.containsKey(pluginId)
+
+    companion object {
+        /**
+         * Maximum time blocking [register], [unregister], and [clear] wait for a [PluginLifecycle]
+         * callback on the isolated daemon thread before interrupting and abandoning it.
+         */
+        const val DEFAULT_BLOCKING_LIFECYCLE_TIMEOUT_MILLIS: Long = 60_000L
+    }
 }
 
 /**

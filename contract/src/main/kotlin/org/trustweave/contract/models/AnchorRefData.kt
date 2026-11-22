@@ -1,7 +1,7 @@
 package org.trustweave.contract.models
 
-import org.trustweave.anchor.AnchorRef
 import kotlinx.serialization.Serializable
+import org.trustweave.anchor.AnchorRef
 
 /**
  * Serializable representation of AnchorRef for contract models.
@@ -14,29 +14,29 @@ data class AnchorRefData(
     val chainId: String,
     val txHash: String,
     val contract: String? = null,
-    val extra: Map<String, String> = emptyMap()
+    val extra: Map<String, String> = emptyMap(),
 ) {
     /**
      * Converts to AnchorRef.
      */
-    fun toAnchorRef(): AnchorRef = AnchorRef(
-        chainId = chainId,
-        txHash = txHash,
-        contract = contract,
-        extra = extra
-    )
+    fun toAnchorRef(): AnchorRef =
+        AnchorRef(
+            chainId = chainId,
+            txHash = txHash,
+            contract = contract,
+            extra = extra,
+        )
 
     companion object {
         /**
          * Creates AnchorRefData from AnchorRef.
          */
-        fun fromAnchorRef(ref: AnchorRef): AnchorRefData = AnchorRefData(
-            chainId = ref.chainId,
-            txHash = ref.txHash,
-            contract = ref.contract,
-            extra = ref.extra
-        )
+        fun fromAnchorRef(ref: AnchorRef): AnchorRefData =
+            AnchorRefData(
+                chainId = ref.chainId,
+                txHash = ref.txHash,
+                contract = ref.contract,
+                extra = ref.extra,
+            )
     }
 }
-
-

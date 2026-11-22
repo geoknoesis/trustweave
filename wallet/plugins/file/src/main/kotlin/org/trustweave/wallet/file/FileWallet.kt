@@ -534,6 +534,9 @@ class FileWallet private constructor(
                         break
                     } catch (error: java.nio.file.AccessDeniedException) {
                         if (attempt == 8) throw error
+                        // Non-suspend helper executing inside withContext(Dispatchers.IO) while holding a
+                        // thread-bound ReentrantLock (withRecordLocks); suspending with delay() here would
+                        // risk resuming on another thread and throwing IllegalMonitorStateException on unlock.
                         Thread.sleep(25L * (attempt + 1))
                     }
                 }

@@ -358,4 +358,27 @@ class HostAuthenticationTest {
         )
         assertNull(HostAuthentication.MUTATING.firstOrNull { it == HttpMethod.Get })
     }
+
+    @Test
+    fun `protocolAuthenticatedPaths bypass host bearer auth but remain rate-limited while exempt paths stay exempt`() =
+        testApplication {
+            application {
+                HostAuthentication
+                    .bearerToken(
+                        token,
+                        rateLimit = HostAuthentication.RateLimit(permits = 2, failedAuthPermits = 2, attemptPermits = 10),
+                    ).install(this, protocolAuthenticatedPaths = setOf("/token"))
+                routing {
+                    post("/token") { call.respond(HttpStatusCode.OK, "issued") }
+                    get("/internal/metrics") { call.respond(HttpStatusCode.OK, "metrics") }
+                }
+            }
+            // First 2 requests to /token succeed without host bearer token.
+            assertEquals(HttpStatusCode.OK, client.request("/token") { method = HttpMethod.Post }.status)
+            assertEquals(HttpStatusCode.OK, client.request("/token") { method = HttpMethod.Post }.status)
+            // Third request hits the per-caller rate limit.
+            assertEquals(HttpStatusCode.TooManyRequests, client.request("/token") { method = HttpMethod.Post }.status)
+            // Exempt metrics path remains unaffected by rate limiting.
+            assertEquals(HttpStatusCode.OK, client.request("/internal/metrics") { method = HttpMethod.Get }.status)
+        }
 }

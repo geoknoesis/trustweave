@@ -13,7 +13,7 @@ import org.trustweave.kms.spi.KeyManagementServiceProvider
  * **Example:**
  * ```kotlin
  * import org.trustweave.kms.*
- * 
+ *
  * // Simple factory API
  * val kms = KeyManagementServices.create("inmemory")
  *
@@ -49,4 +49,3 @@ class InMemoryKeyManagementServiceProvider : KeyManagementServiceProvider {
         return InMemoryKeyManagementService()
     }
 }
-

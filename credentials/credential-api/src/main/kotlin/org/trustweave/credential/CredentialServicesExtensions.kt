@@ -4,7 +4,7 @@ import org.trustweave.core.identifiers.Iri
 import org.trustweave.credential.model.vc.Issuer
 import org.trustweave.did.identifiers.Did
 
-/**
+/*
  * Convenience extensions for CredentialService.
  */
 

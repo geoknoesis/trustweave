@@ -5,9 +5,8 @@ plugins {
 
 group = "org.trustweave.credentials"
 dependencies {
-    implementation(project(":credentials:credential-api"))
+    api(project(":credentials:credential-api"))
     implementation(project(":common")) // Needed for Iri access
-    // StatusListManagerFactory is in this module
 
     // Kotlin Coroutines
     implementation(libs.kotlinx.coroutines.core)

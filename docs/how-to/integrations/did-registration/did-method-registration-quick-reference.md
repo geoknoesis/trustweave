@@ -1,4 +1,5 @@
 ---
+title: "DID Method Registration - Quick Reference"
 redirect_from:
   - /integrations/did-registration/did-method-registration-quick-reference/
 parent: Integration Modules

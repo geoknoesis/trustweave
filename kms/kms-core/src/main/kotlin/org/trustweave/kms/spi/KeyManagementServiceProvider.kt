@@ -44,9 +44,7 @@ interface KeyManagementServiceProvider {
      * @param algorithm The algorithm to check
      * @return true if supported, false otherwise
      */
-    fun supportsAlgorithm(algorithm: Algorithm): Boolean {
-        return supportedAlgorithms.contains(algorithm)
-    }
+    fun supportsAlgorithm(algorithm: Algorithm): Boolean = supportedAlgorithms.contains(algorithm)
 
     /**
      * Checks if an algorithm by name is supported.
@@ -89,13 +87,12 @@ interface KeyManagementServiceProvider {
      *
      * @return true if all required env vars are set or provider-specific checks pass, false otherwise
      */
-    fun hasRequiredEnvironmentVariables(): Boolean {
-        return requiredEnvironmentVariables.all { envVar ->
+    fun hasRequiredEnvironmentVariables(): Boolean =
+        requiredEnvironmentVariables.all { envVar ->
             val isOptional = envVar.startsWith("?")
             val actualVar = if (isOptional) envVar.substring(1) else envVar
             if (isOptional) true else System.getenv(actualVar) != null
         }
-    }
 
     /**
      * Creates a KeyManagementService instance.
@@ -116,8 +113,5 @@ interface KeyManagementServiceProvider {
      * @return A KeyManagementService instance
      * @throws IllegalArgumentException if the provider cannot be created with the given options
      */
-    fun create(options: KmsCreationOptions): KeyManagementService {
-        return create(options.toMap())
-    }
+    fun create(options: KmsCreationOptions): KeyManagementService = create(options.toMap())
 }
-

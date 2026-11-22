@@ -130,7 +130,8 @@ gh release download "v<version>" --repo geoknoesis/trustweave --pattern SHA256SU
 sha256sum --check --ignore-missing SHA256SUMS
 
 # 2. Verify the provenance of the artifact itself (signer workflow, tag and commit)
-gh attestation verify trustweave-core-<version>.jar --repo geoknoesis/trustweave \
+#    (e.g., trust-<version>.jar or distribution-all-<version>.jar from Maven Central)
+gh attestation verify trust-<version>.jar --repo geoknoesis/trustweave \
   --signer-workflow geoknoesis/trustweave/.github/workflows/release-evidence.yml \
   --source-ref "refs/tags/v<version>"
 
@@ -206,7 +207,7 @@ Dependabot (`.github/dependabot.yml`) proposes version updates weekly from `grad
 `org.didcommx:didcomm` 0.3.2 (the latest release, August 2022) is a fat JAR that contains its own
 copies of `com.nimbusds:nimbus-jose-jwt` **9.16-preview.1** and `net.minidev:json-smart`
 **2.4.7**. They are not separate dependencies, so they do not appear in the Gradle dependency graph
-or the SBOM, Dependabot cannot update them, and the catalog's Nimbus version (9.48) does not apply.
+or the SBOM, Dependabot cannot update them, and the catalog's Nimbus version (10.10) does not apply.
 The module's build file excludes a standalone `nimbus-jose-jwt` from its classpath on purpose,
 because two copies of the `com.nimbusds` packages cause split-package and `NoSuchMethodError` failures
 at runtime.

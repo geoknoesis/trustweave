@@ -2,29 +2,29 @@
 title: Migrating to TrustWeave 1.0.0
 redirect_from:
   - /migration/migrating-to-1.0.0/
-parent: Migration
+parent: Migration Guides
 grand_parent: How-To Guides
 ---
 
-# Migrating to TrustWeave 1.0.0
+# Migrating to TrustWeave 1.0.0 (Planned)
 
-This guide helps you migrate from earlier versions of TrustWeave to version 1.0.0.
+> **Release note:** TrustWeave `1.0.0` is **not yet released**; the current release line is **`0.7.0`**. If you are upgrading from `0.6.x` to `0.7.0`, see [Migrating to TrustWeave 0.7.0](migrating-to-0.7.0.md). The patterns below describe the modern `0.7.0+` API surface targeting `1.0.0` stability.
 
 ## Overview of Changes
 
-Version 1.0.0 introduces several improvements:
+The modern TrustWeave API surface introduces several improvements:
 
 - **Type-safe options**: Replaces map-based configuration with typed options classes
-- **Result-based APIs**: All operations return `Result<T>` for consistent error handling
-- **Enhanced error types**: Structured error hierarchy with rich context
-- **Plugin lifecycle**: New lifecycle management APIs
+- **Sealed result APIs**: Core domain operations return TrustWeave sealed result types (`IssuanceResult`, `VerificationResult`, `DidCreationResult`, `RevocationResult`, `TrustOperationResult`, `KeyIdResult`, `SignResult`, etc.) for exhaustive `when` handling
+- **Enhanced error types**: Structured `TrustWeaveException` hierarchy with rich context
+- **Resource lifecycle**: Explicit `close()` / `closeAsync()` lifecycle management on `TrustWeave`
 
 ## Migration Checklist
 
-- Update dependencies to 0.6.0
+- Update dependencies to `0.7.0` using `implementation(platform("org.trustweave:distribution-bom:0.7.0"))`
 - Migrate to type-safe options
-- Update error handling to use `Result<T>`
-- Update plugin lifecycle calls
+- Update error handling to use TrustWeave sealed result types (e.g., `revokeResult { }`, `trustResult { }`, `getKeyIdResult(...)`)
+- Close `TrustWeave` instances on shutdown (`close()` / `closeAsync()`)
 - Test thoroughly
 - Update documentation references
 
@@ -192,7 +192,7 @@ val chainId = "algorand:testnet"  // Still supported, but less safe
 
 **Problem**: Code assumes operations always succeed
 
-**Solution**: Always handle `Result<T>` with `fold()` or `getOrThrow()` (only for tests)
+**Solution**: Handle sealed result variants exhaustively with `when` (use `getOrThrow()` only in tests or simple scripts)
 
 ### Issue 2: Type Mismatches
 

@@ -1,12 +1,12 @@
 package org.trustweave.kms.inmemory
 
+import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.Test
 import org.trustweave.kms.Algorithm
 import org.trustweave.kms.JwkKeys
 import org.trustweave.kms.results.GenerateKeyResult
 import org.trustweave.kms.results.SignResult
 import org.trustweave.kms.util.EcdsaSignatureCodec
-import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Test
 import java.math.BigInteger
 import java.security.AlgorithmParameters
 import java.security.KeyFactory
@@ -32,23 +32,24 @@ import kotlin.test.assertTrue
  *  - secp256k1 signatures have `s <= n/2`.
  */
 class InMemorySignatureFormatTest {
-
     private val kms = InMemoryKeyManagementService()
     private val data = "trustweave-signature-format-contract".toByteArray(Charsets.UTF_8)
 
-    private val secp256k1HalfOrder = BigInteger(
-        "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141",
-        16
-    ).shiftRight(1)
+    private val secp256k1HalfOrder =
+        BigInteger(
+            "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141",
+            16,
+        ).shiftRight(1)
 
-    private fun generateAndSign(algorithm: Algorithm): Pair<ByteArray, Map<String, Any?>> = runBlocking {
-        val gen = kms.generateKey(algorithm)
-        assertTrue(gen is GenerateKeyResult.Success, "expected Success, got $gen")
-        val handle = (gen as GenerateKeyResult.Success).keyHandle
-        val sign = kms.sign(handle.id, data)
-        assertTrue(sign is SignResult.Success, "expected Success, got $sign")
-        (sign as SignResult.Success).signature to handle.publicKeyJwk!!
-    }
+    private fun generateAndSign(algorithm: Algorithm): Pair<ByteArray, Map<String, Any?>> =
+        runBlocking {
+            val gen = kms.generateKey(algorithm)
+            assertTrue(gen is GenerateKeyResult.Success, "expected Success, got $gen")
+            val handle = (gen as GenerateKeyResult.Success).keyHandle
+            val sign = kms.sign(handle.id, data)
+            assertTrue(sign is SignResult.Success, "expected Success, got $sign")
+            (sign as SignResult.Success).signature to handle.publicKeyJwk!!
+        }
 
     /**
      * Rebuilds a JCA EC [PublicKey] from the EC JWK the KMS returned, using the named curve.
@@ -59,19 +60,26 @@ class InMemorySignatureFormatTest {
     private fun ecPublicKeyFromJwk(
         jwk: Map<String, Any?>,
         jcaCurveName: String,
-        providerName: String? = null
+        providerName: String? = null,
     ): PublicKey {
         val decoder = Base64.getUrlDecoder()
         val x = BigInteger(1, decoder.decode(jwk[JwkKeys.X] as String))
         val y = BigInteger(1, decoder.decode(jwk[JwkKeys.Y] as String))
-        val params = (
-            if (providerName != null) AlgorithmParameters.getInstance("EC", providerName)
-            else AlgorithmParameters.getInstance("EC")
+        val params =
+            (
+                if (providerName != null) {
+                    AlgorithmParameters.getInstance("EC", providerName)
+                } else {
+                    AlgorithmParameters.getInstance("EC")
+                }
             ).apply { init(ECGenParameterSpec(jcaCurveName)) }
         val spec = params.getParameterSpec(java.security.spec.ECParameterSpec::class.java)
         val keyFactory =
-            if (providerName != null) KeyFactory.getInstance("EC", providerName)
-            else KeyFactory.getInstance("EC")
+            if (providerName != null) {
+                KeyFactory.getInstance("EC", providerName)
+            } else {
+                KeyFactory.getInstance("EC")
+            }
         return keyFactory.generatePublic(ECPublicKeySpec(ECPoint(x, y), spec))
     }
 
@@ -79,14 +87,14 @@ class InMemorySignatureFormatTest {
         algorithm: Algorithm,
         jcaCurveName: String,
         expectedSize: Int,
-        jcaScheme: String
+        jcaScheme: String,
     ) {
         val (signature, jwk) = generateAndSign(algorithm)
 
         assertEquals(
             expectedSize,
             signature.size,
-            "${algorithm.name} signature must be $expectedSize-byte P1363 (raw r||s)"
+            "${algorithm.name} signature must be $expectedSize-byte P1363 (raw r||s)",
         )
 
         // P1363 -> DER, then verify with plain JCA against the JWK public key.
@@ -95,7 +103,7 @@ class InMemorySignatureFormatTest {
         verifier.update(data)
         assertTrue(
             verifier.verify(EcdsaSignatureCodec.p1363ToDer(signature)),
-            "${algorithm.name} P1363 signature must verify after transcoding to DER"
+            "${algorithm.name} P1363 signature must verify after transcoding to DER",
         )
     }
 
@@ -127,7 +135,7 @@ class InMemorySignatureFormatTest {
             val s = BigInteger(1, signature.copyOfRange(32, 64))
             assertTrue(
                 s <= secp256k1HalfOrder,
-                "secp256k1 signature must be low-s (EIP-2 / Bitcoin), got s > n/2"
+                "secp256k1 signature must be low-s (EIP-2 / Bitcoin), got s > n/2",
             )
 
             val bcName = bcRegistered()
@@ -136,7 +144,7 @@ class InMemorySignatureFormatTest {
             verifier.update(data)
             assertTrue(
                 verifier.verify(EcdsaSignatureCodec.p1363ToDer(signature)),
-                "secp256k1 P1363 low-s signature must verify after transcoding to DER"
+                "secp256k1 P1363 low-s signature must verify after transcoding to DER",
             )
         }
     }

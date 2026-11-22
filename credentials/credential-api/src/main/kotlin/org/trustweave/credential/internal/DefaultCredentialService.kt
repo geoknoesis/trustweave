@@ -1,37 +1,36 @@
 package org.trustweave.credential.internal
 
-import org.trustweave.core.telemetry.Operation
-import org.trustweave.core.telemetry.Telemetry
-import org.trustweave.credential.CredentialService
-import org.trustweave.credential.issue
-import org.trustweave.credential.format.ProofSuiteId
-import org.trustweave.credential.model.vc.VerifiableCredential
-import org.trustweave.credential.model.vc.VerifiablePresentation
-import org.trustweave.credential.model.vc.getFormatId
-import org.trustweave.credential.results.CredentialStatusInfo
-import org.trustweave.credential.results.VerificationResult
-import org.trustweave.credential.results.IssuanceResult
-import org.trustweave.credential.requests.IssuanceRequest
-import org.trustweave.credential.requests.PresentationRequest
-import org.trustweave.credential.requests.VerificationOptions
-import org.trustweave.credential.spi.proof.ProofEngineCapabilities
-import org.trustweave.credential.spi.proof.ProofEngine
-import org.trustweave.credential.revocation.CredentialRevocationManager
-import org.trustweave.credential.schema.SchemaRegistry
-import org.trustweave.credential.trust.TrustEvaluator
-// ProofEngineUtils is imported for DID resolution
-import org.trustweave.core.identifiers.Iri
-import org.trustweave.core.serialization.SerializationModule
-import org.trustweave.credential.model.CredentialType
-import org.trustweave.credential.model.vc.CredentialSubject
-import org.trustweave.credential.model.vc.Issuer
-import org.trustweave.did.resolver.DidResolver
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
+import org.trustweave.core.identifiers.Iri
+import org.trustweave.core.serialization.SerializationModule
+import org.trustweave.core.telemetry.Operation
+import org.trustweave.core.telemetry.Telemetry
+import org.trustweave.credential.CredentialService
+import org.trustweave.credential.format.ProofSuiteId
+import org.trustweave.credential.issue
+import org.trustweave.credential.model.CredentialType
+import org.trustweave.credential.model.vc.CredentialSubject
+import org.trustweave.credential.model.vc.Issuer
+import org.trustweave.credential.model.vc.VerifiableCredential
+import org.trustweave.credential.model.vc.VerifiablePresentation
+import org.trustweave.credential.model.vc.getFormatId
+import org.trustweave.credential.requests.IssuanceRequest
+import org.trustweave.credential.requests.PresentationRequest
+import org.trustweave.credential.requests.VerificationOptions
+import org.trustweave.credential.results.CredentialStatusInfo
+import org.trustweave.credential.results.IssuanceResult
+import org.trustweave.credential.results.VerificationResult
+import org.trustweave.credential.revocation.CredentialRevocationManager
+import org.trustweave.credential.schema.SchemaRegistry
+import org.trustweave.credential.spi.proof.ProofEngine
+import org.trustweave.credential.spi.proof.ProofEngineCapabilities
+import org.trustweave.credential.trust.TrustEvaluator
+import org.trustweave.did.resolver.DidResolver
 import kotlin.time.Clock
 
 /**
@@ -102,11 +101,11 @@ internal class DefaultCredentialService(
 
     override suspend fun verify(
         credential: VerifiableCredential,
-        trustEvaluator: TrustEvaluator?,
+        trustPolicy: TrustEvaluator?,
         options: VerificationOptions,
     ): VerificationResult =
         Telemetry.measure(Operation.CREDENTIAL_VERIFY) {
-            verifyInternal(credential, trustEvaluator, options).also { result ->
+            verifyInternal(credential, trustPolicy, options).also { result ->
                 if (result is VerificationResult.Invalid) {
                     Telemetry.rejected(Operation.CREDENTIAL_VERIFY, result::class.simpleName ?: "Invalid")
                 }
@@ -259,11 +258,11 @@ internal class DefaultCredentialService(
 
     override suspend fun verifyPresentation(
         presentation: VerifiablePresentation,
-        trustEvaluator: TrustEvaluator?,
+        trustPolicy: TrustEvaluator?,
         options: VerificationOptions,
     ): VerificationResult =
         Telemetry.measure(Operation.CREDENTIAL_VERIFY_PRESENTATION) {
-            verifyPresentationInternal(presentation, trustEvaluator, options).also { result ->
+            verifyPresentationInternal(presentation, trustPolicy, options).also { result ->
                 if (result is VerificationResult.Invalid) {
                     Telemetry.rejected(Operation.CREDENTIAL_VERIFY_PRESENTATION, result::class.simpleName ?: "Invalid")
                 }

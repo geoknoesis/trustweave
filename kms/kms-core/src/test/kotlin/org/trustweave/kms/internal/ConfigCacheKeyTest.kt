@@ -1,17 +1,16 @@
 package org.trustweave.kms.internal
 
 import org.trustweave.kms.KmsCreationOptions
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
-import kotlin.test.Test
 
 /**
  * Tests for ConfigCacheKey utility.
  */
 class ConfigCacheKeyTest {
-
     @Test
     fun `should generate same key for same map configuration`() {
         val map1 = mapOf("region" to "us-east-1", "key" to "value")
@@ -98,14 +97,16 @@ class ConfigCacheKeyTest {
 
     @Test
     fun `should handle nested maps`() {
-        val map1 = mapOf(
-            "config" to mapOf("nested" to "value"),
-            "other" to "data"
-        )
-        val map2 = mapOf(
-            "other" to "data",
-            "config" to mapOf("nested" to "value")
-        )
+        val map1 =
+            mapOf(
+                "config" to mapOf("nested" to "value"),
+                "other" to "data",
+            )
+        val map2 =
+            mapOf(
+                "other" to "data",
+                "config" to mapOf("nested" to "value"),
+            )
 
         val key1 = ConfigCacheKey.create("aws", map1)
         val key2 = ConfigCacheKey.create("aws", map2)
@@ -126,16 +127,18 @@ class ConfigCacheKeyTest {
 
     @Test
     fun `should handle typed configuration with additional properties`() {
-        val options1 = KmsCreationOptions(
-            enabled = true,
-            priority = 10,
-            additionalProperties = mapOf("region" to "us-east-1")
-        )
-        val options2 = KmsCreationOptions(
-            enabled = true,
-            priority = 10,
-            additionalProperties = mapOf("region" to "us-east-1")
-        )
+        val options1 =
+            KmsCreationOptions(
+                enabled = true,
+                priority = 10,
+                additionalProperties = mapOf("region" to "us-east-1"),
+            )
+        val options2 =
+            KmsCreationOptions(
+                enabled = true,
+                priority = 10,
+                additionalProperties = mapOf("region" to "us-east-1"),
+            )
 
         val key1 = ConfigCacheKey.create("aws", options1)
         val key2 = ConfigCacheKey.create("aws", options2)
@@ -161,15 +164,16 @@ class ConfigCacheKeyTest {
         val password = "p4ssw0rd-very-secret"
         val token = "FwoGZXIvYXdzEXAMPLESESSIONTOKEN"
 
-        val key = ConfigCacheKey.create(
-            "aws",
-            mapOf(
-                "region" to "us-east-1",
-                "secretAccessKey" to secret,
-                "sessionToken" to token,
-                "nested" to mapOf("password" to password)
+        val key =
+            ConfigCacheKey.create(
+                "aws",
+                mapOf(
+                    "region" to "us-east-1",
+                    "secretAccessKey" to secret,
+                    "sessionToken" to token,
+                    "nested" to mapOf("password" to password),
+                ),
             )
-        )
 
         assertFalse(key.contains(secret), "Cache key must not contain the raw secret access key")
         assertFalse(key.contains(token), "Cache key must not contain the raw session token")
@@ -181,10 +185,11 @@ class ConfigCacheKeyTest {
     @Test
     fun `should not embed secrets from typed configuration in the key`() {
         val secret = "typed-options-secret-value"
-        val options = KmsCreationOptions(
-            enabled = true,
-            additionalProperties = mapOf("secretAccessKey" to secret)
-        )
+        val options =
+            KmsCreationOptions(
+                enabled = true,
+                additionalProperties = mapOf("secretAccessKey" to secret),
+            )
 
         val key = ConfigCacheKey.create("aws", options)
 
@@ -201,4 +206,3 @@ class ConfigCacheKeyTest {
         assertTrue(digest.all { it in '0'..'9' || it in 'a'..'f' }, "Digest should be lowercase hex")
     }
 }
-

@@ -12,7 +12,6 @@ import kotlin.test.assertTrue
  * endpoints — on the initial request and on every redirect hop. IP-literal hosts do no DNS.
  */
 class SsrfBlockingDnsTest {
-
     @Test
     fun `loopback host is refused`() {
         assertThrows<UnknownHostException> { SsrfBlockingDns.lookup("127.0.0.1") }

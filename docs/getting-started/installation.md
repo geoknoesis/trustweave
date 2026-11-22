@@ -26,9 +26,9 @@ immutable release has been published.
 
 Before installing TrustWeave, ensure you have:
 
-- **Kotlin 2.3.21+** (included via Gradle plugin, no manual installation needed)
+- **Kotlin 2.4.21+** (included via Gradle plugin, no manual installation needed)
 - **Java 21+** (required for compilation and runtime)
-- **Gradle 9.5.0 via this repository's wrapper** (no separate Gradle installation needed)
+- **Gradle 9.8.1 via this repository's wrapper** (no separate Gradle installation needed)
 - **Basic Kotlin knowledge** (coroutines, data classes, sealed classes)
 - **Familiarity with W3C standards** (helpful but not required):
   - [Verifiable Credentials Data Model v1.1](https://www.w3.org/TR/vc-data-model/)
@@ -77,23 +77,27 @@ Add TrustWeave dependencies to your `build.gradle.kts`. This brings in the core 
 
 ```kotlin
 dependencies {
-    // Recommended: Use distribution-all for getting started
-    implementation("org.trustweave:distribution-all:0.7.0")
-    
-    // Test kit (for testing)
+    // Import the TrustWeave BOM to align module versions
+    implementation(platform("org.trustweave:distribution-bom:0.7.0"))
+
+    // Recommended for getting started: includes core modules, did:key, and kms-plugins-inmemory
+    // so TrustWeave.quickStart() works out of the box without :testkit
+    implementation("org.trustweave:distribution-all")
+
+    // Test kit (for testing only)
     testImplementation("org.trustweave:testkit:0.7.0")
 
-    // Optional: Integration modules (using hierarchical group IDs)
-    implementation("org.trustweave:kms-plugins-waltid:0.7.0")
-    implementation("org.trustweave:did-plugins-godiddy:0.7.0")
-    implementation("org.trustweave:anchors-plugins-algorand:0.7.0")
-    implementation("org.trustweave:anchors-plugins-polygon:0.7.0")
+    // Optional: Integration modules (versions managed by the BOM)
+    implementation("org.trustweave:kms-plugins-waltid")
+    implementation("org.trustweave:did-plugins-godiddy")
+    implementation("org.trustweave:anchors-plugins-algorand")
+    implementation("org.trustweave:anchors-plugins-polygon")
 }
 ```
 
-> **Note:** `distribution-all` includes all core modules, DID support, KMS abstractions, anchoring, and DSLs. For production, you may want to use individual modules to minimize bundle size. See [Module Architecture](../api-reference/modules/core-modules.md) for details.
+> **Note:** `org.trustweave:distribution-all:0.7.0` is the all-in-one runtime bundle (core modules, `did:key`, and `kms-plugins-inmemory` for quickstart). `org.trustweave:distribution-bom:0.7.0` is the Bill of Materials (`java-platform`) that aligns versions across published TrustWeave modules. For production, prefer individual modules plus a production KMS plugin to minimize bundle size and avoid in-memory key custody. See [Module Architecture](../api-reference/modules/core-modules.md) for details.
 
-**Result:** Gradle resolves the full TrustWeave BOM plus kotlinx libraries so you can compile the sample code in this guide.
+**Result:** Gradle resolves the TrustWeave BOM, the all-in-one bundle (with built-in in-memory KMS for quickstart), and kotlinx dependencies so you can compile and run the sample code in this guide.
 
 ## Gradle (Groovy)
 
@@ -101,17 +105,20 @@ Add TrustWeave dependencies to your `build.gradle`. Use this variant if your pro
 
 ```groovy
 dependencies {
-    // Recommended: Use distribution-all for getting started
-    implementation 'org.trustweave:distribution-all:0.7.0'
-    
-    // Test kit (for testing)
+    // Import the TrustWeave BOM to align module versions
+    implementation platform('org.trustweave:distribution-bom:0.7.0')
+
+    // Recommended for getting started: includes core modules, did:key, and kms-plugins-inmemory
+    implementation 'org.trustweave:distribution-all'
+
+    // Test kit (for testing only)
     testImplementation 'org.trustweave:testkit:0.7.0'
 
-    // Optional: Integration modules
-    implementation 'org.trustweave:kms-plugins-waltid:0.7.0'
-    implementation 'org.trustweave:did-plugins-godiddy:0.7.0'
-    implementation 'org.trustweave:anchors-plugins-algorand:0.7.0'
-    implementation 'org.trustweave:anchors-plugins-polygon:0.7.0'
+    // Optional: Integration modules (versions managed by the BOM)
+    implementation 'org.trustweave:kms-plugins-waltid'
+    implementation 'org.trustweave:did-plugins-godiddy'
+    implementation 'org.trustweave:anchors-plugins-algorand'
+    implementation 'org.trustweave:anchors-plugins-polygon'
 }
 ```
 
@@ -119,18 +126,29 @@ dependencies {
 
 ## Maven
 
-Add TrustWeave dependencies to your `pom.xml`. The snippet lists the minimum set needed to follow the scenarios.
+Add TrustWeave dependencies to your `pom.xml`. Import `distribution-bom` in `<dependencyManagement>` to align versions, then add `distribution-all` (or individual modules).
 
 ```xml
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>org.trustweave</groupId>
+            <artifactId>distribution-bom</artifactId>
+            <version>0.7.0</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+
 <dependencies>
-    <!-- Recommended: Use distribution-all for getting started -->
+    <!-- Recommended for getting started (includes core modules, did:key, and kms-plugins-inmemory) -->
     <dependency>
         <groupId>org.trustweave</groupId>
         <artifactId>distribution-all</artifactId>
-        <version>0.7.0</version>
     </dependency>
 
-    <!-- Test kit (for testing) -->
+    <!-- Test kit (for testing only; excluded from BOM by design) -->
     <dependency>
         <groupId>org.trustweave</groupId>
         <artifactId>testkit</artifactId>
@@ -144,19 +162,26 @@ Add TrustWeave dependencies to your `pom.xml`. The snippet lists the minimum set
 
 ## Production Setup (Individual Modules)
 
-For production deployments, you may want to use individual modules instead of `distribution-all` to minimize bundle size and reduce dependencies:
+For production deployments, use the BOM with individual modules instead of `distribution-all` to minimize bundle size and pick a production KMS plugin:
 
 ```kotlin
 dependencies {
-    // Core modules (required)
-    implementation("org.trustweave:trust:0.7.0")
-    implementation("org.trustweave:credentials-credential-api:0.7.0")
-    implementation("org.trustweave:did-did-core:0.7.0")
-    implementation("org.trustweave:kms-kms-core:0.7.0")
-    implementation("org.trustweave:anchors-anchor-core:0.7.0")
-    implementation("org.trustweave:common:0.7.0")
+    // Align all TrustWeave module versions
+    implementation(platform("org.trustweave:distribution-bom:0.7.0"))
 
-    // Test kit (for testing)
+    // Core modules (required)
+    implementation("org.trustweave:trust")
+    implementation("org.trustweave:credentials-credential-api")
+    implementation("org.trustweave:did-did-core")
+    implementation("org.trustweave:kms-kms-core")
+    implementation("org.trustweave:anchors-anchor-core")
+    implementation("org.trustweave:common")
+
+    // Add your production KMS and DID plugins (example: AWS KMS + did:web)
+    implementation("org.trustweave:kms-plugins-aws")
+    implementation("org.trustweave:did-plugins-web")
+
+    // Test kit (for testing only)
     testImplementation("org.trustweave:testkit:0.7.0")
 }
 ```
@@ -167,14 +192,14 @@ dependencies {
 
 ## Repository Configuration
 
-If you pull SNAPSHOT builds, add the OSS Sonatype snapshot repository so Gradle/Maven can resolve them.
+If you pull SNAPSHOT builds, add the Sonatype Central snapshot repository so Gradle/Maven can resolve them.
 
 ```kotlin
 repositories {
     mavenCentral()
     // Add snapshot repository if needed
     maven {
-        url = uri("https://oss.sonatype.org/content/repositories/snapshots")
+        url = uri("https://central.sonatype.com/repository/maven-snapshots/")
     }
 }
 ```
@@ -184,9 +209,9 @@ repositories {
 ## Version Information
 
 - **Current Version**: 0.7.0
-- **Kotlin Version**: 2.3.21+
+- **Kotlin Version**: 2.4.21+
 - **Java Version**: 21+
-- **Gradle wrapper version**: 9.5.0
+- **Gradle wrapper version**: 9.8.1
 
 ## Next Steps
 

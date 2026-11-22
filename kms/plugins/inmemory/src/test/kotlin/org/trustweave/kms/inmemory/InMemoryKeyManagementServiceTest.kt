@@ -14,7 +14,10 @@ import org.trustweave.kms.results.DeleteKeyResult
 import org.trustweave.kms.results.GenerateKeyResult
 import org.trustweave.kms.results.GetPublicKeyResult
 import org.trustweave.kms.results.SignResult
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 /**
  * Contract tests for InMemoryKeyManagementService.

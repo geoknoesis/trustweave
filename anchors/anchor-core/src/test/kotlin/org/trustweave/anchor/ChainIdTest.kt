@@ -1,18 +1,17 @@
 package org.trustweave.anchor
 
-import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.*
-import kotlinx.serialization.Serializable
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Comprehensive tests for ChainId API.
  */
 class ChainIdTest {
-
     @Test
     fun `test Algorand chain IDs`() {
         assertEquals("algorand:mainnet", ChainId.Algorand.Mainnet.toString())
@@ -157,4 +156,3 @@ class ChainIdTest {
         assertFalse(ChainId.isValid("no-colon"))
     }
 }
-

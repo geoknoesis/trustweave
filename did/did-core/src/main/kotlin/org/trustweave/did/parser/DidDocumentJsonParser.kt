@@ -132,7 +132,7 @@ object DidDocumentJsonParser {
     private fun parseController(json: JsonObject): List<Did> {
         val c = json["controller"] ?: return emptyList()
         return when (c) {
-            is JsonPrimitive -> c.content?.let { listOf(Did(it)) } ?: emptyList()
+            is JsonPrimitive -> listOf(Did(c.content))
             is JsonArray -> c.mapNotNull { (it as? JsonPrimitive)?.content?.let { Did(it) } }
             else -> emptyList()
         }
@@ -193,24 +193,20 @@ object DidDocumentJsonParser {
         if (element == null) return emptyList()
         return when (element) {
             is JsonPrimitive ->
-                element.content?.let { idStr ->
-                    try {
-                        listOf(VerificationMethodId.parse(idStr, baseDid))
-                    } catch (_: IllegalArgumentException) {
-                        emptyList()
-                    }
-                } ?: emptyList()
+                try {
+                    listOf(VerificationMethodId.parse(element.content, baseDid))
+                } catch (_: IllegalArgumentException) {
+                    emptyList()
+                }
             is JsonArray ->
                 element.flatMap { entry ->
                     when (entry) {
                         is JsonPrimitive ->
-                            entry.content?.let { idStr ->
-                                try {
-                                    listOf(VerificationMethodId.parse(idStr, baseDid))
-                                } catch (_: IllegalArgumentException) {
-                                    emptyList()
-                                }
-                            } ?: emptyList()
+                            try {
+                                listOf(VerificationMethodId.parse(entry.content, baseDid))
+                            } catch (_: IllegalArgumentException) {
+                                emptyList()
+                            }
                         is JsonObject -> {
                             val vm = parseOneVerificationMethod(entry, baseDidString) ?: return@flatMap emptyList()
                             embeddedVmsById.putIfAbsent(vm.id.value, vm)

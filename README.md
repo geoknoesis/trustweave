@@ -57,11 +57,19 @@ fun main() =
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:distribution-all:0.7.0")
-    // For testing, use testkit module
+    // Align versions across all TrustWeave modules with the BOM
+    implementation(platform("org.trustweave:distribution-bom:0.7.0"))
+
+    // All-in-one bundle (includes core modules, did:key, and kms-plugins-inmemory
+    // so TrustWeave.quickStart() works out of the box without :testkit)
+    implementation("org.trustweave:distribution-all")
+
+    // Test kit (test-only helpers and fixtures)
     testImplementation("org.trustweave:testkit:0.7.0")
 }
 ```
+
+Or depend directly on `org.trustweave:distribution-all:0.7.0` without the BOM. For production deployments, prefer individual modules plus a production KMS plugin (such as `org.trustweave:kms-plugins-aws` or `org.trustweave:kms-plugins-azure`) — see [Installation](docs/getting-started/installation.md).
 
 ## Documentation
 
@@ -71,9 +79,13 @@ dependencies {
 - **[Production integration checklist](docs/getting-started/production-integration-checklist.md)** - Logging, timeouts, result types
 - **[Module maturity matrix](docs/api-reference/module-maturity.md)** - Which modules are GA vs experimental
 - **[API Reference](docs/api-reference/)** - Detailed API documentation
+- **[KDoc API Reference (Dokka)](https://trustweave.org/api/)** - Browsable Kotlin API documentation generated from KDoc
 - **[Architecture & Modules](docs/introduction/architecture-overview.md)** - Module details and design principles
 - **[Available Plugins](docs/api-reference/plugins.md)** - DID methods, blockchain anchors, and KMS plugins
 - **[Integrations](docs/how-to/integrations/)** - walt.id, godiddy, and third-party integrations
+- **[Roadmap](ROADMAP.md)** - Current baseline and milestones toward 1.0
+- **[Support](SUPPORT.md)** - Community help, troubleshooting, and commercial support
+- **[Maintainers](MAINTAINERS.md)** - Project maintainers and stewardship
 - **[Contributing](CONTRIBUTING.md)** - Building, testing, and development guide
 
 ## Key Features

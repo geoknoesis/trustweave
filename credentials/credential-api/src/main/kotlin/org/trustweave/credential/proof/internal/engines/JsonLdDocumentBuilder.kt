@@ -210,7 +210,7 @@ internal object JsonLdDocumentBuilder {
                 put("statusPurpose", status.statusPurpose.name.lowercase())
                 status.statusListIndex?.let { put("statusListIndex", it) }
                 status.statusListCredential?.let { put("statusListCredential", it.value) }
-                status.formatData?.let { formatData ->
+                status.formatData.let { formatData ->
                     put(
                         "formatData",
                         buildJsonObject {

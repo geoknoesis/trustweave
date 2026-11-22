@@ -1,4 +1,5 @@
 ---
+title: Rate Limiting in Credential API
 redirect_from:
   - /security/rate-limiting/
 parent: Security

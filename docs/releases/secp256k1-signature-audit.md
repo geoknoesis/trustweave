@@ -1,3 +1,10 @@
+---
+layout: default
+title: secp256k1 signature audit (padding defect fixed in cbd1e616)
+parent: Releases
+nav_order: 20
+---
+
 # secp256k1 signature audit (padding defect fixed in `cbd1e616`)
 
 ## What happened

@@ -1,10 +1,10 @@
 ---
 title: Proof Engine Implementation Guide
 nav_order: 80
-parent: Advanced
+parent: Advanced Topics
+grand_parent: API Reference
 redirect_from:
   - /advanced/proof-engine-implementation-guide/
-
 ---
 
 # Proof Engine Implementation Guide

@@ -1,20 +1,21 @@
+@file:Suppress("ktlint:standard:filename")
+
 package org.trustweave.anchor
 
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 
 class AnchorRefTest {
-
     @Test
     fun `AnchorRef should store chain and transaction information`() {
-        val ref = AnchorRef(
-            chainId = "algorand:mainnet",
-            txHash = "ABC123",
-            contract = "app-123"
-        )
+        val ref =
+            AnchorRef(
+                chainId = "algorand:mainnet",
+                txHash = "ABC123",
+                contract = "app-123",
+            )
 
         assertEquals("algorand:mainnet", ref.chainId)
         assertEquals("ABC123", ref.txHash)
@@ -23,12 +24,13 @@ class AnchorRefTest {
 
     @Test
     fun `AnchorRef with extra metadata`() {
-        val ref = AnchorRef(
-            chainId = "algorand:testnet",
-            txHash = "tx-123",
-            contract = "app-456",
-            extra = mapOf("mediaType" to "application/json", "custom" to "value")
-        )
+        val ref =
+            AnchorRef(
+                chainId = "algorand:testnet",
+                txHash = "tx-123",
+                contract = "app-456",
+                extra = mapOf("mediaType" to "application/json", "custom" to "value"),
+            )
 
         assertEquals(2, ref.extra.size)
         assertEquals("application/json", ref.extra["mediaType"])
@@ -40,12 +42,13 @@ class AnchorRefTest {
         val ref = AnchorRef(chainId = "algorand:testnet", txHash = "tx-123")
         val payload = buildJsonObject { put("data", "test") }
 
-        val result = AnchorResult(
-            ref = ref,
-            payload = payload,
-            mediaType = "application/json",
-            timestamp = 1234567890L
-        )
+        val result =
+            AnchorResult(
+                ref = ref,
+                payload = payload,
+                mediaType = "application/json",
+                timestamp = 1234567890L,
+            )
 
         assertEquals(ref, result.ref)
         assertEquals(payload, result.payload)
@@ -53,5 +56,3 @@ class AnchorRefTest {
         assertEquals(1234567890L, result.timestamp)
     }
 }
-
-

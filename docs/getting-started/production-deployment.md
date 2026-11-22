@@ -26,8 +26,9 @@ Production deployments require careful consideration of:
 Never use `inMemory` KMS in production. Use a production-grade key management service:
 
 ```kotlin
+import org.trustweave.trust.TrustWeave
 import org.trustweave.trust.dsl.credential.KmsProviders.AWS
-import org.trustweave.trust.dsl.credential.KeyAlgorithms.ED25519
+import org.trustweave.trust.dsl.credential.KeyAlgorithms.SECP256K1
 
 val trustWeave = TrustWeave.build {
     keys {
@@ -35,11 +36,15 @@ val trustWeave = TrustWeave.build {
         // Provider-specific settings (region, key alias, vault URL) are sourced from environment
         // or system properties picked up by the provider plugin.
         provider(AWS)
-        algorithm(ED25519)
+        // Note: AWS KMS does NOT support Ed25519. Use "P-256" (Secp256r1) or KeyAlgorithms.SECP256K1
+        // on AWS KMS; use HashiCorp Vault, Google Cloud KMS, or an Ed25519-capable HSM if you require Ed25519.
+        algorithm("P-256") // or SECP256K1
     }
     // ... rest of configuration
 }
 ```
+
+> **Algorithm note:** AWS KMS supports NIST curves (`P-256` / `Secp256r1`, `P-384`, `P-521`), `secp256k1`, and RSA, but **does not support `Ed25519`**. Choose `"P-256"` (`Secp256r1`) or `KeyAlgorithms.SECP256K1` when targeting AWS KMS.
 
 **Key Considerations:**
 - Use hardware security modules (HSM) for high-security applications
@@ -49,24 +54,49 @@ val trustWeave = TrustWeave.build {
 
 ### 2. Configure Persistent Storage
 
-Use persistent storage for wallets and trust registries:
+Use persistent storage for wallets, trust registries, and credential revocation. In `TrustWeave.build { ... }`, non-in-memory trust registries and wallets require explicit factories wired via `factories(...)`, and persistent revocation managers (`BitstringStatusListManager` / `TokenStatusListManager`) are wired programmatically via `CredentialServices.createCredentialService(...)` (since `revocation { provider(...) }` only resolves `"inMemory"` out of the box):
 
 ```kotlin
+import org.trustweave.trust.TrustWeave
+import org.trustweave.trust.services.TrustRegistryFactory
+import org.trustweave.wallet.database.DatabaseWalletFactory
+import org.trustweave.wallet.services.WalletCreationOptions
+
+// Supply a TrustRegistryFactory backed by your persistent store (e.g., PostgreSQL)
+val customTrustRegistryFactory: TrustRegistryFactory = /* your TrustRegistryFactory implementation */
+val databaseWalletFactory = DatabaseWalletFactory()
+
 val trustWeave = TrustWeave.build {
     keys { ... }
     did { ... }
+
+    // Wire factories for persistent trust registry and wallets
+    factories(
+        trustRegistryFactory = customTrustRegistryFactory,
+        walletFactory = databaseWalletFactory,
+    )
+
     trust {
-        // ✅ Production: Use a database-backed trust registry provider (registered via SPI/factory)
+        // Resolved via the supplied trustRegistryFactory
         provider("database")
     }
 }
 
-// Wallets should use a persistent wallet provider (factory registered via WalletFactory)
-val wallet = trustWeave.wallet {
-    holder(holderDid)
-    provider("database")
-}.getOrThrow()
+// Create a database-backed wallet via DatabaseWalletFactory (PostgreSQL or H2)
+val wallet = databaseWalletFactory.create(
+    providerName = "database",
+    holderDid = holderDid.value,
+    options = WalletCreationOptions(
+        storagePath = "jdbc:postgresql://db.example.org:5432/trustweave",
+        additionalProperties = mapOf(
+            "username" to System.getenv("DB_USERNAME"),
+            "password" to System.getenv("DB_PASSWORD"),
+        ),
+    ),
+)
 ```
+
+For persistent credential revocation in production, construct a status list manager from `credentials:plugins:status-list:bitstring` (`BitstringStatusListManagerFactory.create(...)`) or `credentials:plugins:status-list:token` (`TokenStatusListManagerFactory.create(...)`) and pass it to `CredentialServices.createCredentialService(kms = ..., didResolver = ..., revocationManager = manager)`, then register that service with `credentialService(...)` inside `TrustWeave.build { ... }`. See [How to Revoke Credentials](../how-to/revoke-credentials.md) for the full setup.
 
 **Storage Options:**
 - **Database**: PostgreSQL, MySQL for structured data
@@ -113,13 +143,14 @@ val trustWeave = TrustWeave.build {
 
 ### 4. Enable Trust Registry
 
-Always enable trust registry in production:
+Always enable a persistent trust registry in production by wiring a `TrustRegistryFactory` via `factories(...)`:
 
 ```kotlin
 val trustWeave = TrustWeave.build {
     // ... other configuration
+    factories(trustRegistryFactory = customTrustRegistryFactory)
     trust {
-        // Select a registered trust registry provider via SPI / TrustRegistryFactory
+        // Resolved via the supplied TrustRegistryFactory
         provider("database")
     }
 }
@@ -189,6 +220,7 @@ suspend fun issuePersonCredential(
 Implement retry logic for transient errors:
 
 ```kotlin
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlin.random.Random
 import org.trustweave.core.exception.TrustWeaveException
@@ -205,6 +237,9 @@ suspend fun <T> retryOperation(
     repeat(maxRetries) { attempt ->
         try {
             return operation()
+        } catch (e: CancellationException) {
+            // Never swallow coroutine cancellation
+            throw e
         } catch (error: Exception) {
             lastError = error
 
@@ -235,7 +270,7 @@ Use connection pooling for database operations:
 ```kotlin
 // Configure connection pool
 val dataSource = HikariDataSource().apply {
-    jdbcUrl = "jdbc:postgresql://db.example.org.trustweave"
+    jdbcUrl = "jdbc:postgresql://db.example.org:5432/trustweave"
     maximumPoolSize = 20
     minimumIdle = 5
     connectionTimeout = 30000
@@ -496,6 +531,8 @@ class TrustWeaveHealthIndicator(
                     .withDetail("testDid", testDid)
                     .build()
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (error: Exception) {
             Health.down()
                 .withDetail("status", "unavailable")

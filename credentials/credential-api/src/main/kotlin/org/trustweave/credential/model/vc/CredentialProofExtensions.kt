@@ -2,7 +2,7 @@ package org.trustweave.credential.model.vc
 
 import org.trustweave.credential.format.ProofSuiteId
 
-/**
+/*
  * Extension functions for CredentialProof.
  */
 

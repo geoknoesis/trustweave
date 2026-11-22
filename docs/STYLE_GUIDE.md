@@ -1,3 +1,10 @@
+---
+layout: default
+title: Documentation Style Guide
+parent: Contributing to TrustWeave
+nav_order: 70
+---
+
 # TrustWeave Documentation Style Guide
 
 This style guide ensures consistent terminology, formatting, and patterns across all TrustWeave documentation.

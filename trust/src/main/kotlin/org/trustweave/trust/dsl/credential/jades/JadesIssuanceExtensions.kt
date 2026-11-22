@@ -5,7 +5,7 @@ import org.trustweave.signatures.jades.JadesProfile
 import org.trustweave.signatures.tsa.TsaConfig
 import org.trustweave.trust.dsl.credential.IssuanceBuilder
 
-/**
+/*
  * Ergonomic DSL extensions for issuing JAdES-protected credentials via
  * [org.trustweave.trust.dsl.credential.IssuanceBuilder].
  *

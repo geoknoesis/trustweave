@@ -1,3 +1,11 @@
+---
+layout: default
+title: Pinned merchant authentication
+parent: Verified Examples
+grand_parent: Operations
+nav_order: 20
+---
+
 # Pinned merchant authentication
 
 This complete SDK test pins a merchant key, identity and challenge. It exercises signed cart extraction, invalid lifetime/challenges, wrong keys and agent shadow data. The verifier provisions CheckoutTrust out of band; never derive trust from the presented token. Run `:credentials:plugins:verifiable-intent:test --tests "*CheckoutTrustTest"`. The helper tests an internal authentication boundary; applications call the public `verifyChainWithCheckout` API.

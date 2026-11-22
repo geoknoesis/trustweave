@@ -113,7 +113,6 @@ internal class JsonSchemaValidator : SchemaValidator {
             is JsonObject -> errors.addAll(validateObject(value, schema, path))
             is JsonArray -> errors.addAll(validateArray(value, schema, path))
             is JsonPrimitive -> errors.addAll(validatePrimitive(value, schema, path))
-            else -> {}
         }
 
         return errors

@@ -2,7 +2,14 @@ package org.trustweave.contract
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.put
 import org.trustweave.anchor.AnchorRef
 import org.trustweave.anchor.BlockchainAnchorRegistry
 import org.trustweave.contract.evaluation.EngineReference
@@ -297,14 +304,12 @@ class DefaultSmartContractService
                         format = ProofSuiteId.VC_LD,
                         issuer = Issuer.from(Iri(issuerDid)),
                         issuerKeyId =
-                            issuerKeyId?.let {
-                                org.trustweave.did.identifiers.VerificationMethodId
-                                    .parse(
-                                        it,
-                                        org.trustweave.did.identifiers
-                                            .Did(issuerDid),
-                                    )
-                            },
+                            org.trustweave.did.identifiers.VerificationMethodId
+                                .parse(
+                                    issuerKeyId,
+                                    org.trustweave.did.identifiers
+                                        .Did(issuerDid),
+                                ),
                         credentialSubject = credentialSubject,
                         type =
                             listOf(

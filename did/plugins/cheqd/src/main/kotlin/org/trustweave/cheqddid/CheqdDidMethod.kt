@@ -8,6 +8,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.trustweave.anchor.BlockchainAnchorClient
 import org.trustweave.core.exception.TrustWeaveException
+import org.trustweave.core.net.ssrfGuardedOkHttpClient
 import org.trustweave.core.util.decodeBase58
 import org.trustweave.core.util.encodeBase58
 import org.trustweave.did.DidCreationOptions
@@ -46,21 +47,53 @@ import java.util.concurrent.ConcurrentHashMap
  * val result = method.resolveDid("did:cheqd:mainnet:...")
  * ```
  */
-class CheqdDidMethod(
+class CheqdDidMethod private constructor(
     kms: KeyManagementService,
     private val anchorClient: BlockchainAnchorClient,
     private val config: CheqdDidConfig,
-) : AbstractBlockchainDidMethod("cheqd", kms) {
-    private val httpClient: OkHttpClient
-
-    init {
+    private val httpClient: OkHttpClient,
+    private val ownsHttpClient: Boolean,
+) : AbstractBlockchainDidMethod("cheqd", kms),
+    AutoCloseable {
+    constructor(
+        kms: KeyManagementService,
+        anchorClient: BlockchainAnchorClient,
+        config: CheqdDidConfig,
+    ) : this(
+        kms = kms,
+        anchorClient = anchorClient,
+        config = config,
         httpClient =
-            OkHttpClient
-                .Builder()
+            ssrfGuardedOkHttpClient()
+                .newBuilder()
                 .connectTimeout(config.timeoutSeconds.toLong(), java.util.concurrent.TimeUnit.SECONDS)
                 .readTimeout(config.timeoutSeconds.toLong(), java.util.concurrent.TimeUnit.SECONDS)
                 .writeTimeout(config.timeoutSeconds.toLong(), java.util.concurrent.TimeUnit.SECONDS)
-                .build()
+                .followRedirects(false)
+                .followSslRedirects(false)
+                .build(),
+        ownsHttpClient = true,
+    )
+
+    constructor(
+        kms: KeyManagementService,
+        anchorClient: BlockchainAnchorClient,
+        config: CheqdDidConfig,
+        httpClient: OkHttpClient,
+    ) : this(
+        kms = kms,
+        anchorClient = anchorClient,
+        config = config,
+        httpClient = httpClient,
+        ownsHttpClient = false,
+    )
+
+    override fun close() {
+        if (ownsHttpClient) {
+            httpClient.dispatcher.executorService.shutdown()
+            httpClient.connectionPool.evictAll()
+            httpClient.cache?.close()
+        }
     }
 
     override fun getBlockchainAnchorClient(): BlockchainAnchorClient = anchorClient

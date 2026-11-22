@@ -31,7 +31,7 @@ storage isolation and encrypted recovery. For authorization, verify replay, budg
 limits and uncertain outcomes. For hosts, verify correlation, privacy, overload and cleanup.
 
 The [integration guide](../../contributing/testing/integration-testing.md) covers prerequisites
-and failure reporting. The [VI conformance profile](../../../credentials/plugins/verifiable-intent/CONFORMANCE.md)
+and failure reporting. The [VI conformance profile](https://github.com/geoknoesis/trustweave/blob/main/credentials/plugins/verifiable-intent/CONFORMANCE.md)
 and [cross-stack guide](../../operations/vi-cross-stack.md) identify implemented and unsupported
 profiles. The [acceptance checklist](../../contributing/testing/acceptance.md) defines what remains
 before a perfect testing/documentation assessment can be justified.

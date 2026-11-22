@@ -1,6 +1,7 @@
 ---
-title: Configuration Reference
-nav_exclude: true
+title: Configuration
+parent: How-To Guides
+has_children: true
 redirect_from:
   - /configuration/README/
 nav_order: 200

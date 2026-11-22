@@ -1,3 +1,11 @@
+---
+layout: default
+title: Host Operations
+parent: Operations
+has_children: true
+nav_order: 70
+---
+
 # Shared SDK host observability
 
 The `org.trustweave:observability` module provides `HostTelemetry` and

@@ -5,11 +5,11 @@ import org.trustweave.kms.Algorithm
 import org.trustweave.kms.KeyHandle
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlin.test.assertFailsWith
 
 class KmsOperationResultTest {
     private val testKeyId = KeyId("test-key-id")
@@ -101,17 +101,19 @@ class KmsOperationResultTest {
     @Test
     fun `test GetPublicKeyResult fold`() {
         val success = GetPublicKeyResult.Success(testKeyHandle)
-        val successValue = success.fold(
-            onFailure = { "failed" },
-            onSuccess = { "success" }
-        )
+        val successValue =
+            success.fold(
+                onFailure = { "failed" },
+                onSuccess = { "success" },
+            )
         assertEquals("success", successValue)
 
         val failure = GetPublicKeyResult.Failure.KeyNotFound(testKeyId)
-        val failureValue = failure.fold(
-            onFailure = { "failed" },
-            onSuccess = { "success" }
-        )
+        val failureValue =
+            failure.fold(
+                onFailure = { "failed" },
+                onSuccess = { "success" },
+            )
         assertEquals("failed", failureValue)
     }
 
@@ -137,12 +139,13 @@ class KmsOperationResultTest {
 
     @Test
     fun `test SignResult UnsupportedAlgorithm`() {
-        val result = SignResult.Failure.UnsupportedAlgorithm(
-            testKeyId,
-            Algorithm.Ed25519,
-            Algorithm.Secp256k1,
-            "Algorithm mismatch"
-        )
+        val result =
+            SignResult.Failure.UnsupportedAlgorithm(
+                testKeyId,
+                Algorithm.Ed25519,
+                Algorithm.Secp256k1,
+                "Algorithm mismatch",
+            )
         assertTrue(result.isFailure)
         assertEquals(testKeyId, result.keyId)
         assertEquals(Algorithm.Ed25519, result.requestedAlgorithm)
@@ -151,11 +154,12 @@ class KmsOperationResultTest {
 
     @Test
     fun `test SignResult getOrThrow with UnsupportedAlgorithm throws`() {
-        val result = SignResult.Failure.UnsupportedAlgorithm(
-            testKeyId,
-            Algorithm.Ed25519,
-            Algorithm.Secp256k1
-        )
+        val result =
+            SignResult.Failure.UnsupportedAlgorithm(
+                testKeyId,
+                Algorithm.Ed25519,
+                Algorithm.Secp256k1,
+            )
         assertFailsWith<org.trustweave.kms.UnsupportedAlgorithmException> {
             result.getOrThrow()
         }
@@ -165,10 +169,11 @@ class KmsOperationResultTest {
     fun `test SignResult fold`() {
         val signature = byteArrayOf(1, 2, 3)
         val success = SignResult.Success(signature)
-        val successValue = success.fold(
-            onFailure = { "failed" },
-            onSuccess = { "success" }
-        )
+        val successValue =
+            success.fold(
+                onFailure = { "failed" },
+                onSuccess = { "success" },
+            )
         assertEquals("success", successValue)
     }
 
@@ -194,11 +199,12 @@ class KmsOperationResultTest {
 
     @Test
     fun `test GenerateKeyResult InvalidOptions`() {
-        val result = GenerateKeyResult.Failure.InvalidOptions(
-            Algorithm.Ed25519,
-            "Invalid key size",
-            mapOf("keySize" to -1)
-        )
+        val result =
+            GenerateKeyResult.Failure.InvalidOptions(
+                Algorithm.Ed25519,
+                "Invalid key size",
+                mapOf("keySize" to -1),
+            )
         assertTrue(result.isFailure)
         assertEquals("Invalid key size", result.reason)
         assertTrue(result.invalidOptions.containsKey("keySize"))
@@ -206,10 +212,11 @@ class KmsOperationResultTest {
 
     @Test
     fun `test GenerateKeyResult getOrThrow with UnsupportedAlgorithm throws`() {
-        val result = GenerateKeyResult.Failure.UnsupportedAlgorithm(
-            Algorithm.Ed25519,
-            setOf(Algorithm.Secp256k1)
-        )
+        val result =
+            GenerateKeyResult.Failure.UnsupportedAlgorithm(
+                Algorithm.Ed25519,
+                setOf(Algorithm.Secp256k1),
+            )
         assertFailsWith<org.trustweave.kms.UnsupportedAlgorithmException> {
             result.getOrThrow()
         }
@@ -217,10 +224,11 @@ class KmsOperationResultTest {
 
     @Test
     fun `test GenerateKeyResult getOrThrow with InvalidOptions throws`() {
-        val result = GenerateKeyResult.Failure.InvalidOptions(
-            Algorithm.Ed25519,
-            "Invalid options"
-        )
+        val result =
+            GenerateKeyResult.Failure.InvalidOptions(
+                Algorithm.Ed25519,
+                "Invalid options",
+            )
         assertFailsWith<IllegalArgumentException> {
             result.getOrThrow()
         }
@@ -274,18 +282,19 @@ class KmsOperationResultTest {
     @Test
     fun `test DeleteKeyResult fold`() {
         val deleted = DeleteKeyResult.Deleted
-        val deletedValue = deleted.fold(
-            onFailure = { "failed" },
-            onSuccess = { if (it) "deleted" else "not found" }
-        )
+        val deletedValue =
+            deleted.fold(
+                onFailure = { "failed" },
+                onSuccess = { if (it) "deleted" else "not found" },
+            )
         assertEquals("deleted", deletedValue)
 
         val notFound = DeleteKeyResult.NotFound
-        val notFoundValue = notFound.fold(
-            onFailure = { "failed" },
-            onSuccess = { if (it) "deleted" else "not found" }
-        )
+        val notFoundValue =
+            notFound.fold(
+                onFailure = { "failed" },
+                onSuccess = { if (it) "deleted" else "not found" },
+            )
         assertEquals("not found", notFoundValue)
     }
 }
-

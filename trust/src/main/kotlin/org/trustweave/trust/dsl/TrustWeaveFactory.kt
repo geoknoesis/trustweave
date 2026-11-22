@@ -101,7 +101,7 @@ internal object TrustWeaveFactory {
 
         val resolvedRevocationManager =
             state.revocationProvider?.let {
-                resolveRevocationManager(it)
+                resolveRevocationManager(it, state.statusListRegistryFactory)
             }
 
         val resolvedTrustRegistry =
@@ -392,8 +392,14 @@ internal object TrustWeaveFactory {
         return providers
     }
 
-    private fun resolveRevocationManager(providerName: String): CredentialRevocationManager =
-        when (providerName) {
+    private suspend fun resolveRevocationManager(
+        providerName: String,
+        factory: org.trustweave.revocation.services.StatusListRegistryFactory? = null,
+    ): CredentialRevocationManager {
+        if (factory != null) {
+            return factory.create(providerName)
+        }
+        return when (providerName) {
             "inMemory", "in-memory", "default" ->
                 org.trustweave.credential.revocation.RevocationManagers
                     .default()
@@ -401,11 +407,12 @@ internal object TrustWeaveFactory {
                 field = "revocation.provider",
                 value = providerName,
                 reason =
-                    "Named revocation providers are not yet supported. " +
-                        "Use \"inMemory\" for the default in-memory manager, or wire a custom " +
-                        "CredentialRevocationManager programmatically.",
+                    "Named revocation providers are not yet supported without a StatusListRegistryFactory. " +
+                        "Use \"inMemory\" for the default in-memory manager, or supply " +
+                        "Builder.factories(statusListRegistryFactory = ...).",
             )
         }
+    }
 
     private suspend fun resolveTrustRegistry(
         providerName: String,
@@ -418,7 +425,11 @@ internal object TrustWeaveFactory {
                 in DefaultTrustRegistryFactory.IN_MEMORY_PROVIDERS -> DefaultTrustRegistryFactory
                 else -> throw IllegalStateException(
                     "TrustRegistry factory is required for provider '$providerName'. " +
-                        "Provide it via Builder.factories(trustRegistryFactory = ...)",
+                        "Use \"inMemory\" for the built-in in-memory trust registry, or configure a custom factory:\n" +
+                        "TrustWeave.build {\n" +
+                        "    factories(trustRegistryFactory = myTrustRegistryFactory)\n" +
+                        "    trust { provider(\"$providerName\") }\n" +
+                        "}",
                 )
             }
         return f.create(providerName)

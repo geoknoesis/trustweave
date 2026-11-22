@@ -97,6 +97,7 @@ public final class org/trustweave/trust/TrustWeave : java/io/Closeable, org/trus
 	public fun getWalletFactory ()Lorg/trustweave/wallet/services/WalletFactory;
 	public final fun issue-KLykuaI (JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun issue-KLykuaI$default (Lorg/trustweave/trust/TrustWeave;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun requireKms ()Lorg/trustweave/kms/KeyManagementService;
 	public fun resolve (Lorg/trustweave/did/identifiers/Did;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun resolve (Lorg/trustweave/did/identifiers/Did;Lorg/trustweave/did/resolution/ResolutionOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun resolveDid-8Mi8wO0 (Ljava/lang/String;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;

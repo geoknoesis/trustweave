@@ -7,7 +7,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonObject
 import org.trustweave.core.exception.TrustWeaveException
-import org.trustweave.did.*
+import org.trustweave.did.DidMethod
 import org.trustweave.did.exception.DidException
 import org.trustweave.did.identifiers.Did
 import org.trustweave.did.model.DidDocument

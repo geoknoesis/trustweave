@@ -40,7 +40,7 @@ object ChainIdValidator {
                 code = ErrorCodes.CHAIN_ID_EMPTY,
                 message = "Chain ID cannot be empty",
                 field = "chainId",
-                value = chainId
+                value = chainId,
             )
         }
 
@@ -50,7 +50,7 @@ object ChainIdValidator {
                 code = ErrorCodes.INVALID_CHAIN_ID_FORMAT,
                 message = "Chain ID must match format: <namespace>:<reference> or <namespace>:<reference>:<additional>",
                 field = "chainId",
-                value = chainId
+                value = chainId,
             )
         }
 
@@ -64,7 +64,10 @@ object ChainIdValidator {
      * @param availableChains List of available chain IDs
      * @return ValidationResult indicating if the chain ID is registered
      */
-    fun validateRegistered(chainId: String, availableChains: List<String>): ValidationResult {
+    fun validateRegistered(
+        chainId: String,
+        availableChains: List<String>,
+    ): ValidationResult {
         val formatResult = validateFormat(chainId)
         if (!formatResult.isValid()) {
             return formatResult
@@ -75,11 +78,10 @@ object ChainIdValidator {
                 code = ErrorCodes.CHAIN_NOT_REGISTERED,
                 message = "Chain ID '$chainId' is not registered. Available chains: $availableChains",
                 field = "chainId",
-                value = chainId
+                value = chainId,
             )
         }
 
         return ValidationResult.Valid
     }
 }
-

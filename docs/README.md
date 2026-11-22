@@ -12,11 +12,11 @@ title: TrustWeave
 
 **A neutral, reusable trust and identity core** library designed to be domain-agnostic, chain-agnostic, Decentralized Identifier (DID)-method-agnostic, and Key Management Service (KMS)-agnostic.
 
-[![Version](https://img.shields.io/badge/version-0.7.0-blue.svg)](https://github.com/geoknoesis/TrustWeave)
-[![License](https://img.shields.io/badge/license-Dual-green.svg)](../LICENSE)
-[![Kotlin](https://img.shields.io/badge/kotlin-2.3.21-orange.svg)](https://kotlinlang.org)
+[![Version](https://img.shields.io/badge/version-0.7.0-blue.svg)](https://github.com/geoknoesis/trustweave)
+[![License](https://img.shields.io/badge/license-Dual-green.svg)](https://github.com/geoknoesis/trustweave/blob/main/LICENSE)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.4.21-orange.svg)](https://kotlinlang.org)
 
-[Quick Start](#zap-quick-start) • [Documentation](getting-started/quick-start.md) • [Scenarios](scenarios/README.md) • [GitHub](https://github.com/geoknoesis/TrustWeave)
+[Quick Start](#quick-start) • [Documentation](getting-started/quick-start.md) • [Scenarios](scenarios/README.md) • [GitHub](https://github.com/geoknoesis/trustweave)
 
 </div>
 
@@ -28,17 +28,17 @@ TrustWeave is a **Kotlin library with provider-specific maturity** for building 
 
 ### ✨ Why TrustWeave?
 
-- Domain-Agnostic** - Works for any use case (education, healthcare, Internet of Things (IoT), supply chain, etc.)
-- Chain-Agnostic** - Supports any blockchain via pluggable adapters
-- DID-Method-Agnostic** - Works with any Decentralized Identifier (DID) method (did:key, did:web, did:ion, etc.)
-- KMS-Agnostic** - Supports any Key Management Service (KMS)
-- Type-Safe** - Leverages Kotlin's type system for compile-time safety
-- Coroutine-Based** - Built for modern async/await patterns
-- Testable** - Comprehensive test utilities and in-memory implementations
+- **Domain-Agnostic** - Works for any use case (education, healthcare, Internet of Things (IoT), supply chain, etc.)
+- **Chain-Agnostic** - Supports any blockchain via pluggable adapters
+- **DID-Method-Agnostic** - Works with any Decentralized Identifier (DID) method (did:key, did:web, did:ion, etc.)
+- **KMS-Agnostic** - Supports any Key Management Service (KMS)
+- **Type-Safe** - Leverages Kotlin's type system for compile-time safety
+- **Coroutine-Based** - Built for modern async/await patterns
+- **Testable** - Comprehensive test utilities and in-memory implementations
 
 ---
 
-## ⚡ Quick Start
+## Quick Start
 
 Get started with TrustWeave in **30 seconds**:
 
@@ -91,7 +91,9 @@ fun main() =
 
 ```kotlin
 dependencies {
-    implementation("org.trustweave:distribution-all:0.7.0")
+    implementation(platform("org.trustweave:distribution-bom:0.7.0"))
+    // Includes core modules, did:key, and kms-plugins-inmemory for QuickStart
+    implementation("org.trustweave:distribution-all")
 }
 ```
 
@@ -223,11 +225,11 @@ Common questions and answers
 
 Each scenario includes:
 
-- Complete, runnable code** - Copy, paste, and run
-- Industry context** - Real-world use cases and value propositions
-- Best practices** - Production-ready patterns
-- Visual diagrams** - Mermaid flowcharts showing the architecture
-- Expected output** - See what success looks like
+- **Complete, runnable code** - Copy, paste, and run
+- **Industry context** - Real-world use cases and value propositions
+- **Best practices** - Production-ready patterns
+- **Visual diagrams** - Mermaid flowcharts showing the architecture
+- **Expected output** - See what success looks like
 
 **Popular Examples:**
 
@@ -322,7 +324,7 @@ val wallet = trustWeave.wallet {
 ## 🤝 Community & Support
 
 - **Created by**: [Geoknoesis LLC](https://www.geoknoesis.com)
-- **License**: Dual license (Open source for non-commercial, Commercial for production)
+- **License**: Dual-licensed — [AGPL-3.0](https://github.com/geoknoesis/trustweave/blob/main/LICENSE) (free for any purpose, including commercial use, under AGPL-3.0 copyleft terms) or [Commercial License](https://github.com/geoknoesis/trustweave/blob/main/LICENSE-COMMERCIAL.md) (removes AGPL-3.0 copyleft obligations for proprietary products and services)
 - **Version**: 0.7.0
 - **GitHub**: [geoknoesis/TrustWeave](https://github.com/geoknoesis/TrustWeave)
 

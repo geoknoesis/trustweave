@@ -3,7 +3,9 @@ package org.trustweave.did
 import org.junit.jupiter.api.Test
 import org.trustweave.did.KeyAlgorithm
 import org.trustweave.did.KeyPurpose
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Tests for type-safe DidCreationOptions.

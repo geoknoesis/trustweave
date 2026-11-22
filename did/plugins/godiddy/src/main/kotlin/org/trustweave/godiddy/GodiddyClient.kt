@@ -18,7 +18,7 @@ import kotlinx.serialization.json.Json
  */
 class GodiddyClient(
     internal val config: GodiddyConfig
-) {
+) : AutoCloseable {
     private val httpClient: HttpClient = HttpClient(CIO) {
         install(ContentNegotiation) {
             json(Json {
@@ -107,7 +107,7 @@ class GodiddyClient(
     /**
      * Closes the HTTP client.
      */
-    fun close() {
+    override fun close() {
         httpClient.close()
     }
 }

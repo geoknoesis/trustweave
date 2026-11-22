@@ -63,6 +63,7 @@ sealed interface HolderKey {
         override fun equals(other: Any?): Boolean =
             other is Software && publicKey.contentEquals(other.publicKey) && privateKey.contentEquals(other.privateKey)
         override fun hashCode(): Int = publicKey.contentHashCode() * 31 + privateKey.contentHashCode()
+        override fun toString(): String = "HolderKey.Software(publicKeySize=${publicKey.size}, privateKey=[REDACTED])"
     }
 
     companion object {
@@ -129,5 +130,10 @@ sealed interface HolderKey {
         val source: String,
         val softwarePrivateKey: ByteArray?,
         val keystoreAlias: String?,
-    )
+    ) {
+        override fun toString(): String =
+            "GeneratedKey(key=$key, source='$source', " +
+                "softwarePrivateKey=${if (softwarePrivateKey != null) "[REDACTED]" else "null"}, " +
+                "keystoreAlias=$keystoreAlias)"
+    }
 }

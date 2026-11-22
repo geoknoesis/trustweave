@@ -92,7 +92,10 @@ class JsonDataBuilder {
      * Used by factories that accept `vararg Pair<String, Any?>`.
      */
     @PublishedApi
-    internal fun putAny(key: String, value: Any?) {
+    internal fun putAny(
+        key: String,
+        value: Any?,
+    ) {
         properties[key] = value.toJsonValue()
     }
 
@@ -104,21 +107,22 @@ class JsonDataBuilder {
  * `buildJsonObject { put(...) }` in user code — it stays in typed Kotlin and
  * keeps `kotlinx.serialization` out of the public surface.
  */
-fun jsonData(block: JsonDataBuilder.() -> Unit): JsonObject =
-    JsonDataBuilder().apply(block).build()
+fun jsonData(block: JsonDataBuilder.() -> Unit): JsonObject = JsonDataBuilder().apply(block).build()
 
-internal fun Any?.toJsonValue(): JsonElement = when (this) {
-    null -> JsonNull
-    is JsonElement -> this
-    is String -> JsonPrimitive(this)
-    is Number -> JsonPrimitive(this)
-    is Boolean -> JsonPrimitive(this)
-    is Map<*, *> -> JsonObject(
-        entries.associate { (k, v) ->
-            requireNotNull(k) { "JSON object keys must be non-null strings" }.toString() to v.toJsonValue()
-        }
-    )
-    is Iterable<*> -> JsonArray(map { it.toJsonValue() })
-    is Array<*> -> JsonArray(map { it.toJsonValue() })
-    else -> error("Unsupported value type for JSON conversion: ${this::class}")
-}
+internal fun Any?.toJsonValue(): JsonElement =
+    when (this) {
+        null -> JsonNull
+        is JsonElement -> this
+        is String -> JsonPrimitive(this)
+        is Number -> JsonPrimitive(this)
+        is Boolean -> JsonPrimitive(this)
+        is Map<*, *> ->
+            JsonObject(
+                entries.associate { (k, v) ->
+                    requireNotNull(k) { "JSON object keys must be non-null strings" }.toString() to v.toJsonValue()
+                },
+            )
+        is Iterable<*> -> JsonArray(map { it.toJsonValue() })
+        is Array<*> -> JsonArray(map { it.toJsonValue() })
+        else -> error("Unsupported value type for JSON conversion: ${this::class}")
+    }

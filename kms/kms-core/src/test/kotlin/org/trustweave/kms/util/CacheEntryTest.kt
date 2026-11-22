@@ -1,10 +1,10 @@
 package org.trustweave.kms.util
 
+import java.util.concurrent.TimeUnit
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import java.util.concurrent.TimeUnit
 
 class CacheEntryTest {
     @Test
@@ -92,4 +92,3 @@ class CacheEntryTest {
         assertTrue(entry.value == mapValue, "Entry should preserve generic value")
     }
 }
-

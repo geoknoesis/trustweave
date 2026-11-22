@@ -54,13 +54,12 @@ class DocumentationCheckTest(unittest.TestCase):
         self.assertIn('missing.md', self.errors()[0])
 
     def test_badge_link_and_historical_link_are_checked(self):
-        self.write('docs/README.md', '[![License](https://img.shields.io/x.svg)](LICENSE)\n')
+        self.write('docs/README.md', '---\ntitle: Docs\n---\n[![Guide](https://img.shields.io/x.svg)](guide.md)\n')
         self.write('docs/reviews/old.md', '[log](validation.log)\n')
         errors = self.errors()
-        self.assertTrue(any('LICENSE' in error for error in errors))
+        self.assertTrue(any('guide.md' in error for error in errors))
         self.assertTrue(any('validation.log' in error for error in errors))
-        self.write('LICENSE', 'text\n')
-        self.write('docs/README.md', '[![License](https://img.shields.io/x.svg)](../LICENSE)\n')
+        self.write('docs/guide.md', '---\ntitle: Guide\n---\n# Guide\n')
         self.write('docs/reviews/old.md', 'no links\n')
         self.assertEqual([], self.errors())
 
@@ -159,6 +158,49 @@ class DocumentationCheckTest(unittest.TestCase):
     def test_repository_gate_requires_the_contract_file(self):
         self.assertTrue(any('Missing required config/documentation-contract.json' in e
                             for e in documentation.inspect(self.root, require_contract=True)['errors']))
+
+    def test_active_doc_requires_valid_front_matter_with_title(self):
+        self.write('docs/guide.md', '# Missing front matter\n')
+        self.assertTrue(any('missing Jekyll YAML front matter' in e for e in self.errors()))
+        self.write('docs/guide.md', '---\nnav_order: 1\n---\n# Missing title\n')
+        self.assertTrue(any('missing non-empty title' in e for e in self.errors()))
+        self.write('docs/guide.md', '---\ntitle: ""\n---\n# Empty title\n')
+        self.assertTrue(any('missing non-empty title' in e for e in self.errors()))
+        self.write('docs/guide.md', '---\nnot valid yaml line\ntitle: Guide\n---\n# Bad YAML\n')
+        self.assertTrue(any('invalid Jekyll YAML front matter line' in e for e in self.errors()))
+        self.write('docs/guide.md', '---\ntitle: Guide\nnav_order: 1\n---\n# Valid\n')
+        self.assertEqual([], self.errors())
+
+    def test_active_doc_link_cannot_escape_docs_root(self):
+        self.write('LICENSE', 'AGPL\n')
+        self.write('docs/getting-started/install.md', '---\ntitle: Install\n---\n[License](../../LICENSE)\n')
+        self.assertTrue(any('escapes docs/ root' in e for e in self.errors()))
+        self.write('docs/getting-started/install.md',
+                   '---\ntitle: Install\n---\n[License](https://github.com/geoknoesis/trustweave/blob/main/LICENSE)\n')
+        self.assertEqual([], self.errors())
+
+    def test_active_doc_rejects_stale_versions_and_sonatype_url(self):
+        for token in ['Kotlin 2.3.21', 'Gradle 9.5.0', 'Gradle 9.2.0', 'https://oss.sonatype.org/content/repositories/snapshots/']:
+            with self.subTest(token=token):
+                self.write('docs/guide.md', f'---\ntitle: Guide\n---\nUse {token}.\n')
+                errors = self.errors()
+                self.assertTrue(any('stale toolchain version' in e or 'oss.sonatype.org' in e for e in errors))
+        self.write('docs/guide.md', '---\ntitle: Guide\n---\nUse Kotlin 2.4.21 and Gradle 9.8.1.\n')
+        self.assertEqual([], self.errors())
+
+    def test_excluded_docs_subtrees_skip_active_doc_rules(self):
+        self.write('LICENSE', 'AGPL\n')
+        for excluded in [
+            'docs/reviews/report.md',
+            'docs/archive/old.md',
+            'docs/superpowers/spec.md',
+            'docs/sales/pitch.md',
+            'docs/tools/notes.md',
+            'docs/contributing/test-templates/template.md',
+        ]:
+            depth = '../' * (len(Path(excluded).parts) - 1)
+            self.write(excluded, f'# No front matter\nKotlin 2.3.21, Gradle 9.5.0, oss.sonatype.org [License]({depth}LICENSE)\n')
+        self.assertEqual([], self.errors())
 
 
 if __name__ == '__main__':

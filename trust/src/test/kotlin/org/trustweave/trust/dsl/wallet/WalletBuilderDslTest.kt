@@ -118,6 +118,10 @@ class WalletBuilderDslTest {
         val error = assertFailsWith<WalletException.WalletFactoryNotConfigured> { runBlocking { builder(null).build() } }
 
         assertEquals("WALLET_FACTORY_NOT_CONFIGURED", error.code)
+        assertTrue(
+            error.message.contains("factories(walletFactory ="),
+            "Expected actionable factories(walletFactory = ...) snippet in error: ${error.message}",
+        )
     }
 
     @Test

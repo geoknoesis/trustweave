@@ -4,7 +4,7 @@ import kotlinx.serialization.json.JsonObject
 import org.trustweave.credential.internal.SecurityConstants
 import org.trustweave.credential.model.vc.VerifiableCredential
 
-/**
+/*
  * Extension functions for VerifiableCredential format transformation.
  *
  * Provides fluent, DSL-like API for credential format conversion.

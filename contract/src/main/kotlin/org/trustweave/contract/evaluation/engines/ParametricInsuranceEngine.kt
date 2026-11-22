@@ -1,8 +1,13 @@
 package org.trustweave.contract.evaluation.engines
 
-import org.trustweave.contract.evaluation.*
-import org.trustweave.contract.models.*
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import org.trustweave.contract.evaluation.BaseEvaluationEngine
+import org.trustweave.contract.evaluation.EvaluationContext
+import org.trustweave.contract.evaluation.require
+import org.trustweave.contract.models.ConditionType
+import org.trustweave.contract.models.ContractCondition
 
 /**
  * Parametric insurance evaluation engine.
@@ -36,26 +41,26 @@ import kotlinx.serialization.json.*
 class ParametricInsuranceEngine : BaseEvaluationEngine() {
     override val engineId: String = "parametric-insurance"
     override val version: String = "1.0.0"
-    override val supportedConditionTypes: Set<ConditionType> = setOf(
-        ConditionType.THRESHOLD,
-        ConditionType.RANGE,
-        ConditionType.COMPARISON
-    )
+    override val supportedConditionTypes: Set<ConditionType> =
+        setOf(
+            ConditionType.THRESHOLD,
+            ConditionType.RANGE,
+            ConditionType.COMPARISON,
+        )
 
     override suspend fun evaluateCondition(
         condition: ContractCondition,
         inputData: JsonElement,
-        context: EvaluationContext
-    ): Boolean {
-        return when (condition.conditionType) {
+        context: EvaluationContext,
+    ): Boolean =
+        when (condition.conditionType) {
             ConditionType.THRESHOLD -> evaluateThreshold(condition, inputData)
             ConditionType.RANGE -> evaluateRange(condition, inputData)
             ConditionType.COMPARISON -> evaluateComparison(condition, inputData)
             else -> throw UnsupportedOperationException(
-                "Condition type ${condition.conditionType} not supported by $engineId"
+                "Condition type ${condition.conditionType} not supported by $engineId",
             )
         }
-    }
 
     /**
      * Evaluates a threshold condition.
@@ -68,7 +73,7 @@ class ParametricInsuranceEngine : BaseEvaluationEngine() {
      */
     private fun evaluateThreshold(
         condition: ContractCondition,
-        inputData: JsonElement
+        inputData: JsonElement,
     ): Boolean {
         val expression = condition.expression.trim()
         require(expression.isNotBlank()) {
@@ -77,11 +82,12 @@ class ParametricInsuranceEngine : BaseEvaluationEngine() {
 
         // Parse expression: $.path >= value
         val operators = listOf(">=", "<=", "==", ">", "<", "!=")
-        val operator = operators.find { expression.contains(it) }
-            ?: throw IllegalArgumentException(
-                "Invalid threshold expression: $expression. " +
-                "Expected format: \$.path >= value"
-            )
+        val operator =
+            operators.find { expression.contains(it) }
+                ?: throw IllegalArgumentException(
+                    "Invalid threshold expression: $expression. " +
+                        "Expected format: \$.path >= value",
+                )
 
         val parts = expression.split(operator, limit = 2)
         if (parts.size != 2) {
@@ -103,18 +109,21 @@ class ParametricInsuranceEngine : BaseEvaluationEngine() {
         }
 
         // Extract value from input data
-        val inputObj = inputData as? JsonObject
-            ?: throw IllegalArgumentException("Input data must be a JSON object")
+        val inputObj =
+            inputData as? JsonObject
+                ?: throw IllegalArgumentException("Input data must be a JSON object")
 
         val pathValue = inputObj[path]
-        val value = pathValue?.jsonPrimitive?.content?.toDoubleOrNull()
-            ?: throw IllegalArgumentException(
-                "Cannot extract numeric value from path: $path. " +
-                "Found: ${pathValue?.toString() ?: "null"}"
-            )
+        val value =
+            pathValue?.jsonPrimitive?.content?.toDoubleOrNull()
+                ?: throw IllegalArgumentException(
+                    "Cannot extract numeric value from path: $path. " +
+                        "Found: ${pathValue?.toString() ?: "null"}",
+                )
 
-        val threshold = thresholdStr.toDoubleOrNull()
-            ?: throw IllegalArgumentException("Invalid threshold value: $thresholdStr")
+        val threshold =
+            thresholdStr.toDoubleOrNull()
+                ?: throw IllegalArgumentException("Invalid threshold value: $thresholdStr")
 
         // Evaluate comparison with epsilon for equality
         return when (operator) {
@@ -136,7 +145,7 @@ class ParametricInsuranceEngine : BaseEvaluationEngine() {
      */
     private fun evaluateRange(
         condition: ContractCondition,
-        inputData: JsonElement
+        inputData: JsonElement,
     ): Boolean {
         val expression = condition.expression.trim()
         require(expression.isNotBlank()) {
@@ -147,7 +156,7 @@ class ParametricInsuranceEngine : BaseEvaluationEngine() {
         if (!expression.contains("&&")) {
             throw IllegalArgumentException(
                 "Invalid range expression: $expression. " +
-                "Expected format: \$.path >= min && \$.path <= max"
+                    "Expected format: \$.path >= min && \$.path <= max",
             )
         }
 
@@ -163,14 +172,16 @@ class ParametricInsuranceEngine : BaseEvaluationEngine() {
         }
 
         // Evaluate both conditions
-        val minSatisfied = evaluateThreshold(
-            condition.copy(expression = minCondition),
-            inputData
-        )
-        val maxSatisfied = evaluateThreshold(
-            condition.copy(expression = maxCondition),
-            inputData
-        )
+        val minSatisfied =
+            evaluateThreshold(
+                condition.copy(expression = minCondition),
+                inputData,
+            )
+        val maxSatisfied =
+            evaluateThreshold(
+                condition.copy(expression = maxCondition),
+                inputData,
+            )
 
         return minSatisfied && maxSatisfied
     }
@@ -183,7 +194,7 @@ class ParametricInsuranceEngine : BaseEvaluationEngine() {
      */
     private fun evaluateComparison(
         condition: ContractCondition,
-        inputData: JsonElement
+        inputData: JsonElement,
     ): Boolean {
         val expression = condition.expression.trim()
         require(expression.isNotBlank()) {
@@ -191,11 +202,12 @@ class ParametricInsuranceEngine : BaseEvaluationEngine() {
         }
 
         val operators = listOf(">=", "<=", "==", ">", "<", "!=")
-        val operator = operators.find { expression.contains(it) }
-            ?: throw IllegalArgumentException(
-                "Invalid comparison expression: $expression. " +
-                "Expected format: \$.path1 >= \$.path2"
-            )
+        val operator =
+            operators.find { expression.contains(it) }
+                ?: throw IllegalArgumentException(
+                    "Invalid comparison expression: $expression. " +
+                        "Expected format: \$.path1 >= \$.path2",
+                )
 
         val parts = expression.split(operator, limit = 2)
         if (parts.size != 2) {
@@ -222,22 +234,25 @@ class ParametricInsuranceEngine : BaseEvaluationEngine() {
             "Invalid comparison expression: $expression. Right path cannot be empty"
         }
 
-        val inputObj = inputData as? JsonObject
-            ?: throw IllegalArgumentException("Input data must be a JSON object")
+        val inputObj =
+            inputData as? JsonObject
+                ?: throw IllegalArgumentException("Input data must be a JSON object")
 
         val path1Value = inputObj[path1]
-        val value1 = path1Value?.jsonPrimitive?.content?.toDoubleOrNull()
-            ?: throw IllegalArgumentException(
-                "Cannot extract numeric value from path: $path1. " +
-                "Found: ${path1Value?.toString() ?: "null"}"
-            )
+        val value1 =
+            path1Value?.jsonPrimitive?.content?.toDoubleOrNull()
+                ?: throw IllegalArgumentException(
+                    "Cannot extract numeric value from path: $path1. " +
+                        "Found: ${path1Value?.toString() ?: "null"}",
+                )
 
         val path2Value = inputObj[path2]
-        val value2 = path2Value?.jsonPrimitive?.content?.toDoubleOrNull()
-            ?: throw IllegalArgumentException(
-                "Cannot extract numeric value from path: $path2. " +
-                "Found: ${path2Value?.toString() ?: "null"}"
-            )
+        val value2 =
+            path2Value?.jsonPrimitive?.content?.toDoubleOrNull()
+                ?: throw IllegalArgumentException(
+                    "Cannot extract numeric value from path: $path2. " +
+                        "Found: ${path2Value?.toString() ?: "null"}",
+                )
 
         // Evaluate comparison with epsilon for equality
         return when (operator) {
@@ -251,4 +266,3 @@ class ParametricInsuranceEngine : BaseEvaluationEngine() {
         }
     }
 }
-

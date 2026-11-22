@@ -10,7 +10,13 @@ import kotlinx.coroutines.yield
 import org.junit.jupiter.api.Test
 import org.trustweave.core.exception.TrustWeaveException
 import kotlin.coroutines.cancellation.CancellationException
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.milliseconds
 
 /**

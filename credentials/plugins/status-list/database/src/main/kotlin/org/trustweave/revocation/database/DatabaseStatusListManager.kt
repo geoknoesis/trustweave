@@ -75,6 +75,7 @@ class DatabaseStatusListManager(
      */
     private fun initializeSchema() {
         dataSource.connection.use { conn ->
+            val savedAutoCommit = conn.autoCommit
             conn.autoCommit = false
             try {
                 conn
@@ -91,7 +92,7 @@ class DatabaseStatusListManager(
                             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                         )
                         """.trimIndent(),
-                    ).execute()
+                    ).use { it.execute() }
 
                 conn
                     .prepareStatement(
@@ -104,7 +105,7 @@ class DatabaseStatusListManager(
                             FOREIGN KEY (status_list_id) REFERENCES status_lists(id) ON DELETE CASCADE
                         )
                         """.trimIndent(),
-                    ).execute()
+                    ).use { it.execute() }
 
                 conn
                     .prepareStatement(
@@ -115,7 +116,7 @@ class DatabaseStatusListManager(
                             FOREIGN KEY (status_list_id) REFERENCES status_lists(id) ON DELETE CASCADE
                         )
                         """.trimIndent(),
-                    ).execute()
+                    ).use { it.execute() }
 
                 listOf(
                     "CREATE INDEX IF NOT EXISTS idx_status_lists_issuer ON status_lists (issuer_did)",
@@ -123,12 +124,14 @@ class DatabaseStatusListManager(
                     "CREATE INDEX IF NOT EXISTS idx_credential_indices_list ON credential_indices (status_list_id)",
                     "CREATE INDEX IF NOT EXISTS idx_credential_indices_entry ON credential_indices (status_list_id, index_value)",
                     "CREATE INDEX IF NOT EXISTS idx_credential_indices_credential ON credential_indices (credential_id)",
-                ).forEach { conn.prepareStatement(it).execute() }
+                ).forEach { sql -> conn.prepareStatement(sql).use { it.execute() } }
 
                 conn.commit()
             } catch (e: Exception) {
-                conn.rollback()
+                runCatching { conn.rollback() }
                 throw RuntimeException("Failed to initialize database schema: ${e.message}", e)
+            } finally {
+                runCatching { conn.autoCommit = savedAutoCommit }
             }
         }
     }
@@ -167,39 +170,45 @@ class DatabaseStatusListManager(
                 }
 
             dataSource.connection.use { conn ->
+                val savedAutoCommit = conn.autoCommit
                 conn.autoCommit = false
                 try {
-                    val stmt =
-                        conn.prepareStatement(
+                    conn
+                        .prepareStatement(
                             """
                     INSERT INTO status_lists (id, issuer_did, purpose, size, encoded_list, status_list_data)
                     VALUES (?, ?, ?, ?, ?, ?)
                 """,
-                        )
-                    stmt.setString(1, id)
-                    stmt.setString(2, issuerDid)
-                    stmt.setString(3, purpose.name)
-                    stmt.setInt(4, size)
-                    stmt.setString(5, encodedList)
-                    stmt.setString(6, json.encodeToString(JsonObject.serializer(), statusListJson))
-                    stmt.executeUpdate()
+                        ).use { stmt ->
+                            stmt.setString(1, id)
+                            stmt.setString(2, issuerDid)
+                            stmt.setString(3, purpose.name)
+                            stmt.setInt(4, size)
+                            stmt.setString(5, encodedList)
+                            stmt.setString(6, json.encodeToString(JsonObject.serializer(), statusListJson))
+                            stmt.executeUpdate()
+                        }
 
-                    val nextIndexStmt =
-                        conn.prepareStatement(
+                    conn
+                        .prepareStatement(
                             """
                     INSERT INTO status_list_next_index (status_list_id, next_index)
                     VALUES (?, 0)
                 """,
-                        )
-                    nextIndexStmt.setString(1, id)
-                    nextIndexStmt.executeUpdate()
+                        ).use { nextIndexStmt ->
+                            nextIndexStmt.setString(1, id)
+                            nextIndexStmt.executeUpdate()
+                        }
 
                     conn.commit()
                 } catch (cancelled: CancellationException) {
+                    runCatching { conn.rollback() }
                     throw cancelled
                 } catch (e: Exception) {
-                    conn.rollback()
+                    runCatching { conn.rollback() }
                     throw RuntimeException("Failed to create status list: ${e.message}", e)
+                } finally {
+                    runCatching { conn.autoCommit = savedAutoCommit }
                 }
             }
 
@@ -246,6 +255,7 @@ class DatabaseStatusListManager(
     ): Boolean =
         withContext(Dispatchers.IO) {
             dataSource.connection.use { conn ->
+                val savedAutoCommit = conn.autoCommit
                 conn.autoCommit = false
                 try {
                     // Get status list
@@ -287,26 +297,27 @@ class DatabaseStatusListManager(
                     val updatedStatusListJson = updateEncodedList(statusListJson, newEncodedList)
 
                     // Save to database
-                    val updateStmt =
-                        conn.prepareStatement(
+                    conn
+                        .prepareStatement(
                             """
                     UPDATE status_lists
                     SET encoded_list = ?, status_list_data = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE id = ?
                 """,
-                        )
-                    updateStmt.setString(1, newEncodedList)
-                    updateStmt.setString(2, json.encodeToString(JsonObject.serializer(), updatedStatusListJson))
-                    updateStmt.setString(3, statusListId)
-                    updateStmt.executeUpdate()
+                        ).use { updateStmt ->
+                            updateStmt.setString(1, newEncodedList)
+                            updateStmt.setString(2, json.encodeToString(JsonObject.serializer(), updatedStatusListJson))
+                            updateStmt.setString(3, statusListId)
+                            updateStmt.executeUpdate()
+                        }
 
                     conn.commit()
                     true
                 } catch (cancelled: kotlinx.coroutines.CancellationException) {
-                    conn.rollback()
+                    runCatching { conn.rollback() }
                     throw cancelled
                 } catch (e: Exception) {
-                    conn.rollback()
+                    runCatching { conn.rollback() }
                     // A database/decoding failure must not look like "not applied".
                     throw TrustWeaveException.InvalidState(
                         message =
@@ -314,6 +325,8 @@ class DatabaseStatusListManager(
                                 "in status list $statusListId: ${e.message}",
                         cause = e,
                     )
+                } finally {
+                    runCatching { conn.autoCommit = savedAutoCommit }
                 }
             }
         }
@@ -378,21 +391,23 @@ class DatabaseStatusListManager(
     ): Int? =
         withContext(Dispatchers.IO) {
             dataSource.connection.use { conn ->
-                val stmt =
-                    conn.prepareStatement(
+                conn
+                    .prepareStatement(
                         """
                 SELECT index_value FROM credential_indices
                 WHERE credential_id = ? AND status_list_id = ?
             """,
-                    )
-                stmt.setString(1, credentialId)
-                stmt.setString(2, statusListId.toString())
-                val rs = stmt.executeQuery()
-                if (rs.next()) {
-                    rs.getInt("index_value")
-                } else {
-                    null
-                }
+                    ).use { stmt ->
+                        stmt.setString(1, credentialId)
+                        stmt.setString(2, statusListId.toString())
+                        stmt.executeQuery().use { rs ->
+                            if (rs.next()) {
+                                rs.getInt("index_value")
+                            } else {
+                                null
+                            }
+                        }
+                    }
             }
         }
 
@@ -403,6 +418,7 @@ class DatabaseStatusListManager(
     ): Int =
         withContext(Dispatchers.IO) {
             dataSource.connection.use { conn ->
+                val savedAutoCommit = conn.autoCommit
                 conn.autoCommit = false
                 try {
                     val size = lockStatusList(statusListId.toString(), conn)
@@ -446,10 +462,13 @@ class DatabaseStatusListManager(
                     conn.commit()
                     assignedIndex
                 } catch (cancelled: CancellationException) {
+                    runCatching { conn.rollback() }
                     throw cancelled
                 } catch (e: Exception) {
-                    conn.rollback()
+                    runCatching { conn.rollback() }
                     throw e
+                } finally {
+                    runCatching { conn.autoCommit = savedAutoCommit }
                 }
             }
         }
@@ -478,46 +497,48 @@ class DatabaseStatusListManager(
     override suspend fun getStatusList(statusListId: StatusListId): StatusListMetadata? =
         withContext(Dispatchers.IO) {
             dataSource.connection.use { conn ->
-                val stmt =
-                    conn.prepareStatement(
+                conn
+                    .prepareStatement(
                         """
                 SELECT id, issuer_did, purpose, size, created_at, updated_at
                 FROM status_lists WHERE id = ?
             """,
-                    )
-                stmt.setString(1, statusListId.toString())
-                val rs = stmt.executeQuery()
-                if (rs.next()) {
-                    val createdAt =
-                        rs.getTimestamp("created_at")?.let { ts ->
-                            val javaInstant = ts.toInstant()
-                            Instant.fromEpochSeconds(javaInstant.epochSecond, javaInstant.nano)
-                        } ?: Clock.System.now()
-                    val lastUpdated =
-                        rs.getTimestamp("updated_at")?.let { ts ->
-                            val javaInstant = ts.toInstant()
-                            Instant.fromEpochSeconds(javaInstant.epochSecond, javaInstant.nano)
-                        } ?: Clock.System.now()
-                    val purposeStr = rs.getString("purpose")
-                    val purpose =
-                        try {
-                            StatusPurpose.valueOf(purposeStr.uppercase())
-                        } catch (cancelled: CancellationException) {
-                            throw cancelled
-                        } catch (e: Exception) {
-                            StatusPurpose.REVOCATION // Default fallback
+                    ).use { stmt ->
+                        stmt.setString(1, statusListId.toString())
+                        stmt.executeQuery().use { rs ->
+                            if (rs.next()) {
+                                val createdAt =
+                                    rs.getTimestamp("created_at")?.let { ts ->
+                                        val javaInstant = ts.toInstant()
+                                        Instant.fromEpochSeconds(javaInstant.epochSecond, javaInstant.nano)
+                                    } ?: Clock.System.now()
+                                val lastUpdated =
+                                    rs.getTimestamp("updated_at")?.let { ts ->
+                                        val javaInstant = ts.toInstant()
+                                        Instant.fromEpochSeconds(javaInstant.epochSecond, javaInstant.nano)
+                                    } ?: Clock.System.now()
+                                val purposeStr = rs.getString("purpose")
+                                val purpose =
+                                    try {
+                                        StatusPurpose.valueOf(purposeStr.uppercase())
+                                    } catch (cancelled: CancellationException) {
+                                        throw cancelled
+                                    } catch (e: Exception) {
+                                        StatusPurpose.REVOCATION // Default fallback
+                                    }
+                                StatusListMetadata(
+                                    id = statusListId,
+                                    issuerDid = rs.getString("issuer_did"),
+                                    purpose = purpose,
+                                    size = rs.getInt("size"),
+                                    createdAt = createdAt,
+                                    lastUpdated = lastUpdated,
+                                )
+                            } else {
+                                null
+                            }
                         }
-                    StatusListMetadata(
-                        id = statusListId,
-                        issuerDid = rs.getString("issuer_did"),
-                        purpose = purpose,
-                        size = rs.getInt("size"),
-                        createdAt = createdAt,
-                        lastUpdated = lastUpdated,
-                    )
-                } else {
-                    null
-                }
+                    }
             }
         }
 
@@ -530,87 +551,109 @@ class DatabaseStatusListManager(
                     } else {
                         "SELECT id, issuer_did, purpose, size, created_at, updated_at FROM status_lists"
                     }
-                val stmt = conn.prepareStatement(sql)
-                if (issuerDid != null) {
-                    stmt.setString(1, issuerDid)
-                }
-                val rs = stmt.executeQuery()
-                val results = mutableListOf<StatusListMetadata>()
-                while (rs.next()) {
-                    val id = StatusListId(rs.getString("id"))
-                    val createdAt =
-                        rs.getTimestamp("created_at")?.let { ts ->
-                            val javaInstant = ts.toInstant()
-                            Instant.fromEpochSeconds(javaInstant.epochSecond, javaInstant.nano)
-                        } ?: Clock.System.now()
-                    val lastUpdated =
-                        rs.getTimestamp("updated_at")?.let { ts ->
-                            val javaInstant = ts.toInstant()
-                            Instant.fromEpochSeconds(javaInstant.epochSecond, javaInstant.nano)
-                        } ?: Clock.System.now()
-                    val purposeStr = rs.getString("purpose")
-                    val purpose =
-                        try {
-                            StatusPurpose.valueOf(purposeStr.uppercase())
-                        } catch (cancelled: CancellationException) {
-                            throw cancelled
-                        } catch (e: Exception) {
-                            StatusPurpose.REVOCATION // Default fallback
+                conn.prepareStatement(sql).use { stmt ->
+                    if (issuerDid != null) {
+                        stmt.setString(1, issuerDid)
+                    }
+                    stmt.executeQuery().use { rs ->
+                        val results = mutableListOf<StatusListMetadata>()
+                        while (rs.next()) {
+                            val id = StatusListId(rs.getString("id"))
+                            val createdAt =
+                                rs.getTimestamp("created_at")?.let { ts ->
+                                    val javaInstant = ts.toInstant()
+                                    Instant.fromEpochSeconds(javaInstant.epochSecond, javaInstant.nano)
+                                } ?: Clock.System.now()
+                            val lastUpdated =
+                                rs.getTimestamp("updated_at")?.let { ts ->
+                                    val javaInstant = ts.toInstant()
+                                    Instant.fromEpochSeconds(javaInstant.epochSecond, javaInstant.nano)
+                                } ?: Clock.System.now()
+                            val purposeStr = rs.getString("purpose")
+                            val purpose =
+                                try {
+                                    StatusPurpose.valueOf(purposeStr.uppercase())
+                                } catch (cancelled: CancellationException) {
+                                    throw cancelled
+                                } catch (e: Exception) {
+                                    StatusPurpose.REVOCATION // Default fallback
+                                }
+                            results.add(
+                                StatusListMetadata(
+                                    id = id,
+                                    issuerDid = rs.getString("issuer_did"),
+                                    purpose = purpose,
+                                    size = rs.getInt("size"),
+                                    createdAt = createdAt,
+                                    lastUpdated = lastUpdated,
+                                ),
+                            )
                         }
-                    results.add(
-                        StatusListMetadata(
-                            id = id,
-                            issuerDid = rs.getString("issuer_did"),
-                            purpose = purpose,
-                            size = rs.getInt("size"),
-                            createdAt = createdAt,
-                            lastUpdated = lastUpdated,
-                        ),
-                    )
+                        results
+                    }
                 }
-                results
             }
         }
 
     override suspend fun deleteStatusList(statusListId: StatusListId): Boolean =
         withContext(Dispatchers.IO) {
             dataSource.connection.use { conn ->
+                val savedAutoCommit = conn.autoCommit
                 conn.autoCommit = false
                 try {
-                    val stmt = conn.prepareStatement("DELETE FROM status_lists WHERE id = ?")
-                    stmt.setString(1, statusListId.toString())
-                    val deleted = stmt.executeUpdate() > 0
+                    val deleted =
+                        conn.prepareStatement("DELETE FROM status_lists WHERE id = ?").use { stmt ->
+                            stmt.setString(1, statusListId.toString())
+                            stmt.executeUpdate() > 0
+                        }
                     conn.commit()
                     deleted
                 } catch (cancelled: kotlinx.coroutines.CancellationException) {
-                    conn.rollback()
+                    runCatching { conn.rollback() }
                     throw cancelled
                 } catch (e: Exception) {
                     // false means "no such list"; a database failure must not read as that.
-                    conn.rollback()
+                    runCatching { conn.rollback() }
                     throw e
+                } finally {
+                    runCatching { conn.autoCommit = savedAutoCommit }
                 }
             }
         }
 
     override suspend fun getStatusListStatistics(statusListId: StatusListId): StatusListStatistics? =
         withContext(Dispatchers.IO) {
-            val statusListJson = getStatusListFromDb(statusListId.toString()) ?: return@withContext null
-
             dataSource.connection.use { conn ->
-                val usedIndicesStmt =
-                    conn.prepareStatement(
-                        """
-                SELECT COUNT(*) as count FROM credential_indices WHERE status_list_id = ?
-            """,
-                    )
-                usedIndicesStmt.setString(1, statusListId.toString())
-                val usedRs = usedIndicesStmt.executeQuery()
-                val usedIndices = if (usedRs.next()) usedRs.getInt("count") else 0
+                val (totalCapacity, statusListJson) =
+                    conn
+                        .prepareStatement("SELECT size, status_list_data FROM status_lists WHERE id = ?")
+                        .use { stmt ->
+                            stmt.setString(1, statusListId.toString())
+                            stmt.executeQuery().use { rs ->
+                                if (rs.next()) {
+                                    rs.getInt("size") to
+                                        json.decodeFromString(JsonObject.serializer(), rs.getString("status_list_data"))
+                                } else {
+                                    return@withContext null
+                                }
+                            }
+                        }
+
+                val usedIndices =
+                    conn
+                        .prepareStatement(
+                            """
+                    SELECT COUNT(*) as count FROM credential_indices WHERE status_list_id = ?
+                """,
+                        ).use { usedIndicesStmt ->
+                            usedIndicesStmt.setString(1, statusListId.toString())
+                            usedIndicesStmt.executeQuery().use { usedRs ->
+                                if (usedRs.next()) usedRs.getInt("count") else 0
+                            }
+                        }
 
                 val encodedList = extractEncodedList(statusListJson)
                 val bitSet = decodeBitSet(encodedList)
-                val totalCapacity = bitSet.size()
                 val purpose = extractPurpose(statusListJson)
                 val revokedCount = if (purpose == StatusPurpose.REVOCATION) bitSet.cardinality() else 0
                 val suspendedCount = if (purpose == StatusPurpose.SUSPENSION) bitSet.cardinality() else 0
@@ -646,7 +689,9 @@ class DatabaseStatusListManager(
                 credentialIds.associateWith { true }
             } catch (cancelled: kotlinx.coroutines.CancellationException) {
                 throw cancelled
-            } catch (failure: Exception) {
+            } catch (_: IllegalArgumentException) {
+                // Domain refusal (unknown list, non-revocation list, or capacity exhausted):
+                // transaction rolled back cleanly; report none revoked.
                 credentialIds.associateWith { false }
             }
         }
@@ -676,6 +721,7 @@ class DatabaseStatusListManager(
         mutation: (java.sql.Connection, Int, JsonObject) -> Unit,
     ) {
         dataSource.connection.use { conn ->
+            val savedAutoCommit = conn.autoCommit
             conn.autoCommit = false
             try {
                 val size = lockStatusList(id, conn)
@@ -683,8 +729,10 @@ class DatabaseStatusListManager(
                 mutation(conn, size, document)
                 conn.commit()
             } catch (failure: Throwable) {
-                conn.rollback()
+                runCatching { conn.rollback() }
                 throw failure
+            } finally {
+                runCatching { conn.autoCommit = savedAutoCommit }
             }
         }
     }
@@ -713,18 +761,19 @@ class DatabaseStatusListManager(
     ) {
         val connection = conn ?: dataSource.connection
         try {
-            val stmt =
-                connection.prepareStatement(
+            connection
+                .prepareStatement(
                     """
                 UPDATE status_lists
                 SET encoded_list = ?, status_list_data = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
             """,
-                )
-            stmt.setString(1, encodedList)
-            stmt.setString(2, json.encodeToString(JsonObject.serializer(), statusListJson))
-            stmt.setString(3, statusListId)
-            stmt.executeUpdate()
+                ).use { stmt ->
+                    stmt.setString(1, encodedList)
+                    stmt.setString(2, json.encodeToString(JsonObject.serializer(), statusListJson))
+                    stmt.setString(3, statusListId)
+                    stmt.executeUpdate()
+                }
         } finally {
             if (conn == null) {
                 connection.close()
@@ -793,33 +842,38 @@ class DatabaseStatusListManager(
     ): Int {
         lockStatusList(statusListId, conn)
         // Try to get existing index
-        val getStmt =
-            conn.prepareStatement(
-                """
+        val existing =
+            conn
+                .prepareStatement(
+                    """
             SELECT index_value FROM credential_indices
             WHERE credential_id = ? AND status_list_id = ?
         """,
-            )
-        getStmt.setString(1, credentialId)
-        getStmt.setString(2, statusListId)
-        val rs = getStmt.executeQuery()
-        if (rs.next()) {
-            return rs.getInt("index_value")
+                ).use { getStmt ->
+                    getStmt.setString(1, credentialId)
+                    getStmt.setString(2, statusListId)
+                    getStmt.executeQuery().use { rs ->
+                        if (rs.next()) rs.getInt("index_value") else null
+                    }
+                }
+        if (existing != null) {
+            return existing
         }
 
         // Assign new index
         return getNextAvailableIndex(statusListId, conn).also { index ->
-            val insertStmt =
-                conn.prepareStatement(
+            conn
+                .prepareStatement(
                     """
                 INSERT INTO credential_indices (credential_id, status_list_id, index_value)
                 VALUES (?, ?, ?)
             """,
-                )
-            insertStmt.setString(1, credentialId)
-            insertStmt.setString(2, statusListId)
-            insertStmt.setInt(3, index)
-            insertStmt.executeUpdate()
+                ).use { insertStmt ->
+                    insertStmt.setString(1, credentialId)
+                    insertStmt.setString(2, statusListId)
+                    insertStmt.setInt(3, index)
+                    insertStmt.executeUpdate()
+                }
         }
     }
 
@@ -845,35 +899,36 @@ class DatabaseStatusListManager(
     ): Int {
         val size = lockStatusList(statusListId, conn)
         // Get current next index
-        val getStmt =
-            conn.prepareStatement(
-                """
+        var next =
+            conn
+                .prepareStatement(
+                    """
             SELECT next_index FROM status_list_next_index WHERE status_list_id = ?
         """,
-            )
-        getStmt.setString(1, statusListId)
-        val rs = getStmt.executeQuery()
-
-        var next =
-            if (rs.next()) {
-                rs.getInt("next_index")
-            } else {
-                0
-            }
+                ).use { getStmt ->
+                    getStmt.setString(1, statusListId)
+                    getStmt.executeQuery().use { rs ->
+                        if (rs.next()) rs.getInt("next_index") else 0
+                    }
+                }
 
         // Find next available index (skip already assigned ones)
         while (next < size) {
-            val checkStmt =
-                conn.prepareStatement(
-                    """
+            val isFree =
+                conn
+                    .prepareStatement(
+                        """
                 SELECT COUNT(*) as count FROM credential_indices
                 WHERE status_list_id = ? AND index_value = ?
             """,
-                )
-            checkStmt.setString(1, statusListId)
-            checkStmt.setInt(2, next)
-            val checkRs = checkStmt.executeQuery()
-            if (checkRs.next() && checkRs.getInt("count") == 0) {
+                    ).use { checkStmt ->
+                        checkStmt.setString(1, statusListId)
+                        checkStmt.setInt(2, next)
+                        checkStmt.executeQuery().use { checkRs ->
+                            checkRs.next() && checkRs.getInt("count") == 0
+                        }
+                    }
+            if (isFree) {
                 break
             }
             next++

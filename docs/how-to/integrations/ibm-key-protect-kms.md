@@ -31,7 +31,7 @@ dependencies {
 }
 ```
 
-**Note:** The IBM Key Protect KMS plugin automatically includes `trustweave-kms` and `trustweave-common` as transitive dependencies, so you don't need to declare them explicitly.
+**Note:** The IBM Key Protect KMS plugin automatically includes `kms-kms-core` (`org.trustweave:kms-kms-core`) and `common` (`org.trustweave:common`) as transitive dependencies, so you don't need to declare them explicitly.
 
 ## Quick Start
 

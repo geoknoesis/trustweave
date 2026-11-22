@@ -13,6 +13,14 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 HISTORICAL = {'.internal', 'superpowers', 'reviews', 'archive'}
+ACTIVE_DOCS_EXCLUDED = {'.internal', 'reviews', 'archive', 'superpowers', 'sales', '_site', 'tools'}
+FRONT_MATTER = re.compile(r'\A---[ \t]*\r?\n(.*?)\r?\n---[ \t]*(?:\r?\n|\Z)', re.S)
+FRONT_MATTER_TITLE = re.compile(r'^title:[ \t]*(?!["\']{2}[ \t]*$)\S', re.M)
+FRONT_MATTER_TOP_KEY = re.compile(r'^[A-Za-z0-9_-]+:(?:[ \t].*)?$')
+STALE_DOC_PATTERNS = [
+    (re.compile(r'\b(?:2\.3\.21|9\.5\.0|9\.2\.0)\b'), 'stale toolchain version'),
+    (re.compile(r'oss\.sonatype\.org', re.I), 'retired oss.sonatype.org URL'),
+]
 
 
 MAIN_SOURCE = re.compile(r'(?:^|/)src/(?:main|[a-zA-Z0-9]*Main)/(?:kotlin|java)/.+\.(?:kt|java)$')
@@ -101,6 +109,60 @@ def missing_links(path, relative, content, available):
     return problems
 
 
+def is_active_doc(relative):
+    """True for published docs/**/*.md outside excluded historical, internal, or template subtrees."""
+    if not relative.parts or relative.parts[0] != 'docs':
+        return False
+    subparts = relative.parts[1:]
+    if ACTIVE_DOCS_EXCLUDED.intersection(subparts):
+        return False
+    if len(subparts) >= 2 and subparts[0] == 'contributing' and subparts[1] == 'test-templates':
+        return False
+    return True
+
+
+def front_matter_problems(relative, content):
+    """Ensure active docs/**/*.md files start with valid Jekyll YAML front matter containing a title."""
+    match = FRONT_MATTER.match(content)
+    if not match:
+        return [f'{relative}: missing Jekyll YAML front matter']
+    block = match.group(1)
+    for line in block.splitlines():
+        if not line.strip() or line.lstrip().startswith('#'):
+            continue
+        if line[0] in (' ', '\t'):
+            continue
+        if not FRONT_MATTER_TOP_KEY.match(line):
+            return [f'{relative}: invalid Jekyll YAML front matter line: {line}']
+    if not FRONT_MATTER_TITLE.search(block):
+        return [f'{relative}: Jekyll YAML front matter missing non-empty title']
+    return []
+
+
+def escaping_docs_links(path, relative, content, docs_root):
+    """Reject relative links in active docs/ that escape above the docs/ root directory."""
+    problems = []
+    prose = prose_of(content)
+    for target in LINK.findall(prose) + REFERENCE.findall(prose):
+        target = target.strip('<>').split('#')[0].split('?')[0]
+        if not target or re.match(r'\w+:|//|/|\{', target):
+            continue
+        resolved = (path.parent / unquote(target)).resolve()
+        if not resolved.is_relative_to(docs_root):
+            problems.append(f'{relative}: relative link escapes docs/ root: {target}')
+    return problems
+
+
+def stale_doc_references(relative, content):
+    """Reject stale toolchain versions and retired oss.sonatype.org references in active docs."""
+    problems = []
+    for pattern, label in STALE_DOC_PATTERNS:
+        for match in pattern.finditer(content):
+            line_number = content[:match.start()].count('\n') + 1
+            problems.append(f'{relative}:{line_number}: {label}: {match.group(0)}')
+    return problems
+
+
 def unknown_module_paths(relative, content, modules):
     """Gradle project paths in include(...) lines, gradlew commands or inline code that settings.gradle.kts lacks.
 
@@ -138,6 +200,7 @@ def inspect(root, require_contract=False):
     paths = sorted({Path(name) for name in names if name.endswith('.md') and
                     not {'node_modules', '_site', 'build', '.next'}.intersection(Path(name).parts)})
     packages = source_symbols(root, names)
+    docs_root = (root / 'docs').resolve()
     errors, snippets, source_examples = [], [], []
     for relative in paths:
         path = root / relative
@@ -162,6 +225,10 @@ def inspect(root, require_contract=False):
             elif not source.is_file() or source.read_text(encoding='utf-8-sig').strip() != match[2].strip():
                 errors.append(f'{relative}: source-backed example drift: {match[1]}')
         errors.extend(missing_links(path, relative, content, available))
+        if is_active_doc(relative):
+            errors.extend(front_matter_problems(relative, content))
+            errors.extend(escaping_docs_links(path, relative, content, docs_root))
+            errors.extend(stale_doc_references(relative, content))
         if historical:
             continue
         if relative.name != 'CHANGELOG.md':  # the changelog legitimately names removed modules

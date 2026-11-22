@@ -36,7 +36,11 @@ data class OfferState(
      * server could not detect.
      */
     val issuedAt: Long = System.currentTimeMillis(),
-)
+) {
+    override fun toString(): String =
+        "OfferState(credentialTypes=$credentialTypes, txCode=$txCode, " +
+            "txCodeValue=${if (txCodeValue != null) "[REDACTED]" else "null"}, issuedAt=$issuedAt)"
+}
 
 data class TokenEntry(
     val offerState: OfferState,
@@ -72,6 +76,11 @@ data class TokenEntry(
         cNonceIssuedAt: Long,
         remainingCredentials: Int,
     ) : this(offerState, issuedAt, cNonce, cNonceIssuedAt, remainingCredentials, offerState.credentialTypes)
+
+    override fun toString(): String =
+        "TokenEntry(offerState=$offerState, issuedAt=$issuedAt, cNonce=[REDACTED], " +
+            "cNonceIssuedAt=$cNonceIssuedAt, remainingCredentials=$remainingCredentials, " +
+            "remainingConfigurations=$remainingConfigurations)"
 }
 
 /** The access token is unknown or has outlived its advertised `expires_in` (→ `invalid_token`). */
@@ -823,7 +832,9 @@ class Oidc4VciIssuerService
 data class CreateOfferResponse(
     val offerUri: String,
     val preAuthCode: String,
-)
+) {
+    override fun toString(): String = "CreateOfferResponse(offerUri=[REDACTED], preAuthCode=[REDACTED])"
+}
 
 data class TokenResponse(
     val accessToken: String,
@@ -831,7 +842,11 @@ data class TokenResponse(
     val expiresIn: Long = 3600,
     val cNonce: String,
     val cNonceExpiresIn: Long = 300,
-)
+) {
+    override fun toString(): String =
+        "TokenResponse(accessToken=[REDACTED], tokenType='$tokenType', expiresIn=$expiresIn, " +
+            "cNonce=[REDACTED], cNonceExpiresIn=$cNonceExpiresIn)"
+}
 
 data class CredentialServerResponse(
     val credential: String? = null,

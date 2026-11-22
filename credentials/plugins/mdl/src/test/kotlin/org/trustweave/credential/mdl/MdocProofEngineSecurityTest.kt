@@ -11,11 +11,18 @@ import kotlinx.serialization.json.JsonPrimitive
 import org.bouncycastle.asn1.ASN1Integer
 import org.bouncycastle.asn1.ASN1Sequence
 import org.bouncycastle.asn1.x500.X500Name
+import org.bouncycastle.asn1.x509.BasicConstraints
+import org.bouncycastle.asn1.x509.Extension
+import org.bouncycastle.asn1.x509.KeyUsage
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import org.trustweave.core.identifiers.KeyId
 import org.trustweave.credential.format.ProofSuiteId
 import org.trustweave.credential.mdl.engine.MdocCbor
@@ -511,4 +518,247 @@ class MdocProofEngineSecurityTest {
         val s = (seq.getObjectAt(1) as ASN1Integer).positiveValue
         return pad(r) + pad(s)
     }
+
+    @Test
+    fun `ES512 P-521 x5chain signature verifies with long-form DER sequence length`() =
+        runBlocking<Unit> {
+            val keyPair =
+                KeyPairGenerator
+                    .getInstance("EC")
+                    .apply { initialize(ECGenParameterSpec("secp521r1")) }
+                    .generateKeyPair()
+            val name = X500Name("CN=Test ES512 DS")
+            val now = System.currentTimeMillis()
+            val cert =
+                JcaX509CertificateConverter().getCertificate(
+                    JcaX509v3CertificateBuilder(
+                        name,
+                        BigInteger.valueOf(now),
+                        Date(now - 3_600_000L),
+                        Date(now + 86_400_000L),
+                        name,
+                        keyPair.public,
+                    ).build(JcaContentSignerBuilder("SHA512withECDSA").build(keyPair.private)),
+                )
+
+            val vc = engineOptIn.issue(buildIssuanceRequest())
+            val mdocProof = vc.proof as CredentialProof.MdocProof
+            val doc = MdocCbor.decodeMobileDocument(mdocProof.deviceResponse)
+            val msoBytes = MdocCoseSign.extractPayload(doc.issuerSigned.issuerAuth)
+
+            val protectedMap = CBORObject.NewOrderedMap()
+            protectedMap[CBORObject.FromObject(1)] = CBORObject.FromObject(-36) // ES512
+            val protectedBytes = protectedMap.EncodeToBytes()
+            val sigStructure =
+                CBORObject.NewArray().apply {
+                    Add(CBORObject.FromObject("Signature1"))
+                    Add(CBORObject.FromObject(protectedBytes))
+                    Add(CBORObject.FromObject(ByteArray(0)))
+                    Add(CBORObject.FromObject(msoBytes))
+                }
+            val signer =
+                Signature.getInstance("SHA512withECDSA").apply {
+                    initSign(keyPair.private)
+                    update(sigStructure.EncodeToBytes())
+                }
+            val rawSignature = derToRawSignature(signer.sign(), componentSize = 66)
+            // Verify rawToDerSignature uses long-form DER length (0x81) for P-521 (seq >= 128)
+            val der = engineOptIn.rawToDerSignature(rawSignature)
+            der[0] shouldBe 0x30.toByte()
+            der[1] shouldBe 0x81.toByte()
+
+            val unprotectedMap = CBORObject.NewOrderedMap()
+            unprotectedMap[CBORObject.FromObject(33)] = CBORObject.FromObject(cert.encoded)
+            val coseSign1 =
+                CBORObject.NewArray().apply {
+                    Add(CBORObject.FromObject(protectedBytes))
+                    Add(unprotectedMap)
+                    Add(CBORObject.FromObject(msoBytes))
+                    Add(CBORObject.FromObject(rawSignature))
+                }
+            val newDoc = doc.copy(issuerSigned = doc.issuerSigned.copy(issuerAuth = coseSign1.EncodeToBytes()))
+            val resigned =
+                vc.copy(
+                    proof = CredentialProof.MdocProof(MdocCbor.encodeMobileDocument(newDoc), mdocProof.docType),
+                )
+
+            val engineWithAnchor =
+                MdocProofEngine(
+                    kms,
+                    config = ProofEngineConfig(properties = mapOf(MdocProofEngine.OPTION_IACA_TRUST_ANCHORS to listOf(cert))),
+                )
+            engineWithAnchor.verify(resigned, VerificationOptions()).shouldBeInstanceOf<VerificationResult.Valid>()
+        }
+
+    @Test
+    fun `mismatched EC curve and COSE alg fails verification`() =
+        runBlocking<Unit> {
+            val keyPair = generateP256KeyPair()
+            val cert = generateSelfSignedCert(keyPair, "CN=Curve Mismatch DS")
+            val vc = engineOptIn.issue(buildIssuanceRequest())
+            val mdocProof = vc.proof as CredentialProof.MdocProof
+            val doc = MdocCbor.decodeMobileDocument(mdocProof.deviceResponse)
+            val msoBytes = MdocCoseSign.extractPayload(doc.issuerSigned.issuerAuth)
+
+            // Claim ES384 (-35) while signing with a P-256 key
+            val protectedMap = CBORObject.NewOrderedMap()
+            protectedMap[CBORObject.FromObject(1)] = CBORObject.FromObject(-35)
+            val protectedBytes = protectedMap.EncodeToBytes()
+            val sigStructure =
+                CBORObject.NewArray().apply {
+                    Add(CBORObject.FromObject("Signature1"))
+                    Add(CBORObject.FromObject(protectedBytes))
+                    Add(CBORObject.FromObject(ByteArray(0)))
+                    Add(CBORObject.FromObject(msoBytes))
+                }
+            val signer =
+                Signature.getInstance("SHA384withECDSA").apply {
+                    initSign(keyPair.private)
+                    update(sigStructure.EncodeToBytes())
+                }
+            val rawSignature = derToRawSignature(signer.sign(), componentSize = 32)
+            val unprotectedMap = CBORObject.NewOrderedMap()
+            unprotectedMap[CBORObject.FromObject(33)] = CBORObject.FromObject(cert.encoded)
+            val coseSign1 =
+                CBORObject.NewArray().apply {
+                    Add(CBORObject.FromObject(protectedBytes))
+                    Add(unprotectedMap)
+                    Add(CBORObject.FromObject(msoBytes))
+                    Add(CBORObject.FromObject(rawSignature))
+                }
+            val newDoc = doc.copy(issuerSigned = doc.issuerSigned.copy(issuerAuth = coseSign1.EncodeToBytes()))
+            val resigned =
+                vc.copy(
+                    proof = CredentialProof.MdocProof(MdocCbor.encodeMobileDocument(newDoc), mdocProof.docType),
+                )
+
+            val engineWithAnchor =
+                MdocProofEngine(
+                    kms,
+                    config = ProofEngineConfig(properties = mapOf(MdocProofEngine.OPTION_IACA_TRUST_ANCHORS to listOf(cert))),
+                )
+            val result = engineWithAnchor.verify(resigned, VerificationOptions())
+            result.shouldBeInstanceOf<VerificationResult.Invalid.InvalidProof>()
+            result.reason.shouldContain("curve size")
+        }
+
+    @Test
+    fun `CA leaf cert and non-digitalSignature keyUsage are rejected`() =
+        runBlocking<Unit> {
+            val keyPair = generateP256KeyPair()
+            val name = X500Name("CN=CA Leaf")
+            val now = System.currentTimeMillis()
+            val caLeafCert =
+                JcaX509CertificateConverter().getCertificate(
+                    JcaX509v3CertificateBuilder(
+                        name,
+                        BigInteger.valueOf(now),
+                        Date(now - 3_600_000L),
+                        Date(now + 86_400_000L),
+                        name,
+                        keyPair.public,
+                    ).addExtension(Extension.basicConstraints, true, BasicConstraints(true))
+                        .build(JcaContentSignerBuilder("SHA256withECDSA").build(keyPair.private)),
+                )
+            val vc = engineOptIn.issue(buildIssuanceRequest())
+            val resignedCa = resignWithX5Chain(vc, keyPair, caLeafCert)
+            val engineCa =
+                MdocProofEngine(
+                    kms,
+                    config = ProofEngineConfig(properties = mapOf(MdocProofEngine.OPTION_IACA_TRUST_ANCHORS to listOf(caLeafCert))),
+                )
+            val caRes = engineCa.verify(resignedCa, VerificationOptions())
+            caRes.shouldBeInstanceOf<VerificationResult.Invalid.InvalidProof>()
+            caRes.reason.shouldContain("CA certificate")
+
+            val keyEncCert =
+                JcaX509CertificateConverter().getCertificate(
+                    JcaX509v3CertificateBuilder(
+                        name,
+                        BigInteger.valueOf(now + 1),
+                        Date(now - 3_600_000L),
+                        Date(now + 86_400_000L),
+                        name,
+                        keyPair.public,
+                    ).addExtension(Extension.keyUsage, true, KeyUsage(KeyUsage.keyEncipherment))
+                        .build(JcaContentSignerBuilder("SHA256withECDSA").build(keyPair.private)),
+                )
+            val resignedKu = resignWithX5Chain(vc, keyPair, keyEncCert)
+            val engineKu =
+                MdocProofEngine(
+                    kms,
+                    config = ProofEngineConfig(properties = mapOf(MdocProofEngine.OPTION_IACA_TRUST_ANCHORS to listOf(keyEncCert))),
+                )
+            val kuRes = engineKu.verify(resignedKu, VerificationOptions())
+            kuRes.shouldBeInstanceOf<VerificationResult.Invalid.InvalidProof>()
+            kuRes.reason.shouldContain("digitalSignature")
+        }
+
+    @Test
+    fun `quoted numeric and boolean strings stay strings and unknown algorithm fails closed`() =
+        runBlocking<Unit> {
+            val req =
+                buildIssuanceRequest(
+                    claims =
+                        mapOf(
+                            "postal_code" to JsonPrimitive("00123"),
+                            "flag_text" to JsonPrimitive("true"),
+                        ),
+                )
+            val vc = engineOptIn.issue(req)
+            val doc = MdocCbor.decodeMobileDocument((vc.proof as CredentialProof.MdocProof).deviceResponse)
+            val items = doc.issuerSigned.nameSpaces.values.flatten().associate { it.elementIdentifier to it.elementValue }
+            items["postal_code"] shouldBe "00123"
+            items["flag_text"] shouldBe "true"
+            engineOptIn.verify(vc, VerificationOptions()).shouldBeInstanceOf<VerificationResult.Valid>()
+
+            val badAlgReq =
+                req.copy(
+                    proofOptions = ProofOptions(additionalOptions = mapOf("algorithm" to "NO_SUCH_ALG")),
+                )
+            assertThrows<IllegalArgumentException> {
+                runBlocking { engineOptIn.issue(badAlgReq) }
+            }
+        }
+
+    @Test
+    fun `temporal checks respect checkExpiration checkNotBefore and clockSkewTolerance`() =
+        runBlocking<Unit> {
+            val now = Clock.System.now()
+            val expiredVc =
+                engineOptIn.issue(
+                    buildIssuanceRequest().copy(
+                        validFrom = now - 20.minutes,
+                        validUntil = now - 2.minutes,
+                    ),
+                )
+            // Within 5-minute default clockSkewTolerance -> Valid
+            engineOptIn.verify(expiredVc, VerificationOptions()).shouldBeInstanceOf<VerificationResult.Valid>()
+            // With 0s clockSkewTolerance -> Expired
+            engineOptIn
+                .verify(expiredVc, VerificationOptions(clockSkewTolerance = 0.seconds))
+                .shouldBeInstanceOf<VerificationResult.Invalid.Expired>()
+            // With checkExpiration = false -> Valid
+            engineOptIn
+                .verify(expiredVc, VerificationOptions(checkExpiration = false, clockSkewTolerance = 0.seconds))
+                .shouldBeInstanceOf<VerificationResult.Valid>()
+
+            val futureVc =
+                engineOptIn.issue(
+                    buildIssuanceRequest().copy(
+                        validFrom = now + 2.minutes,
+                        validUntil = now + 20.minutes,
+                    ),
+                )
+            // Within 5-minute default clockSkewTolerance -> Valid
+            engineOptIn.verify(futureVc, VerificationOptions()).shouldBeInstanceOf<VerificationResult.Valid>()
+            // With 0s clockSkewTolerance -> NotYetValid
+            engineOptIn
+                .verify(futureVc, VerificationOptions(clockSkewTolerance = 0.seconds))
+                .shouldBeInstanceOf<VerificationResult.Invalid.NotYetValid>()
+            // With checkNotBefore = false -> Valid
+            engineOptIn
+                .verify(futureVc, VerificationOptions(checkNotBefore = false, clockSkewTolerance = 0.seconds))
+                .shouldBeInstanceOf<VerificationResult.Valid>()
+        }
 }

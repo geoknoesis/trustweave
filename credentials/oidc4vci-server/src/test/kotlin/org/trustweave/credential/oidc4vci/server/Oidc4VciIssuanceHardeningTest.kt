@@ -112,6 +112,7 @@ class Oidc4VciIssuanceHardeningTest {
             buildJsonObject {
                 put("aud", issuerUrl)
                 put("nonce", nonce)
+                put("iat", System.currentTimeMillis() / 1000L)
             }
         val h = enc.encodeToString(header.toString().toByteArray())
         val p = enc.encodeToString(payload.toString().toByteArray())

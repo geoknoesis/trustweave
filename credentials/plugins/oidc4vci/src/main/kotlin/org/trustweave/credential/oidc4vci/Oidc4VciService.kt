@@ -94,7 +94,7 @@ class Oidc4VciService(
     private val httpClient: OkHttpClient =
         org.trustweave.core.net
             .ssrfGuardedOkHttpClient(),
-    didResolver: DidResolver? = null,
+    private val didResolver: DidResolver? = null,
     private val exchangeClock: java.time.Clock = java.time.Clock.systemUTC(),
     private val exchangeTtlMillis: Long = 15 * 60 * 1000L,
     private val maxPendingExchanges: Int = 1000,
@@ -102,7 +102,16 @@ class Oidc4VciService(
     companion object {
         /** Pre-authorized code grant type — OID4VCI v1.0 §4.1.1. */
         const val PRE_AUTHORIZED_CODE_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:pre-authorized_code"
+
+        /** Maximum HTTP response body size read into memory (2 MiB) to guard against OOM DoS. */
+        private const val MAX_RESPONSE_BODY_BYTES = 2L * 1024 * 1024
     }
+
+    private val json =
+        Json {
+            ignoreUnknownKeys = true
+            encodeDefaults = true
+        }
 
     /**
      * Holder-side verifier for issuer-returned credentials, built from `didResolver`.
@@ -366,7 +375,7 @@ class Oidc4VciService(
                         credentialIssuer = request.credentialIssuer,
                     )
 
-            val keyId = "$holderDid#key-1" // In production, get actual key ID
+            val keyId = resolveHolderKeyId(holderDid)
             // aud of the proof-of-possession JWT is the credential issuer identifier (OID4VCI v1.0 §7.2.1.1)
             val proofAudience = issuerMetadata.credentialIssuer
 
@@ -582,11 +591,6 @@ class Oidc4VciService(
                         credentialIssuer = credentialIssuerUrl,
                     )
 
-            val json =
-                Json {
-                    prettyPrint = false
-                    encodeDefaults = false
-                }
             val requestBody =
                 buildJsonObject {
                     put("transaction_id", request.transactionId)
@@ -605,23 +609,29 @@ class Oidc4VciService(
                     .addHeader("Content-Type", "application/json")
                     .build()
 
-            val response = httpClient.newCall(httpRequest).execute()
             val responseBody =
-                response.body?.string()
-                    ?: throw Oidc4VciException.CredentialRequestFailed(
-                        reason = "Empty response body from deferred credential endpoint",
-                        credentialIssuer = deferredEndpoint,
-                    )
+                httpClient.newCall(httpRequest).execute().use { response ->
+                    val rawBody =
+                        readBoundedBody(response) { reason ->
+                            Oidc4VciException.CredentialRequestFailed(
+                                reason = reason,
+                                credentialIssuer = deferredEndpoint,
+                            )
+                        } ?: throw Oidc4VciException.CredentialRequestFailed(
+                            reason = "Empty response body from deferred credential endpoint",
+                            credentialIssuer = deferredEndpoint,
+                        )
 
-            if (!response.isSuccessful) {
-                throw Oidc4VciException.CredentialRequestFailed(
-                    reason = "HTTP ${response.code}: ${summarizeUpstreamBody(responseBody)}",
-                    credentialIssuer = deferredEndpoint,
-                )
-            }
+                    if (!response.isSuccessful) {
+                        throw Oidc4VciException.CredentialRequestFailed(
+                            reason = "HTTP ${response.code}: ${summarizeUpstreamBody(rawBody)}",
+                            credentialIssuer = deferredEndpoint,
+                        )
+                    }
+                    rawBody
+                }
 
-            val jsonParser = Json { ignoreUnknownKeys = true }
-            val rawResponse = jsonParser.parseToJsonElement(responseBody).jsonObject
+            val rawResponse = json.parseToJsonElement(responseBody).jsonObject
             val credentialResponse = rawResponse.toMap()
             val newTransactionId = credentialResponse["transaction_id"] as? String
 
@@ -690,11 +700,6 @@ class Oidc4VciService(
                         credentialIssuer = credentialIssuerUrl,
                     )
 
-            val json =
-                Json {
-                    prettyPrint = false
-                    encodeDefaults = false
-                }
             val notificationJson = json.encodeToString(Oidc4VciNotification.serializer(), notification)
             val body = notificationJson.toRequestBody("application/json".toMediaType())
 
@@ -707,13 +712,20 @@ class Oidc4VciService(
                     .addHeader("Content-Type", "application/json")
                     .build()
 
-            val response = httpClient.newCall(request).execute()
-            if (!response.isSuccessful) {
-                val responseBody = response.body?.string() ?: ""
-                throw Oidc4VciException.CredentialRequestFailed(
-                    reason = "Notification endpoint returned HTTP ${response.code}: ${summarizeUpstreamBody(responseBody)}",
-                    credentialIssuer = notificationEndpoint,
-                )
+            httpClient.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) {
+                    val responseBody =
+                        readBoundedBody(response) { reason ->
+                            Oidc4VciException.CredentialRequestFailed(
+                                reason = reason,
+                                credentialIssuer = notificationEndpoint,
+                            )
+                        } ?: ""
+                    throw Oidc4VciException.CredentialRequestFailed(
+                        reason = "Notification endpoint returned HTTP ${response.code}: ${summarizeUpstreamBody(responseBody)}",
+                        credentialIssuer = notificationEndpoint,
+                    )
+                }
             }
         }
 
@@ -761,11 +773,6 @@ class Oidc4VciService(
                     put("credential_requests", credentialRequestsJson)
                 }
 
-            val json =
-                Json {
-                    prettyPrint = false
-                    encodeDefaults = false
-                }
             val requestBody =
                 json
                     .encodeToString(JsonObject.serializer(), batchBody)
@@ -780,23 +787,29 @@ class Oidc4VciService(
                     .addHeader("Content-Type", "application/json")
                     .build()
 
-            val response = httpClient.newCall(httpRequest).execute()
             val responseBody =
-                response.body?.string()
-                    ?: throw Oidc4VciException.CredentialRequestFailed(
-                        reason = "Empty response body from batch credential endpoint",
-                        credentialIssuer = batchEndpoint,
-                    )
+                httpClient.newCall(httpRequest).execute().use { response ->
+                    val rawBody =
+                        readBoundedBody(response) { reason ->
+                            Oidc4VciException.CredentialRequestFailed(
+                                reason = reason,
+                                credentialIssuer = batchEndpoint,
+                            )
+                        } ?: throw Oidc4VciException.CredentialRequestFailed(
+                            reason = "Empty response body from batch credential endpoint",
+                            credentialIssuer = batchEndpoint,
+                        )
 
-            if (!response.isSuccessful) {
-                throw Oidc4VciException.CredentialRequestFailed(
-                    reason = "HTTP ${response.code}: ${summarizeUpstreamBody(responseBody)}",
-                    credentialIssuer = batchEndpoint,
-                )
-            }
+                    if (!response.isSuccessful) {
+                        throw Oidc4VciException.CredentialRequestFailed(
+                            reason = "HTTP ${response.code}: ${summarizeUpstreamBody(rawBody)}",
+                            credentialIssuer = batchEndpoint,
+                        )
+                    }
+                    rawBody
+                }
 
-            val jsonParser = Json { ignoreUnknownKeys = true }
-            val batchResponse = jsonParser.parseToJsonElement(responseBody).jsonObject
+            val batchResponse = json.parseToJsonElement(responseBody).jsonObject
             val credentialResponsesArray =
                 batchResponse["credential_responses"]?.jsonArray
                     ?: throw Oidc4VciException.CredentialRequestFailed(
@@ -900,22 +913,28 @@ class Oidc4VciService(
                 .get()
                 .build()
 
-        val response = httpClient.newCall(request).execute()
         val body =
-            response.body?.string()
-                ?: throw Oidc4VciException.TokenEndpointResolutionFailed(
-                    credentialIssuer = authorizationServer,
-                    reason = "Empty response body from authorization server metadata endpoint",
-                )
+            httpClient.newCall(request).execute().use { response ->
+                val rawBody =
+                    readBoundedBody(response) { reason ->
+                        Oidc4VciException.TokenEndpointResolutionFailed(
+                            credentialIssuer = authorizationServer,
+                            reason = reason,
+                        )
+                    } ?: throw Oidc4VciException.TokenEndpointResolutionFailed(
+                        credentialIssuer = authorizationServer,
+                        reason = "Empty response body from authorization server metadata endpoint",
+                    )
 
-        if (!response.isSuccessful) {
-            throw Oidc4VciException.TokenEndpointResolutionFailed(
-                credentialIssuer = authorizationServer,
-                reason = "Authorization server metadata fetch failed: HTTP ${response.code}: ${summarizeUpstreamBody(body)}",
-            )
-        }
+                if (!response.isSuccessful) {
+                    throw Oidc4VciException.TokenEndpointResolutionFailed(
+                        credentialIssuer = authorizationServer,
+                        reason = "Authorization server metadata fetch failed: HTTP ${response.code}: ${summarizeUpstreamBody(rawBody)}",
+                    )
+                }
+                rawBody
+            }
 
-        val json = Json { ignoreUnknownKeys = true }
         val asMetadata =
             try {
                 json.decodeFromString<AuthorizationServerMetadata>(body)
@@ -1013,23 +1032,29 @@ class Oidc4VciService(
                 .addHeader("Content-Type", "application/x-www-form-urlencoded")
                 .build()
 
-        val response = httpClient.newCall(request).execute()
         val body =
-            response.body?.string()
-                ?: throw Oidc4VciException.TokenExchangeFailed(
-                    reason = "Empty response body",
-                    credentialIssuer = tokenEndpoint,
-                )
+            httpClient.newCall(request).execute().use { response ->
+                val rawBody =
+                    readBoundedBody(response) { reason ->
+                        Oidc4VciException.TokenExchangeFailed(
+                            reason = reason,
+                            credentialIssuer = tokenEndpoint,
+                        )
+                    } ?: throw Oidc4VciException.TokenExchangeFailed(
+                        reason = "Empty response body",
+                        credentialIssuer = tokenEndpoint,
+                    )
 
-        if (!response.isSuccessful) {
-            throw Oidc4VciException.TokenExchangeFailed(
-                reason = "HTTP ${response.code}: ${summarizeUpstreamBody(body)}",
-                credentialIssuer = tokenEndpoint,
-                cause = null,
-            )
-        }
+                if (!response.isSuccessful) {
+                    throw Oidc4VciException.TokenExchangeFailed(
+                        reason = "HTTP ${response.code}: ${summarizeUpstreamBody(rawBody)}",
+                        credentialIssuer = tokenEndpoint,
+                        cause = null,
+                    )
+                }
+                rawBody
+            }
 
-        val json = Json { ignoreUnknownKeys = true }
         val tokenResponse = json.parseToJsonElement(body).jsonObject
 
         val accessToken =
@@ -1072,7 +1097,7 @@ class Oidc4VciService(
         val proofJwt = createProofOfPossessionJwt(holderDid, keyId, audience, cNonce)
 
         return buildJsonObject {
-            put("format", "vc+sd-jwt") // or "jwt_vc_json" or "ldp_vc"
+            put("format", "ldp_vc")
             put(
                 "credential_definition",
                 buildJsonObject {
@@ -1122,11 +1147,6 @@ class Oidc4VciService(
             }
 
         // Encode header and payload
-        val json =
-            Json {
-                prettyPrint = false
-                encodeDefaults = false
-            }
         val headerBase64 =
             Base64
                 .getUrlEncoder()
@@ -1167,11 +1187,6 @@ class Oidc4VciService(
         accessToken: String,
         credentialRequest: JsonObject,
     ): IssuerResponse {
-        val json =
-            Json {
-                prettyPrint = false
-                encodeDefaults = false
-            }
         val requestBody =
             json
                 .encodeToString(JsonObject.serializer(), credentialRequest)
@@ -1186,34 +1201,39 @@ class Oidc4VciService(
                 .addHeader("Content-Type", "application/json")
                 .build()
 
-        val response = httpClient.newCall(request).execute()
         val body =
-            response.body?.string()
-                ?: throw Oidc4VciException.CredentialRequestFailed(
-                    reason = "Empty response body",
-                    credentialIssuer = credentialEndpoint,
-                )
+            httpClient.newCall(request).execute().use { response ->
+                val rawBody =
+                    readBoundedBody(response) { reason ->
+                        Oidc4VciException.CredentialRequestFailed(
+                            reason = reason,
+                            credentialIssuer = credentialEndpoint,
+                        )
+                    } ?: throw Oidc4VciException.CredentialRequestFailed(
+                        reason = "Empty response body",
+                        credentialIssuer = credentialEndpoint,
+                    )
 
-        val jsonParser = Json { ignoreUnknownKeys = true }
-
-        if (!response.isSuccessful) {
-            // OID4VCI v1.0 §7.3.1: an invalid_proof error may carry a fresh c_nonce the
-            // wallet must use for its next proof of possession. Only that specific error
-            // code triggers a retry — a stray c_nonce in an unrelated error response
-            // (e.g. HTTP 500) must not.
-            val errorJson = runCatching { jsonParser.parseToJsonElement(body).jsonObject }.getOrNull()
-            val errorCode = errorJson?.get("error")?.jsonPrimitive?.contentOrNull
-            val freshNonce = errorJson?.get("c_nonce")?.jsonPrimitive?.contentOrNull
-            if (errorCode == "invalid_proof" && freshNonce != null) {
-                throw FreshNonceRequired(freshNonce, "HTTP ${response.code}: ${summarizeUpstreamBody(body)}")
+                if (!response.isSuccessful) {
+                    // OID4VCI v1.0 §7.3.1: an invalid_proof error may carry a fresh c_nonce the
+                    // wallet must use for its next proof of possession. Only that specific error
+                    // code triggers a retry — a stray c_nonce in an unrelated error response
+                    // (e.g. HTTP 500) must not.
+                    val errorJson = runCatching { json.parseToJsonElement(rawBody).jsonObject }.getOrNull()
+                    val errorCode = errorJson?.get("error")?.jsonPrimitive?.contentOrNull
+                    val freshNonce = errorJson?.get("c_nonce")?.jsonPrimitive?.contentOrNull
+                    if (errorCode == "invalid_proof" && freshNonce != null) {
+                        throw FreshNonceRequired(freshNonce, "HTTP ${response.code}: ${summarizeUpstreamBody(rawBody)}")
+                    }
+                    throw Oidc4VciException.CredentialRequestFailed(
+                        reason = "HTTP ${response.code}: ${summarizeUpstreamBody(rawBody)}",
+                        credentialIssuer = credentialEndpoint,
+                    )
+                }
+                rawBody
             }
-            throw Oidc4VciException.CredentialRequestFailed(
-                reason = "HTTP ${response.code}: ${summarizeUpstreamBody(body)}",
-                credentialIssuer = credentialEndpoint,
-            )
-        }
 
-        val credentialResponse = jsonParser.parseToJsonElement(body).jsonObject
+        val credentialResponse = json.parseToJsonElement(body).jsonObject
 
         return IssuerResponse(raw = credentialResponse, native = credentialResponse.toMap())
     }
@@ -1238,7 +1258,6 @@ class Oidc4VciService(
             buildMap<String, JsonElement> {
                 grants.forEach { (key, value) -> put(key, anyToJsonElement(value)) }
                 if (txCode != null) {
-                    val json = Json { encodeDefaults = false }
                     val txCodeJson = json.encodeToJsonElement(TxCode.serializer(), txCode)
                     val preAuthGrant = (get(PRE_AUTHORIZED_CODE_GRANT_TYPE) as? JsonObject) ?: JsonObject(emptyMap())
                     put(PRE_AUTHORIZED_CODE_GRANT_TYPE, JsonObject(preAuthGrant + ("tx_code" to txCodeJson)))
@@ -1335,7 +1354,7 @@ class Oidc4VciService(
                     ?.get("tx_code")
                     ?.let { element ->
                         runCatching {
-                            Json { ignoreUnknownKeys = true }.decodeFromJsonElement(TxCode.serializer(), element)
+                            json.decodeFromJsonElement(TxCode.serializer(), element)
                         }.getOrNull()
                     }
 
@@ -1381,22 +1400,27 @@ class Oidc4VciService(
                 )
             }
 
-        val response = httpClient.newCall(request).execute()
-        val body =
-            response.body?.string()
-                ?: throw Oidc4VciException.OfferParseFailed(
+        return httpClient.newCall(request).execute().use { response ->
+            val body =
+                readBoundedBody(response) { reason ->
+                    Oidc4VciException.OfferParseFailed(
+                        offerUri = credentialOfferUri,
+                        reason = reason,
+                    )
+                } ?: throw Oidc4VciException.OfferParseFailed(
                     offerUri = credentialOfferUri,
                     reason = "Empty response body from credential_offer_uri",
                 )
 
-        if (!response.isSuccessful) {
-            throw Oidc4VciException.OfferParseFailed(
-                offerUri = credentialOfferUri,
-                reason = "HTTP ${response.code}: ${summarizeUpstreamBody(body)}",
-            )
-        }
+            if (!response.isSuccessful) {
+                throw Oidc4VciException.OfferParseFailed(
+                    offerUri = credentialOfferUri,
+                    reason = "HTTP ${response.code}: ${summarizeUpstreamBody(body)}",
+                )
+            }
 
-        return body
+            body
+        }
     }
 
     /**
@@ -1493,31 +1517,107 @@ class Oidc4VciService(
      */
     suspend fun fetchCredentialIssuerMetadata(credentialIssuerUrl: String): CredentialIssuerMetadata =
         withContext(Dispatchers.IO) {
+            requireHttpsOrLoopback(credentialIssuerUrl) { reason ->
+                Oidc4VciException.MetadataFetchFailed(
+                    credentialIssuer = credentialIssuerUrl,
+                    reason = "credential_issuer $reason",
+                )
+            }
+            val metadataUrl = credentialIssuerMetadataUrl(credentialIssuerUrl)
             val request =
                 Request
                     .Builder()
-                    .url("$credentialIssuerUrl/.well-known/openid-credential-issuer")
+                    .url(metadataUrl)
                     .get()
                     .build()
 
-            val response = httpClient.newCall(request).execute()
             val body =
-                response.body?.string()
-                    ?: throw Oidc4VciException.MetadataFetchFailed(
-                        credentialIssuer = credentialIssuerUrl,
-                        reason = "Empty response body",
-                    )
+                httpClient.newCall(request).execute().use { response ->
+                    val rawBody =
+                        readBoundedBody(response) { reason ->
+                            Oidc4VciException.MetadataFetchFailed(
+                                credentialIssuer = credentialIssuerUrl,
+                                reason = reason,
+                            )
+                        } ?: throw Oidc4VciException.MetadataFetchFailed(
+                            credentialIssuer = credentialIssuerUrl,
+                            reason = "Empty response body",
+                        )
 
-            if (!response.isSuccessful) {
-                throw Oidc4VciException.MetadataFetchFailed(
-                    credentialIssuer = credentialIssuerUrl,
-                    reason = "HTTP ${response.code}: ${summarizeUpstreamBody(body)}",
-                )
-            }
+                    if (!response.isSuccessful) {
+                        throw Oidc4VciException.MetadataFetchFailed(
+                            credentialIssuer = credentialIssuerUrl,
+                            reason = "HTTP ${response.code}: ${summarizeUpstreamBody(rawBody)}",
+                        )
+                    }
+                    rawBody
+                }
 
-            val json = Json { ignoreUnknownKeys = true }
             json.decodeFromString<CredentialIssuerMetadata>(body)
         }
+
+    /**
+     * Builds the RFC 8615 / OID4VCI v1.0 §11.2.2 well-known credential issuer metadata URL:
+     * inserts `/.well-known/openid-credential-issuer` between host and path when the issuer URL
+     * has a path component (e.g. `https://host/tenant` → `https://host/.well-known/openid-credential-issuer/tenant`).
+     */
+    private fun credentialIssuerMetadataUrl(credentialIssuerUrl: String): String {
+        val uri = java.net.URI(credentialIssuerUrl)
+        val pathSuffix = uri.rawPath?.trimEnd('/').orEmpty()
+        return "${uri.scheme}://${uri.rawAuthority}/.well-known/openid-credential-issuer$pathSuffix"
+    }
+
+    /**
+     * Resolves the holder's signing key ID from [didResolver] / [kms] when available,
+     * falling back to `"$holderDid#key-1"` when no DID document or KMS key match is found.
+     */
+    private suspend fun resolveHolderKeyId(holderDid: String): String {
+        val resolved =
+            didResolver?.let { resolver ->
+                runCatching {
+                    val did = org.trustweave.did.identifiers.Did(holderDid)
+                    when (val res = resolver.resolve(did)) {
+                        is org.trustweave.did.resolver.DidResolutionResult.Success -> {
+                            val doc = res.document
+                            val candidateIds =
+                                buildList {
+                                    doc.authentication.forEach { add(it.value) }
+                                    doc.assertionMethod.forEach { add(it.value) }
+                                    doc.verificationMethod.forEach { add(it.id.value) }
+                                }.distinct()
+                            candidateIds.firstOrNull { id ->
+                                kms.getPublicKey(KeyId(id)) is org.trustweave.kms.results.GetPublicKeyResult.Success
+                            }
+                        }
+                        else -> null
+                    }
+                }.getOrNull()
+            }
+        return resolved ?: "$holderDid#key-1"
+    }
+
+    /**
+     * Reads an OkHttp response body up to [maxBytes] to guard against OOM DoS from
+     * unbounded or maliciously large upstream responses.
+     */
+    private inline fun readBoundedBody(
+        response: okhttp3.Response,
+        maxBytes: Long = MAX_RESPONSE_BODY_BYTES,
+        onTooLarge: (String) -> Oidc4VciException,
+    ): String? {
+        val body = response.body ?: return null
+        val contentLength = body.contentLength()
+        if (contentLength > maxBytes) {
+            throw onTooLarge(
+                "Response body exceeds maximum allowed size of $maxBytes bytes (Content-Length: $contentLength)",
+            )
+        }
+        val source = body.source()
+        if (source.request(maxBytes + 1)) {
+            throw onTooLarge("Response body exceeds maximum allowed size of $maxBytes bytes")
+        }
+        return source.readUtf8()
+    }
 
     /**
      * An issuer response in both shapes it is needed in.
@@ -1543,7 +1643,7 @@ class Oidc4VciService(
         if (body.isNullOrBlank()) return "<empty body>"
         val errorCode =
             runCatching {
-                Json { ignoreUnknownKeys = true }
+                json
                     .parseToJsonElement(body)
                     .jsonObject["error"]
                     ?.jsonPrimitive

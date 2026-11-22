@@ -42,6 +42,7 @@ import java.security.cert.CertificateFactory
 import java.security.cert.PKIXParameters
 import java.security.cert.TrustAnchor
 import java.security.cert.X509Certificate
+import java.security.interfaces.ECPublicKey
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -171,7 +172,7 @@ class MdocProofEngine(
                 "P-384", "ES384" -> Algorithm.P384
                 "P-521", "ES512" -> Algorithm.P521
                 "ED25519", "EDDSA" -> Algorithm.Ed25519
-                else -> Algorithm.P256
+                else -> throw IllegalArgumentException("Unsupported mDoc signing algorithm: '$algorithmName'")
             }
 
         val issuerKeyId =
@@ -305,13 +306,14 @@ class MdocProofEngine(
 
             // Verify temporal validity
             val now = Clock.System.now()
-            if (now < mso.validityInfo.validFrom) {
+            val skew = options.clockSkewTolerance
+            if (options.checkNotBefore && now + skew < mso.validityInfo.validFrom) {
                 return VerificationResult.Invalid.NotYetValid(
                     credential = credential,
                     validFrom = mso.validityInfo.validFrom,
                 )
             }
-            if (now > mso.validityInfo.validUntil) {
+            if (options.checkExpiration && now - skew > mso.validityInfo.validUntil) {
                 return VerificationResult.Invalid.Expired(
                     credential = credential,
                     expiredAt = mso.validityInfo.validUntil,
@@ -487,6 +489,20 @@ class MdocProofEngine(
                     "Issuer (DocSigner) certificate from x5chain is not currently valid: ${e.message}",
                 )
             }
+            if (leaf.basicConstraints != -1) {
+                throw MdocException(
+                    "INVALID_ISSUER_CERT",
+                    "Issuer (DocSigner) leaf certificate must not be a CA certificate (basicConstraints=${leaf.basicConstraints})",
+                )
+            }
+            leaf.keyUsage?.let { keyUsage ->
+                if (keyUsage.isEmpty() || !keyUsage[0]) {
+                    throw MdocException(
+                        "INVALID_ISSUER_CERT",
+                        "Issuer (DocSigner) leaf certificate keyUsage does not permit digitalSignature",
+                    )
+                }
+            }
             val payload = verifyCoseSign1Signature(issuerAuthBytes, leaf.publicKey)
             validateChainToAnchor(certs, anchors)
             return payload
@@ -622,14 +638,29 @@ class MdocProofEngine(
         sigStructure.Add(CBORObject.FromObject(payloadBytes))
         val toBeSigned = sigStructure.EncodeToBytes()
 
-        val (jcaAlgorithm, isEcdsa) =
+        val (jcaAlgorithm, expectedEcFieldSize) =
             when (coseAlg) {
-                ALG_ES256 -> "SHA256withECDSA" to true
-                ALG_ES384 -> "SHA384withECDSA" to true
-                ALG_ES512 -> "SHA512withECDSA" to true
-                ALG_EDDSA -> "Ed25519" to false
+                ALG_ES256 -> "SHA256withECDSA" to 256
+                ALG_ES384 -> "SHA384withECDSA" to 384
+                ALG_ES512 -> "SHA512withECDSA" to 521
+                ALG_EDDSA -> "Ed25519" to null
                 else -> throw MdocException.invalidCoseSign1("Unsupported COSE algorithm: $coseAlg")
             }
+
+        val isEcdsa = expectedEcFieldSize != null
+        if (expectedEcFieldSize != null) {
+            val ecKey =
+                publicKey as? ECPublicKey
+                    ?: throw MdocException.invalidCoseSign1(
+                        "COSE algorithm $coseAlg requires an EC public key, got ${publicKey.algorithm}",
+                    )
+            val actualFieldSize = ecKey.params.curve.field.fieldSize
+            if (actualFieldSize != expectedEcFieldSize) {
+                throw MdocException.invalidCoseSign1(
+                    "EC key curve size ($actualFieldSize-bit) does not match COSE algorithm $coseAlg (expected $expectedEcFieldSize-bit)",
+                )
+            }
+        }
 
         val valid =
             try {
@@ -647,7 +678,12 @@ class MdocProofEngine(
     }
 
     /** Convert raw (r||s) ECDSA signature (COSE format) to DER encoding (JCA format). */
-    private fun rawToDerSignature(rawSig: ByteArray): ByteArray {
+    internal fun rawToDerSignature(rawSig: ByteArray): ByteArray {
+        if (rawSig.isEmpty() || rawSig.size % 2 != 0) {
+            throw MdocException.invalidCoseSign1(
+                "Invalid raw ECDSA signature length: ${rawSig.size} (must be non-empty and even)",
+            )
+        }
         val half = rawSig.size / 2
         val r = rawSig.copyOfRange(0, half)
         val s = rawSig.copyOfRange(half, rawSig.size)
@@ -662,7 +698,13 @@ class MdocProofEngine(
         val rDer = encodeMpi(r)
         val sDer = encodeMpi(s)
         val seq = rDer + sDer
-        return byteArrayOf(0x30, seq.size.toByte()) + seq
+        val lengthBytes =
+            when {
+                seq.size < 128 -> byteArrayOf(seq.size.toByte())
+                seq.size < 256 -> byteArrayOf(0x81.toByte(), seq.size.toByte())
+                else -> byteArrayOf(0x82.toByte(), (seq.size shr 8).toByte(), (seq.size and 0xFF).toByte())
+            }
+        return byteArrayOf(0x30) + lengthBytes + seq
     }
 
     // ---------------------------------------------------------------------------
@@ -855,6 +897,7 @@ class MdocProofEngine(
         when (element) {
             is JsonPrimitive ->
                 when {
+                    element.isString -> element.content
                     element.booleanOrNull != null -> element.booleanOrNull!!
                     element.longOrNull != null -> element.longOrNull!!
                     element.doubleOrNull != null -> element.doubleOrNull!!

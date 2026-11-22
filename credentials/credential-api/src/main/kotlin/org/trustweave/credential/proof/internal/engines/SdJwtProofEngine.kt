@@ -131,6 +131,9 @@ internal class SdJwtProofEngine(
                         ?: "VerifiableCredential",
                 ).claim("vc", buildVcClaim(request, sdHashes))
 
+        request.validFrom?.let {
+            claimsBuilder.notBeforeTime(Date.from(JavaInstant.ofEpochSecond(it.epochSeconds)))
+        }
         request.validUntil?.let {
             claimsBuilder.expirationTime(Date.from(JavaInstant.ofEpochSecond(it.epochSeconds)))
         }
@@ -853,7 +856,7 @@ internal class SdJwtProofEngine(
         disclosures: List<String>,
         kbJwt: String?,
     ): String {
-        val sb = StringBuilder(jwt)
+        val sb = StringBuilder(jwt.substringBefore("~"))
         for (disc in disclosures) sb.append("~").append(disc)
         sb.append("~")
         if (kbJwt != null) sb.append(kbJwt)

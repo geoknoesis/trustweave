@@ -55,4 +55,12 @@ class PrivateNetworkGuardTest {
         assertNotNull(PrivateNetworkGuard.rejectionReason("169.254.169.254"))
         assertNull(PrivateNetworkGuard.rejectionReason("8.8.8.8"))
     }
+
+    @Test
+    fun `blocks RFC 8215 local NAT64 Teredo IPv6 benchmarking and discard prefixes`() {
+        assertTrue(PrivateNetworkGuard.isDisallowed(InetAddress.getByName("64:ff9b:1::1")))
+        assertTrue(PrivateNetworkGuard.isDisallowed(InetAddress.getByName("2001:0::1")))
+        assertTrue(PrivateNetworkGuard.isDisallowed(InetAddress.getByName("2001:2::1")))
+        assertTrue(PrivateNetworkGuard.isDisallowed(InetAddress.getByName("100::1")))
+    }
 }

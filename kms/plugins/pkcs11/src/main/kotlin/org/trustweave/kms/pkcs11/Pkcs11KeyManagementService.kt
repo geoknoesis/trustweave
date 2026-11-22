@@ -79,7 +79,13 @@ class Pkcs11KeyManagementService(
      * fails fast. Any underlying exception is wrapped in [Pkcs11Exception] so callers see a
      * single, well-documented type.
      */
-    private val provider: Provider = installProvider(config)
+    private val provider: Provider =
+        try {
+            installProvider(config)
+        } catch (e: Throwable) {
+            config.pin?.fill('\u0000')
+            throw e
+        }
 
     /**
      * The PKCS#11 keystore. Eagerly loaded so that PIN errors and token-not-present errors are
@@ -89,25 +95,19 @@ class Pkcs11KeyManagementService(
         try {
             loadKeyStore(provider, config.pin?.copyOf())
         } catch (e: Throwable) {
+            config.pin?.fill('\u0000')
             releaseProvider(provider)
             throw e
         }
 
     /**
-     * Logs out the PKCS#11 session (when supported by the provider), zeroes the configured PIN,
-     * and unregisters the SunPKCS11 provider once no active [Pkcs11KeyManagementService] instance
-     * references it. Safe to call multiple times.
+     * Zeroes the configured PIN and releases this instance's reference to the SunPKCS11 provider.
+     * Once no active [Pkcs11KeyManagementService] instance references the provider, logs out the
+     * PKCS#11 session (when supported) and unregisters the provider. Safe to call multiple times.
      */
     override fun close() {
         if (!closed.compareAndSet(false, true)) return
         config.pin?.fill('\u0000')
-        if (provider is AuthProvider) {
-            try {
-                provider.logout()
-            } catch (e: Exception) {
-                logger.warn("Error logging out PKCS#11 session for provider '{}'", provider.name, e)
-            }
-        }
         releaseProvider(provider)
     }
 
@@ -118,6 +118,7 @@ class Pkcs11KeyManagementService(
         options: Map<String, Any?>,
     ): GenerateKeyResult =
         withContext(Dispatchers.IO) {
+            check(!closed.get()) { "Pkcs11KeyManagementService is closed" }
             if (algorithm is Algorithm.Custom || algorithm is Algorithm.Secp256k1) {
                 return@withContext GenerateKeyResult.Failure.UnsupportedAlgorithm(
                     algorithm = algorithm,
@@ -206,13 +207,16 @@ class Pkcs11KeyManagementService(
 
     override suspend fun getPublicKey(keyId: KeyId): GetPublicKeyResult =
         withContext(Dispatchers.IO) {
+            check(!closed.get()) { "Pkcs11KeyManagementService is closed" }
             try {
-                if (!keyStore.containsAlias(keyId.value)) {
-                    return@withContext GetPublicKeyResult.Failure.KeyNotFound(keyId = keyId)
-                }
                 val cert =
-                    keyStore.getCertificate(keyId.value)
-                        ?: return@withContext GetPublicKeyResult.Failure.KeyNotFound(keyId = keyId)
+                    synchronized(keyStoreLock) {
+                        if (!keyStore.containsAlias(keyId.value)) {
+                            null
+                        } else {
+                            keyStore.getCertificate(keyId.value)
+                        }
+                    } ?: return@withContext GetPublicKeyResult.Failure.KeyNotFound(keyId = keyId)
                 val publicKey = cert.publicKey
                 val derivedAlgorithm = deriveKeyAlgorithm(publicKey)
                 val algorithmName = derivedAlgorithm?.name ?: publicKey.algorithm ?: "unknown"
@@ -245,30 +249,33 @@ class Pkcs11KeyManagementService(
         algorithm: Algorithm?,
     ): SignResult =
         withContext(Dispatchers.IO) {
+            check(!closed.get()) { "Pkcs11KeyManagementService is closed" }
             try {
-                if (!keyStore.containsAlias(keyId.value)) {
-                    return@withContext SignResult.Failure.KeyNotFound(keyId = keyId)
-                }
-
-                val privateKey =
-                    try {
-                        keyStore.getKey(keyId.value, null) as? java.security.PrivateKey
-                            ?: return@withContext SignResult.Failure.Error(
-                                keyId = keyId,
-                                reason = "PKCS#11 alias '${keyId.value}' does not resolve to a private key",
-                            )
-                    } catch (e: KeyStoreException) {
-                        // "no such alias" is reported here on some providers
-                        return@withContext SignResult.Failure.KeyNotFound(
-                            keyId = keyId,
-                            reason = e.message,
-                        )
+                val (privateKey, publicKey) =
+                    synchronized(keyStoreLock) {
+                        if (!keyStore.containsAlias(keyId.value)) {
+                            return@withContext SignResult.Failure.KeyNotFound(keyId = keyId)
+                        }
+                        val priv =
+                            try {
+                                keyStore.getKey(keyId.value, null) as? java.security.PrivateKey
+                                    ?: return@withContext SignResult.Failure.Error(
+                                        keyId = keyId,
+                                        reason = "PKCS#11 alias '${keyId.value}' does not resolve to a private key",
+                                    )
+                            } catch (e: KeyStoreException) {
+                                // "no such alias" is reported here on some providers
+                                return@withContext SignResult.Failure.KeyNotFound(
+                                    keyId = keyId,
+                                    reason = e.message,
+                                )
+                            }
+                        priv to keyStore.getCertificate(keyId.value)?.publicKey
                     }
 
                 // The key's own algorithm (EC curve, RSA modulus size) is authoritative. PKCS#11 does not
                 // persist a TrustWeave Algorithm, so derive it from the key parameters; the placeholder
                 // certificate carries the same public key when the private key hides its parameters.
-                val publicKey = keyStore.getCertificate(keyId.value)?.publicKey
                 val resolution =
                     resolveSigning(algorithm, privateKey.algorithm, deriveKeyAlgorithm(privateKey) ?: deriveKeyAlgorithm(publicKey))
                 val (signatureScheme, signingAlgorithm) =
@@ -336,46 +343,49 @@ class Pkcs11KeyManagementService(
 
     override suspend fun deleteKey(keyId: KeyId): DeleteKeyResult =
         withContext(Dispatchers.IO) {
-            // containsAlias may itself fail on a broken provider; treat any pre-delete failure as
-            // a hard error so callers see what went wrong.
-            val exists =
+            check(!closed.get()) { "Pkcs11KeyManagementService is closed" }
+            synchronized(keyStoreLock) {
+                // containsAlias may itself fail on a broken provider; treat any pre-delete failure as
+                // a hard error so callers see what went wrong.
+                val exists =
+                    try {
+                        keyStore.containsAlias(keyId.value)
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        logger.error("Failed to query PKCS#11 alias: keyId=${keyId.value}", e)
+                        return@withContext DeleteKeyResult.Failure.Error(
+                            keyId = keyId,
+                            reason = "Failed to query PKCS#11 alias: ${e.message ?: e.javaClass.simpleName}",
+                            cause = e,
+                        )
+                    }
+                if (!exists) {
+                    return@withContext DeleteKeyResult.NotFound
+                }
+
                 try {
-                    keyStore.containsAlias(keyId.value)
+                    keyStore.deleteEntry(keyId.value)
+                    DeleteKeyResult.Deleted
                 } catch (e: kotlinx.coroutines.CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    logger.error("Failed to query PKCS#11 alias: keyId=${keyId.value}", e)
-                    return@withContext DeleteKeyResult.Failure.Error(
-                        keyId = keyId,
-                        reason = "Failed to query PKCS#11 alias: ${e.message ?: e.javaClass.simpleName}",
-                        cause = e,
-                    )
-                }
-            if (!exists) {
-                return@withContext DeleteKeyResult.NotFound
-            }
-
-            try {
-                keyStore.deleteEntry(keyId.value)
-                DeleteKeyResult.Deleted
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                if (config.enableSoftDelete) {
-                    logger.warn(
-                        "PKCS#11 device refused deleteEntry for '{}'; soft-delete enabled, returning Deleted",
-                        keyId.value,
-                        e,
-                    )
-                    DeleteKeyResult.Deleted
-                } else {
-                    DeleteKeyResult.Failure.Error(
-                        keyId = keyId,
-                        reason =
-                            "PKCS#11 device refused key deletion (set Pkcs11Config.enableSoftDelete=true " +
-                                "to ignore): ${e.message ?: e.javaClass.simpleName}",
-                        cause = e,
-                    )
+                    if (config.enableSoftDelete) {
+                        logger.warn(
+                            "PKCS#11 device refused deleteEntry for '{}'; soft-delete enabled, returning Deleted",
+                            keyId.value,
+                            e,
+                        )
+                        DeleteKeyResult.Deleted
+                    } else {
+                        DeleteKeyResult.Failure.Error(
+                            keyId = keyId,
+                            reason =
+                                "PKCS#11 device refused key deletion (set Pkcs11Config.enableSoftDelete=true " +
+                                    "to ignore): ${e.message ?: e.javaClass.simpleName}",
+                            cause = e,
+                        )
+                    }
                 }
             }
         }
@@ -420,13 +430,26 @@ class Pkcs11KeyManagementService(
         val serial = BigInteger(64, java.security.SecureRandom())
 
         val sigAlg =
-            when {
-                jcaKeyType.equals("Ed25519", ignoreCase = true) -> "Ed25519"
-                jcaKeyType.equals("EC", ignoreCase = true) -> "SHA256withECDSA"
-                jcaKeyType.equals("RSA", ignoreCase = true) -> "SHA256withRSA"
-                else -> throw Pkcs11Exception(
-                    "internal: cannot build placeholder certificate for keyType=$jcaKeyType algorithm=$algorithm",
-                )
+            when (algorithm) {
+                Algorithm.Ed25519 -> "Ed25519"
+                Algorithm.P256 -> "SHA256withECDSA"
+                Algorithm.P384 -> "SHA384withECDSA"
+                Algorithm.P521 -> "SHA512withECDSA"
+                is Algorithm.RSA ->
+                    when (algorithm.rsaKeySize) {
+                        3072 -> "SHA384withRSA"
+                        4096 -> "SHA512withRSA"
+                        else -> "SHA256withRSA"
+                    }
+                else ->
+                    when {
+                        jcaKeyType.equals("Ed25519", ignoreCase = true) -> "Ed25519"
+                        jcaKeyType.equals("EC", ignoreCase = true) -> "SHA256withECDSA"
+                        jcaKeyType.equals("RSA", ignoreCase = true) -> "SHA256withRSA"
+                        else -> throw Pkcs11Exception(
+                            "internal: cannot build placeholder certificate for keyType=$jcaKeyType algorithm=$algorithm",
+                        )
+                    }
             }
 
         // Use BouncyCastle's certificate builder via reflection-free direct call. This keeps the
@@ -440,12 +463,11 @@ class Pkcs11KeyManagementService(
                 subject,
                 keyPair.public,
             )
-        // The placeholder is signed by the same private key. The private key lives on the token,
-        // so we sign through the provider — but at this point [setKeyEntry] has not yet been
-        // called, so the in-memory `keyPair.private` is still usable for signing.
+        // The placeholder is signed by the same private key through the PKCS#11 provider.
         val signer =
             org.bouncycastle.operator.jcajce
                 .JcaContentSignerBuilder(sigAlg)
+                .setProvider(provider)
                 .build(keyPair.private)
         val holder = certBuilder.build(signer)
         return org.bouncycastle.cert.jcajce
@@ -733,6 +755,15 @@ class Pkcs11KeyManagementService(
                 val remaining = (providerRefCounts[effectiveName] ?: 0) - 1
                 if (remaining <= 0) {
                     providerRefCounts.remove(effectiveName)
+                    if (provider is AuthProvider) {
+                        try {
+                            provider.logout()
+                        } catch (e: Exception) {
+                            LoggerFactory
+                                .getLogger(Pkcs11KeyManagementService::class.java)
+                                .warn("Error logging out PKCS#11 session for provider '{}'", provider.name, e)
+                        }
+                    }
                     if (registeredProviders.remove(effectiveName) != null) {
                         Security.removeProvider(effectiveName)
                     }

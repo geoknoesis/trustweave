@@ -27,8 +27,13 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import sys
 from pathlib import Path
+
+# Gradle KMP builds produce `<artifact>-metadata-<version>.jar` under build/libs,
+# while the `kotlinMultiplatform` Maven publication stages it as `<artifact>-<version>.jar`.
+KMP_METADATA_JAR = re.compile(r"^(.+)-metadata-(\d[^/]*\.jar)$")
 
 
 def sha256(path):
@@ -92,6 +97,16 @@ def verify(manifest, staging, min_jars=None, allowlist=None, expected_commit=Non
     for jar in sorted(Path(staging).rglob("*.jar")):
         if kind(jar.name) != "javadoc":
             staged.setdefault(jar.name, jar)
+    normalized_evidence = {}
+    for name, digest in evidence.items():
+        match = KMP_METADATA_JAR.match(name) if kind(name) == "binary" else None
+        if match and name not in staged and name not in allowlist:
+            mapped = f"{match.group(1)}-{match.group(2)}"
+            if mapped not in evidence and mapped not in normalized_evidence:
+                normalized_evidence[mapped] = digest
+                continue
+        normalized_evidence[name] = digest
+    evidence = normalized_evidence
     expected_binary = {n for n in evidence if kind(n) == "binary" and n not in allowlist}
     for name in sorted(expected_binary - staged.keys()):
         problems.append(f"{name}: validated by the evidence build but not staged (allowlist it with a reason if it is never published)")

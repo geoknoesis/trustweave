@@ -306,6 +306,28 @@ internal class VcLdProofEngine(
                 )
             }
 
+            // Temporal validity checks (W3C VC 1.1 expirationDate and VC 2.0 validFrom/validUntil)
+            val now = Clock.System.now()
+            val skew = options.clockSkewTolerance
+            if (options.checkNotBefore) {
+                val notBefore = credential.validFrom
+                if (notBefore != null && now + skew < notBefore) {
+                    return VerificationResult.Invalid.NotYetValid(
+                        credential = credential,
+                        validFrom = notBefore,
+                    )
+                }
+            }
+            if (options.checkExpiration) {
+                val expiresAt = credential.validUntil ?: credential.expirationDate
+                if (expiresAt != null && now - skew > expiresAt) {
+                    return VerificationResult.Invalid.Expired(
+                        credential = credential,
+                        expiredAt = expiresAt,
+                    )
+                }
+            }
+
             // Revocation / suspension check
             val effectiveChecker =
                 statusChecker
@@ -704,7 +726,7 @@ internal class VcLdProofEngine(
                 "ES256K", "SECP256K1" -> JWSAlgorithm.ES256K
                 "ES384" -> JWSAlgorithm.ES384
                 "ES512" -> JWSAlgorithm.ES512
-                else -> JWSAlgorithm.EdDSA
+                else -> throw IllegalArgumentException("Unsupported JsonWebSignature2020 algorithm: '$algorithm'")
             }
         val header = JWSHeader.Builder(jwsAlgorithm).build()
         val signingInput =

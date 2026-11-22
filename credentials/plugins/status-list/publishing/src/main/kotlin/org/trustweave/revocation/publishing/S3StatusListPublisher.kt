@@ -2,12 +2,14 @@ package org.trustweave.revocation.publishing
 
 import kotlinx.coroutines.future.await
 import software.amazon.awssdk.core.async.AsyncRequestBody
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
+import java.time.Duration
 
 /**
  * Configuration for the S3-backed status list publisher.
@@ -55,7 +57,13 @@ class S3StatusListPublisher private constructor(
             S3AsyncClient
                 .builder()
                 .region(Region.of(config.region))
-                .build(),
+                .overrideConfiguration(
+                    ClientOverrideConfiguration
+                        .builder()
+                        .apiCallTimeout(Duration.ofSeconds(30))
+                        .apiCallAttemptTimeout(Duration.ofSeconds(10))
+                        .build(),
+                ).build(),
         ownsClient = true,
     )
 

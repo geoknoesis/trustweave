@@ -49,6 +49,8 @@ class Oidc4VciProofRobustnessTest {
         alg: JsonElement = JsonPrimitive("EdDSA"),
         typ: JsonElement = JsonPrimitive("openid4vci-proof+jwt"),
         kty: JsonElement = JsonPrimitive("OKP"),
+        iat: JsonElement? = JsonPrimitive(System.currentTimeMillis() / 1000L),
+        includePrivateD: Boolean = false,
     ): String {
         val raw = holder.public.encoded.let { it.copyOfRange(it.size - 32, it.size) }
         val header =
@@ -61,6 +63,7 @@ class Oidc4VciProofRobustnessTest {
                         put("kty", kty)
                         put("crv", "Ed25519")
                         put("x", enc.encodeToString(raw))
+                        if (includePrivateD) put("d", enc.encodeToString(ByteArray(32) { 1 }))
                     },
                 )
             }
@@ -68,6 +71,7 @@ class Oidc4VciProofRobustnessTest {
             buildJsonObject {
                 put("aud", aud)
                 put("nonce", nonceClaim)
+                iat?.let { put("iat", it) }
             }
         val h = enc.encodeToString(header.toString().toByteArray())
         val p = enc.encodeToString(payload.toString().toByteArray())
@@ -160,5 +164,61 @@ class Oidc4VciProofRobustnessTest {
             svc.issueCredential(token.accessToken, "jwt_vc_json", listOf("VerifiableCredential"), proof(first.cNonce!!))
             assertEquals(listOf(listOf("T"), listOf("A")), builder.seen)
             assertTrue(builder.seen.all { it.size == 1 })
+        }
+
+    @Test
+    fun `proof JWT missing stale or future iat is rejected`() =
+        runBlocking<Unit> {
+            val svc = service(RecordingBuilder())
+            val tok = token(svc, "T")
+            val nowSec = System.currentTimeMillis() / 1000L
+
+            // Missing iat
+            val missingErr =
+                assertFailsWith<InvalidProofException> {
+                    svc.issueCredential(tok.accessToken, "jwt_vc_json", emptyList(), proof(tok.cNonce, iat = null))
+                }
+            assertTrue(missingErr.message.orEmpty().contains("iat"))
+
+            // Stale iat (> 5 minutes old)
+            val staleErr =
+                assertFailsWith<InvalidProofException> {
+                    svc.issueCredential(
+                        tok.accessToken,
+                        "jwt_vc_json",
+                        emptyList(),
+                        proof(missingErr.freshCNonce, iat = JsonPrimitive(nowSec - 600L)),
+                    )
+                }
+            assertTrue(staleErr.message.orEmpty().contains("iat"))
+
+            // Future iat (> 5 minutes in the future)
+            val futureErr =
+                assertFailsWith<InvalidProofException> {
+                    svc.issueCredential(
+                        tok.accessToken,
+                        "jwt_vc_json",
+                        emptyList(),
+                        proof(staleErr.freshCNonce, iat = JsonPrimitive(nowSec + 600L)),
+                    )
+                }
+            assertTrue(futureErr.message.orEmpty().contains("iat"))
+        }
+
+    @Test
+    fun `proof JWT carrying private key parameter d in jwk header is rejected`() =
+        runBlocking<Unit> {
+            val svc = service(RecordingBuilder())
+            val tok = token(svc, "T")
+            val err =
+                assertFailsWith<InvalidProofException> {
+                    svc.issueCredential(
+                        tok.accessToken,
+                        "jwt_vc_json",
+                        emptyList(),
+                        proof(tok.cNonce, includePrivateD = true),
+                    )
+                }
+            assertTrue(err.message.orEmpty().contains("private key"))
         }
 }

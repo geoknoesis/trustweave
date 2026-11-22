@@ -28,6 +28,7 @@ import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
 import okhttp3.FormBody
 import okhttp3.OkHttpClient
@@ -494,17 +495,17 @@ class Oidc4VpService(
                     .build()
 
             // Response is closed and its body bounded (readBodyBounded) on every path.
-            val response = httpClient.newCall(httpRequest).execute()
-            val code = response.code
-            val successful = response.isSuccessful
-            if (!successful) {
-                val body = runCatching { response.readBodyBounded(MAX_ERROR_BODY_BYTES) }.getOrNull()
-                throw Oidc4VpException.PresentationSubmissionFailed(
-                    reason = "HTTP $code: ${body.orEmpty().take(MAX_ERROR_BODY_CHARS)}",
-                    verifierUrl = responseUri,
-                )
+            httpClient.newCall(httpRequest).execute().use { response ->
+                val code = response.code
+                val successful = response.isSuccessful
+                if (!successful) {
+                    val body = runCatching { response.readBodyBounded(MAX_ERROR_BODY_BYTES) }.getOrNull()
+                    throw Oidc4VpException.PresentationSubmissionFailed(
+                        reason = "HTTP $code: ${body.orEmpty().take(MAX_ERROR_BODY_CHARS)}",
+                        verifierUrl = responseUri,
+                    )
+                }
             }
-            response.close()
         }
 
     private fun isDidClientSignal(
@@ -571,28 +572,31 @@ class Oidc4VpService(
                 .get()
                 .build()
 
-        val response = httpClient.newCall(request).execute()
-        val code = response.code
-        val successful = response.isSuccessful
         val body =
-            try {
-                response.readBodyBounded()
-            } catch (e: java.io.IOException) {
-                throw Oidc4VpException.AuthorizationRequestFetchFailed(
-                    requestUri = requestUri,
-                    reason = "Response body unreadable or too large: ${e.message}",
-                )
-            } ?: throw Oidc4VpException.AuthorizationRequestFetchFailed(
-                requestUri = requestUri,
-                reason = "Empty response body",
-            )
+            httpClient.newCall(request).execute().use { response ->
+                val code = response.code
+                val successful = response.isSuccessful
+                val rawBody =
+                    try {
+                        response.readBodyBounded()
+                    } catch (e: java.io.IOException) {
+                        throw Oidc4VpException.AuthorizationRequestFetchFailed(
+                            requestUri = requestUri,
+                            reason = "Response body unreadable or too large: ${e.message}",
+                        )
+                    } ?: throw Oidc4VpException.AuthorizationRequestFetchFailed(
+                        requestUri = requestUri,
+                        reason = "Empty response body",
+                    )
 
-        if (!successful) {
-            throw Oidc4VpException.AuthorizationRequestFetchFailed(
-                requestUri = requestUri,
-                reason = "HTTP $code: ${body.take(MAX_ERROR_BODY_CHARS)}",
-            )
-        }
+                if (!successful) {
+                    throw Oidc4VpException.AuthorizationRequestFetchFailed(
+                        requestUri = requestUri,
+                        reason = "HTTP $code: ${rawBody.take(MAX_ERROR_BODY_CHARS)}",
+                    )
+                }
+                rawBody
+            }
 
         val trimmed = body.trim()
         return if (trimmed.startsWith("{")) {
@@ -687,6 +691,33 @@ class Oidc4VpService(
 
         val claimsJson = lenientJson.parseToJsonElement(signedJwt.payload.toString()).jsonObject
 
+        // RFC 9101 (JAR) header & temporal/issuer claim validation
+        val headerTyp = signedJwt.header.type?.type
+        if (headerTyp != null && !headerTyp.equals("oauth-authz-req+jwt", ignoreCase = true)) {
+            throw Oidc4VpException.AuthorizationRequestFetchFailed(
+                requestUri = requestUri,
+                reason = "Invalid request object JWT typ '$headerTyp'; expected 'oauth-authz-req+jwt'",
+            )
+        }
+        val nowSeconds = System.currentTimeMillis() / 1000L
+        val clockSkewSeconds = 60L
+        (claimsJson["exp"] as? JsonPrimitive)?.longOrNull?.let { exp ->
+            if (nowSeconds > exp + clockSkewSeconds) {
+                throw Oidc4VpException.AuthorizationRequestFetchFailed(
+                    requestUri = requestUri,
+                    reason = "Request object JWT is expired (exp=$exp)",
+                )
+            }
+        }
+        (claimsJson["nbf"] as? JsonPrimitive)?.longOrNull?.let { nbf ->
+            if (nowSeconds + clockSkewSeconds < nbf) {
+                throw Oidc4VpException.AuthorizationRequestFetchFailed(
+                    requestUri = requestUri,
+                    reason = "Request object JWT is not yet valid (nbf=$nbf)",
+                )
+            }
+        }
+
         val claimClientId = (claimsJson["client_id"] as? JsonPrimitive)?.contentOrNull
         val claimClientIdScheme =
             (claimsJson["client_id_scheme"] as? JsonPrimitive)
@@ -696,6 +727,13 @@ class Oidc4VpService(
         // DID-scheme signals: an explicit client_id_scheme=did (claims or URL) or a
         // client_id that is itself a DID (claims, or URL when the claims carry none).
         val effectiveClientId = claimClientId ?: urlClientId
+        val claimIss = (claimsJson["iss"] as? JsonPrimitive)?.contentOrNull
+        if (claimIss != null && effectiveClientId != null && claimIss != effectiveClientId) {
+            throw Oidc4VpException.AuthorizationRequestFetchFailed(
+                requestUri = requestUri,
+                reason = "Request object JWT 'iss' ('$claimIss') does not match 'client_id' ('$effectiveClientId')",
+            )
+        }
         val didPinned =
             claimClientIdScheme == ClientIdScheme.DID ||
                 urlClientIdScheme == ClientIdScheme.DID ||
@@ -1086,28 +1124,31 @@ class Oidc4VpService(
                     .get()
                     .build()
 
-            val response = httpClient.newCall(request).execute()
-            val code = response.code
-            val successful = response.isSuccessful
             val body =
-                try {
-                    response.readBodyBounded()
-                } catch (e: java.io.IOException) {
-                    throw Oidc4VpException.MetadataFetchFailed(
-                        verifierUrl = verifierUrl,
-                        reason = "Response body unreadable or too large: ${e.message}",
-                    )
-                } ?: throw Oidc4VpException.MetadataFetchFailed(
-                    verifierUrl = verifierUrl,
-                    reason = "Empty response body",
-                )
+                httpClient.newCall(request).execute().use { response ->
+                    val code = response.code
+                    val successful = response.isSuccessful
+                    val rawBody =
+                        try {
+                            response.readBodyBounded()
+                        } catch (e: java.io.IOException) {
+                            throw Oidc4VpException.MetadataFetchFailed(
+                                verifierUrl = verifierUrl,
+                                reason = "Response body unreadable or too large: ${e.message}",
+                            )
+                        } ?: throw Oidc4VpException.MetadataFetchFailed(
+                            verifierUrl = verifierUrl,
+                            reason = "Empty response body",
+                        )
 
-            if (!successful) {
-                throw Oidc4VpException.MetadataFetchFailed(
-                    verifierUrl = verifierUrl,
-                    reason = "HTTP $code: ${body.take(MAX_ERROR_BODY_CHARS)}",
-                )
-            }
+                    if (!successful) {
+                        throw Oidc4VpException.MetadataFetchFailed(
+                            verifierUrl = verifierUrl,
+                            reason = "HTTP $code: ${rawBody.take(MAX_ERROR_BODY_CHARS)}",
+                        )
+                    }
+                    rawBody
+                }
 
             lenientJson.decodeFromString<VerifierMetadata>(body)
         }

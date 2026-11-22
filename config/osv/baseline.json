@@ -4,23 +4,6 @@
   "package_count": 770,
   "advisories": [
     {
-      "id": "GHSA-3g76-f9xq-8vp6",
-      "aliases": [
-        "CVE-2026-6860"
-      ],
-      "packages": [
-        "io.vertx:vertx-core@4.5.11",
-        "vertx-core@4.5.11"
-      ],
-      "ecosystems": [
-        "Maven"
-      ],
-      "status": "affected",
-      "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): vertx-core@4.5.11 in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > crypto > tuweni-bytes. Fixed in 4.5.27, 5.0.12. Reachability from TrustWeave code is not individually assessed. Vert.x 4.5.11 arrives through web3j (tuweni); the fix is a newer web3j or a Vert.x pin.",
-      "reviewed": "2026-10-08",
-      "expires": "2026-12-10"
-    },
-    {
       "id": "GHSA-4265-ccf5-phj5",
       "aliases": [
         "CVE-2024-26308"
@@ -119,39 +102,6 @@
       "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): protobuf-java@3.14.0 in the runtimeClasspath of 1 module(s), e.g. :credentials:plugins:didcomm via didcomm > tink > protobuf-java. Fixed in 3.25.5, 4.27.5, 4.28.2. Reachability from TrustWeave code is not individually assessed. protobuf-java 3.14.0 and gson 2.8.6 come from org.didcommx:didcomm -> tink; they go away with the DIDComm replacement tracked in docs/contributing/dependency-upgrade-plan.md. Recorded versions not in the current graph (shaded, build tooling or stale): protobuf-javalite@3.18.0.",
       "reviewed": "2026-10-08",
       "expires": "2026-12-17"
-    },
-    {
-      "id": "GHSA-cphf-4846-3xx9",
-      "aliases": [
-        "CVE-2026-1002"
-      ],
-      "packages": [
-        "io.vertx:vertx-core@4.5.11",
-        "vertx-core@4.5.11"
-      ],
-      "ecosystems": [
-        "Maven"
-      ],
-      "status": "affected",
-      "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): vertx-core@4.5.11 in the runtimeClasspath of 11 module(s), e.g. :anchors:plugins:arbitrum via evm-base > core > crypto > tuweni-bytes. Fixed in 4.5.24, 5.0.7. Reachability from TrustWeave code is not individually assessed. Vert.x 4.5.11 arrives through web3j (tuweni); the fix is a newer web3j or a Vert.x pin.",
-      "reviewed": "2026-10-08",
-      "expires": "2026-12-17"
-    },
-    {
-      "id": "GHSA-cw39-r4h6-8j3x",
-      "aliases": [
-        "CVE-2026-21452"
-      ],
-      "packages": [
-        "msgpack-core@0.9.9"
-      ],
-      "ecosystems": [
-        "Maven"
-      ],
-      "status": "affected",
-      "reason": "Affected version on a production runtime classpath (Gradle resolution on 2026-10-08): msgpack-core@0.9.9 in the runtimeClasspath of 1 module(s), e.g. :anchors:plugins:algorand via algosdk > jackson-dataformat-msgpack > msgpack-core. Fixed in 0.9.11. Reachability from TrustWeave code is not individually assessed. msgpack-core 0.9.9 comes from algosdk -> jackson-dataformat-msgpack; fix by upgrading algosdk or pinning 0.9.11.",
-      "reviewed": "2026-10-08",
-      "expires": "2026-12-24"
     },
     {
       "id": "GHSA-g5ww-5jh7-63cx",

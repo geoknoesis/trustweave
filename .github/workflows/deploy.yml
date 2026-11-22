@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'docs/**'
+      - 'trust/src/main/kotlin/**'
       - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
@@ -65,7 +66,6 @@ jobs:
           ./gradlew :dokkaGeneratePublicationHtml \
             --no-daemon \
             --max-workers=3 \
-            -Ptrustweave.dokka=true \
             -Ptrustweave.dokkaOutputDir="$PWD/docs/_site/api"
 
       - name: Upload artifact

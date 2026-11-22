@@ -74,12 +74,15 @@ abstract class AbstractWebDidMethod(
     method: String,
     kms: KeyManagementService,
     protected val httpClient: OkHttpClient,
+    private val ownsHttpClient: Boolean = false,
 ) : AbstractDidMethod(method, kms),
     AutoCloseable {
     override fun close() {
-        httpClient.dispatcher.executorService.shutdown()
-        httpClient.connectionPool.evictAll()
-        httpClient.cache?.close()
+        if (ownsHttpClient) {
+            httpClient.dispatcher.executorService.shutdown()
+            httpClient.connectionPool.evictAll()
+            httpClient.cache?.close()
+        }
     }
 
     /**
@@ -186,18 +189,19 @@ abstract class AbstractWebDidMethod(
     internal val publishClient: OkHttpClient by lazy { buildGuardedClient(forResolution = false) }
 
     private fun buildGuardedClient(forResolution: Boolean): OkHttpClient {
-        val builder =
-            httpClient
-                .newBuilder()
-                .also { if (forResolution) configureResolutionClient(it) }
-                .followRedirects(false)
-                .followSslRedirects(false)
-                .proxy(Proxy.NO_PROXY)
-                .dns(ResolutionGuardedDns(httpClient.dns))
+        val builder = httpClient.newBuilder()
         // Whole-call deadline (connect through the last body byte) unless one was configured:
         // without it a host that sends headers and then stalls holds the thread indefinitely.
-        if (builder.build().callTimeoutMillis == 0) builder.callTimeout(DEFAULT_CALL_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-        return builder.build()
+        if (httpClient.callTimeoutMillis == 0) {
+            builder.callTimeout(DEFAULT_CALL_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        }
+        if (forResolution) configureResolutionClient(builder)
+        return builder
+            .followRedirects(false)
+            .followSslRedirects(false)
+            .proxy(Proxy.NO_PROXY)
+            .dns(ResolutionGuardedDns(httpClient.dns))
+            .build()
     }
 
     /**

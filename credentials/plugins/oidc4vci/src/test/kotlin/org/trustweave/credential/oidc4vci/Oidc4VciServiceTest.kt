@@ -66,8 +66,8 @@ class Oidc4VciServiceTest {
     fun setUp() =
         runBlocking {
             mockWebServer = MockWebServer()
-            mockWebServer.start()
-            issuerUrl = mockWebServer.url("").toString().trimEnd('/')
+            mockWebServer.start(java.net.InetAddress.getByName("127.0.0.1"), 0)
+            issuerUrl = "http://127.0.0.1:${mockWebServer.port}"
 
             kms = InMemoryKeyManagementService()
 

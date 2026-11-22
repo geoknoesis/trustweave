@@ -688,6 +688,10 @@ class Oidc4VciIssuerService
                 reject("proof.jwt typ must be 'openid4vci-proof+jwt', got '${typ ?: "<absent>"}'")
             }
 
+            if ((header["jwk"] as? JsonObject)?.containsKey("d") == true) {
+                reject("proof.jwt jwk header must not contain private key parameter 'd'")
+            }
+
             val proofKey =
                 try {
                     extractProofKey(header)
@@ -714,6 +718,22 @@ class Oidc4VciIssuerService
             val aud = payload.text("aud", "payload")
             if (aud != baseUrl) {
                 reject("proof.jwt aud '${aud ?: "<absent>"}' does not match credential issuer '$baseUrl'")
+            }
+
+            val iatPrimitive = payload["iat"] as? JsonPrimitive
+            val iatSeconds =
+                if (iatPrimitive == null || iatPrimitive.isString) {
+                    null
+                } else {
+                    iatPrimitive.longOrNull
+                } ?: reject("proof.jwt is missing a valid numeric 'iat' claim")
+            val nowSeconds = nowMillis() / 1000L
+            val maxSkewSeconds = 300L
+            if (iatSeconds < nowSeconds - maxSkewSeconds) {
+                reject("proof.jwt 'iat' is too old (stale beyond 5 minutes)")
+            }
+            if (iatSeconds > nowSeconds + maxSkewSeconds) {
+                reject("proof.jwt 'iat' is too far in the future (skew beyond 5 minutes)")
             }
 
             val nonce = payload.text("nonce", "payload") ?: reject("proof.jwt is missing the nonce claim")
@@ -782,6 +802,7 @@ class Oidc4VciIssuerService
          */
         private fun extractProofKey(header: JsonObject): ProofKey? {
             (header["jwk"] as? JsonObject)?.let { jwk ->
+                if (jwk.containsKey("d")) return null
                 if ((jwk["kty"] as? JsonPrimitive)?.contentOrNull != "OKP") return null
                 if ((jwk["crv"] as? JsonPrimitive)?.contentOrNull != "Ed25519") return null
                 val x = (jwk["x"] as? JsonPrimitive)?.contentOrNull ?: return null

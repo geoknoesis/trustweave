@@ -11,6 +11,7 @@ import org.trustweave.core.exception.PluginException
 import org.trustweave.core.exception.TrustWeaveException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 
@@ -238,8 +239,25 @@ internal class DefaultPluginRegistry(
             registerNonLifecycle(metadata, instance)
             return
         }
-        // Blocking entry point: isolate suspending lifecycle execution onto a dedicated daemon thread.
-        runLifecycleBlocking("register-${metadata.id}") { registerSuspending(metadata, instance) }
+        val abandoned = AtomicBoolean(false)
+        val tokenHolder = AtomicReference<Long?>(null)
+        try {
+            // Blocking entry point: isolate suspending lifecycle execution onto a dedicated daemon thread.
+            runLifecycleBlocking("register-${metadata.id}") {
+                registerSuspendingInternal(metadata, instance, abandoned, tokenHolder)
+            }
+        } catch (t: Throwable) {
+            // If the blocking call timed out or was interrupted before the worker finished,
+            // mark abandoned and revoke our reservation token under mutationLock so a
+            // late-finishing daemon thread can NEVER silently publish the timed-out plugin.
+            synchronized(mutationLock) {
+                abandoned.set(true)
+                tokenHolder.get()?.let { token ->
+                    pendingRegistrations.remove(metadata.id, token)
+                }
+            }
+            throw t
+        }
     }
 
     private fun registerNonLifecycle(
@@ -258,6 +276,13 @@ internal class DefaultPluginRegistry(
     override suspend fun registerSuspending(
         metadata: PluginMetadata,
         instance: Any,
+    ) = registerSuspendingInternal(metadata, instance, abandoned = null, tokenHolder = null)
+
+    private suspend fun registerSuspendingInternal(
+        metadata: PluginMetadata,
+        instance: Any,
+        abandoned: AtomicBoolean?,
+        tokenHolder: AtomicReference<Long?>?,
     ) {
         if (metadata.id.isBlank()) {
             throw PluginException.BlankId
@@ -266,8 +291,14 @@ internal class DefaultPluginRegistry(
         // Phase 1 (locked): validate and reserve the ID so no concurrent register can claim it.
         val token =
             synchronized(mutationLock) {
+                if (abandoned?.get() == true) {
+                    throw CancellationException("Plugin registration for '${metadata.id}' was abandoned")
+                }
                 validateRegistrationLocked(metadata)
-                registrationGenerations.incrementAndGet().also { pendingRegistrations[metadata.id] = it }
+                registrationGenerations.incrementAndGet().also {
+                    pendingRegistrations[metadata.id] = it
+                    tokenHolder?.set(it)
+                }
             }
 
         // Phase 2 (unlocked): drive the plugin lifecycle. A plugin that fails initialize()/start()
@@ -707,19 +738,17 @@ internal class DefaultPluginRegistry(
         worker.isDaemon = true
         worker.start()
 
-        var interrupted = false
         val deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(blockingLifecycleTimeoutMillis)
         while (worker.isAlive) {
             val remaining = deadline - System.nanoTime()
             if (remaining <= 0) break
             try {
                 TimeUnit.NANOSECONDS.timedJoin(worker, remaining)
-            } catch (_: InterruptedException) {
-                interrupted = true
+            } catch (ie: InterruptedException) {
+                worker.interrupt()
+                Thread.currentThread().interrupt()
+                throw ie
             }
-        }
-        if (interrupted) {
-            Thread.currentThread().interrupt()
         }
 
         if (worker.isAlive) {

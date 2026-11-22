@@ -303,7 +303,7 @@ jobs:
           cd build/release-staging
           find . -type f ! -name 'SHA256SUMS' ! -name 'maven-metadata*' \
             ! -name '*.md5' ! -name '*.sha1' ! -name '*.sha256' ! -name '*.sha512' \
-            | LC_ALL=C sort | sed 's|^\./||' | xargs sha256sum > SHA256SUMS
+            -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sed 's|  \./|  |' > SHA256SUMS
           count="$(wc -l < SHA256SUMS)"
           echo "Checksummed $count files"
           test "$count" -gt 0
@@ -388,7 +388,7 @@ jobs:
       - name: Record the staged POMs
         run: |
           ./gradlew -q :distribution:bom:generatePomFileForMavenPublication --no-daemon
-          ls -R build/*/publications > published-poms.txt
+          find . -path '*/build/publications/*' -type f | LC_ALL=C sort > published-poms.txt
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

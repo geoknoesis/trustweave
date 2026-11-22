@@ -133,6 +133,34 @@ class VerifyStagedJarsTest(unittest.TestCase):
         manifest = {"jar_sha256": {"a/libs/x.jar": digest(b"1"), "b/libs/x.jar": digest(b"2")}}
         self.assertTrue(any("two different jars" in p for p in verifyjars.verify(manifest, ".")))
 
+    def test_kmp_metadata_jar_matches_staged_root_jar(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            staged(tmp, "common-mp-0.7.0.jar", b"meta")
+            staged(tmp, "common-mp-jvm-0.7.0.jar", b"jvm")
+            manifest = self.manifest(**{
+                "common-mp-metadata-0.7.0.jar": b"meta",
+                "common-mp-jvm-0.7.0.jar": b"jvm",
+            })
+            self.assertEqual([], verifyjars.verify(manifest, tmp))
+
+    def test_kmp_metadata_jar_different_bytes_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            staged(tmp, "common-mp-0.7.0.jar", b"tampered")
+            manifest = self.manifest(**{"common-mp-metadata-0.7.0.jar": b"meta"})
+            problems = verifyjars.verify(manifest, tmp)
+            self.assertEqual(1, len(problems))
+            self.assertIn("differs", problems[0])
+
+    def test_kmp_metadata_jar_missing_from_staging_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            staged(tmp, "core-0.7.0.jar", b"a")
+            manifest = self.manifest(**{
+                "core-0.7.0.jar": b"a",
+                "common-mp-metadata-0.7.0.jar": b"meta",
+            })
+            problems = verifyjars.verify(manifest, tmp)
+            self.assertTrue(any("common-mp-0.7.0.jar" in p and "not staged" in p for p in problems))
+
 
 if __name__ == "__main__":
     unittest.main()

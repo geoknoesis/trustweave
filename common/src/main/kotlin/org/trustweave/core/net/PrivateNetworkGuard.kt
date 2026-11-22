@@ -32,6 +32,7 @@ public object PrivateNetworkGuard {
             address.isSiteLocalAddress ||
             address.isMulticastAddress ||
             isUniqueLocalIpv6(address) ||
+            isReservedIpv6(address) ||
             isReservedIpv4(address) ||
             embeddedIpv4(address)?.let { isDisallowed(it) } == true
 
@@ -64,6 +65,28 @@ public object PrivateNetworkGuard {
     private fun isUniqueLocalIpv6(address: InetAddress): Boolean {
         val bytes = address.address
         return bytes.size == 16 && (bytes[0].toInt() and 0xFE) == 0xFC
+    }
+
+    /**
+     * Special-purpose / non-globally-routable IPv6 ranges:
+     * - `64:ff9b:1::/48` (RFC 8215 local-use NAT64)
+     * - `2001::/32` (RFC 4380 Teredo tunneling)
+     * - `2001:2::/48` (RFC 5180 IPv6 benchmarking)
+     * - `100::/64` (RFC 6666 Discard-Only)
+     */
+    private fun isReservedIpv6(address: InetAddress): Boolean {
+        val b = address.address
+        if (b.size != 16) return false
+        val u = IntArray(16) { b[it].toInt() and 0xFF }
+        val isLocalNat64 =
+            u[0] == 0x00 && u[1] == 0x64 && u[2] == 0xFF && u[3] == 0x9B && u[4] == 0x00 && u[5] == 0x01
+        val isTeredo =
+            u[0] == 0x20 && u[1] == 0x01 && u[2] == 0x00 && u[3] == 0x00
+        val isBenchmarking =
+            u[0] == 0x20 && u[1] == 0x01 && u[2] == 0x00 && u[3] == 0x02 && u[4] == 0x00 && u[5] == 0x00
+        val isDiscard =
+            u[0] == 0x01 && u[1] == 0x00 && (2..7).all { u[it] == 0 }
+        return isLocalNat64 || isTeredo || isBenchmarking || isDiscard
     }
 
     private fun isReservedIpv4(address: InetAddress): Boolean {

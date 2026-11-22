@@ -265,7 +265,7 @@ class BitstringStatusListManager(
                             updated_at TIMESTAMP NOT NULL
                         )
                         """.trimIndent(),
-                    ).execute()
+                    ).use { it.execute() }
 
                 conn
                     .prepareStatement(
@@ -277,7 +277,7 @@ class BitstringStatusListManager(
                             PRIMARY KEY (credential_id, status_list_id)
                         )
                         """.trimIndent(),
-                    ).execute()
+                    ).use { it.execute() }
 
                 // Each bit position may be bound to at most ONE credential: two concurrent
                 // assignments racing to the same index must not both succeed (one retries).
@@ -287,7 +287,7 @@ class BitstringStatusListManager(
                         CREATE UNIQUE INDEX IF NOT EXISTS ux_bitstring_indices_list_entry
                         ON bitstring_credential_indices (status_list_id, entry_index)
                         """.trimIndent(),
-                    ).execute()
+                    ).use { it.execute() }
 
                 conn
                     .prepareStatement(
@@ -297,7 +297,7 @@ class BitstringStatusListManager(
                             next_index INT NOT NULL DEFAULT 0
                         )
                         """.trimIndent(),
-                    ).execute()
+                    ).use { it.execute() }
 
                 // Free list of indices that were allocated but never issued (see releaseStatusListIndex).
                 conn
@@ -310,7 +310,7 @@ class BitstringStatusListManager(
                             PRIMARY KEY (status_list_id, entry_index)
                         )
                         """.trimIndent(),
-                    ).execute()
+                    ).use { it.execute() }
 
                 // Indices whose status was ever written. Such an index was demonstrably in use by an
                 // issued credential, so it can never be released for reuse, even if its bit is clear now.
@@ -323,15 +323,17 @@ class BitstringStatusListManager(
                             PRIMARY KEY (status_list_id, entry_index)
                         )
                         """.trimIndent(),
-                    ).execute()
+                    ).use { it.execute() }
 
                 conn.commit()
             } catch (e: Exception) {
-                conn.rollback()
+                runCatching { conn.rollback() }
                 throw TrustWeaveException.InvalidState(
                     message = "Failed to initialise bitstring status list schema: ${e.message}",
                     cause = e,
                 )
+            } finally {
+                runCatching { conn.autoCommit = true }
             }
         }
     }
@@ -374,34 +376,38 @@ class BitstringStatusListManager(
                                 (id, issuer_did, purpose, size, bits_per_entry, encoded_list, status_list_vc, created_at, updated_at)
                             VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?)
                             """.trimIndent(),
-                        ).apply {
-                            setString(1, id)
-                            setString(2, issuerDid)
-                            setString(3, purpose.name)
-                            setInt(4, effectiveSize)
-                            setInt(5, bitsPerEntry)
-                            setString(6, encodedList)
-                            setTimestamp(7, Timestamp(now.toEpochMilliseconds()))
-                            setTimestamp(8, Timestamp(now.toEpochMilliseconds()))
-                        }.executeUpdate()
+                        ).use { stmt ->
+                            stmt.setString(1, id)
+                            stmt.setString(2, issuerDid)
+                            stmt.setString(3, purpose.name)
+                            stmt.setInt(4, effectiveSize)
+                            stmt.setInt(5, bitsPerEntry)
+                            stmt.setString(6, encodedList)
+                            stmt.setTimestamp(7, Timestamp(now.toEpochMilliseconds()))
+                            stmt.setTimestamp(8, Timestamp(now.toEpochMilliseconds()))
+                            stmt.executeUpdate()
+                        }
 
                     conn
                         .prepareStatement(
                             "INSERT INTO bitstring_next_index (status_list_id, next_index) VALUES (?, 0)",
-                        ).apply {
-                            setString(1, id)
-                        }.executeUpdate()
+                        ).use { stmt ->
+                            stmt.setString(1, id)
+                            stmt.executeUpdate()
+                        }
 
                     conn.commit()
                 } catch (e: CancellationException) {
-                    conn.rollback()
+                    runCatching { conn.rollback() }
                     throw e
                 } catch (e: Exception) {
-                    conn.rollback()
+                    runCatching { conn.rollback() }
                     throw TrustWeaveException.InvalidState(
                         message = "Failed to create bitstring status list: ${e.message}",
                         cause = e,
                     )
+                } finally {
+                    runCatching { conn.autoCommit = true }
                 }
             }
 
@@ -556,12 +562,12 @@ class BitstringStatusListManager(
                 conn
                     .prepareStatement(
                         "SELECT entry_index FROM bitstring_credential_indices WHERE credential_id = ? AND status_list_id = ?",
-                    ).apply {
-                        setString(1, credentialId)
-                        setString(2, statusListId.toString())
-                    }.executeQuery()
-                    .let { rs ->
-                        if (rs.next()) rs.getInt("entry_index") else null
+                    ).use { stmt ->
+                        stmt.setString(1, credentialId)
+                        stmt.setString(2, statusListId.toString())
+                        stmt.executeQuery().use { rs ->
+                            if (rs.next()) rs.getInt("entry_index") else null
+                        }
                     }
             }
         }
@@ -582,17 +588,20 @@ class BitstringStatusListManager(
                 try {
                     val sid = statusListId.toString()
                     // Idempotent: return existing index if already assigned
-                    val existing =
+                    val existingIndex =
                         conn
                             .prepareStatement(
                                 "SELECT entry_index FROM bitstring_credential_indices WHERE credential_id = ? AND status_list_id = ?",
-                            ).apply {
-                                setString(1, credentialId)
-                                setString(2, sid)
-                            }.executeQuery()
-                    if (existing.next()) {
+                            ).use { stmt ->
+                                stmt.setString(1, credentialId)
+                                stmt.setString(2, sid)
+                                stmt.executeQuery().use { rs ->
+                                    if (rs.next()) rs.getInt("entry_index") else null
+                                }
+                            }
+                    if (existingIndex != null) {
                         conn.rollback()
-                        return@withContext existing.getInt("entry_index")
+                        return@withContext existingIndex
                     }
 
                     val assignedIndex =
@@ -601,13 +610,13 @@ class BitstringStatusListManager(
                                 conn
                                     .prepareStatement(
                                         "SELECT COUNT(*) AS cnt FROM bitstring_credential_indices WHERE status_list_id = ? AND entry_index = ?",
-                                    ).apply {
-                                        setString(1, sid)
-                                        setInt(2, index)
-                                    }.executeQuery()
-                                    .let { rs ->
-                                        rs.next()
-                                        rs.getInt("cnt")
+                                    ).use { stmt ->
+                                        stmt.setString(1, sid)
+                                        stmt.setInt(2, index)
+                                        stmt.executeQuery().use { rs ->
+                                            rs.next()
+                                            rs.getInt("cnt")
+                                        }
                                     }
                             if (count > 0) {
                                 throw IllegalArgumentException("Index $index is already assigned in status list $statusListId")
@@ -615,18 +624,20 @@ class BitstringStatusListManager(
                             conn
                                 .prepareStatement(
                                     "INSERT INTO bitstring_credential_indices (credential_id, status_list_id, entry_index) VALUES (?, ?, ?)",
-                                ).apply {
-                                    setString(1, credentialId)
-                                    setString(2, sid)
-                                    setInt(3, index)
-                                }.executeUpdate()
+                                ).use { stmt ->
+                                    stmt.setString(1, credentialId)
+                                    stmt.setString(2, sid)
+                                    stmt.setInt(3, index)
+                                    stmt.executeUpdate()
+                                }
                             conn
                                 .prepareStatement(
                                     "DELETE FROM bitstring_released_indices WHERE status_list_id = ? AND entry_index = ?",
-                                ).apply {
-                                    setString(1, sid)
-                                    setInt(2, index)
-                                }.executeUpdate()
+                                ).use { stmt ->
+                                    stmt.setString(1, sid)
+                                    stmt.setInt(2, index)
+                                    stmt.executeUpdate()
+                                }
                             index
                         } else {
                             insertNextAvailableIndex(credentialId, sid, row, conn)
@@ -635,10 +646,13 @@ class BitstringStatusListManager(
                     conn.commit()
                     assignedIndex
                 } catch (cancelled: CancellationException) {
+                    runCatching { conn.rollback() }
                     throw cancelled
                 } catch (e: Exception) {
-                    conn.rollback()
+                    runCatching { conn.rollback() }
                     throw e
+                } finally {
+                    runCatching { conn.autoCommit = true }
                 }
             }
         }
@@ -683,10 +697,10 @@ class BitstringStatusListManager(
                     conn.commit()
                     results
                 } catch (e: CancellationException) {
-                    conn.rollback()
+                    runCatching { conn.rollback() }
                     throw e
                 } catch (e: Exception) {
-                    conn.rollback()
+                    runCatching { conn.rollback() }
                     logger.error(
                         "Failed to revoke credentials in bitstring status list {}: {}",
                         statusListId,
@@ -697,6 +711,8 @@ class BitstringStatusListManager(
                         message = "Failed to revoke credentials in bitstring status list $statusListId: ${e.message}",
                         cause = e,
                     )
+                } finally {
+                    runCatching { conn.autoCommit = true }
                 }
             }
         }
@@ -762,10 +778,10 @@ class BitstringStatusListManager(
                 persistEncodedList(statusListId.toString(), newEncodedList, conn)
                 conn.commit()
             } catch (e: CancellationException) {
-                conn.rollback()
+                runCatching { conn.rollback() }
                 throw e
             } catch (e: Exception) {
-                conn.rollback()
+                runCatching { conn.rollback() }
                 logger.error(
                     "Failed to apply batch status updates to bitstring status list {}: {}",
                     statusListId,
@@ -778,6 +794,8 @@ class BitstringStatusListManager(
                             "$statusListId: ${e.message}",
                     cause = e,
                 )
+            } finally {
+                runCatching { conn.autoCommit = true }
             }
         }
     }
@@ -791,23 +809,24 @@ class BitstringStatusListManager(
                     conn
                         .prepareStatement(
                             "SELECT COUNT(*) AS cnt FROM bitstring_credential_indices WHERE status_list_id = ?",
-                        ).apply {
-                            setString(1, statusListId.toString())
-                        }.executeQuery()
-                        .let { rs ->
-                            rs.next()
-                            rs.getInt("cnt")
+                        ).use { stmt ->
+                            stmt.setString(1, statusListId.toString())
+                            stmt.executeQuery().use { rs ->
+                                rs.next()
+                                rs.getInt("cnt")
+                            }
                         }
                 }
 
             val bitSet = decodeBitSet(row.encodedList)
             val purpose = parsePurpose(row.purpose)
+            val totalCapacity = if (row.bitsPerEntry == 2) row.size / 2 else row.size
 
             StatusListStatistics(
                 statusListId = statusListId,
                 issuerDid = row.issuerDid,
                 purpose = purpose,
-                totalCapacity = if (row.bitsPerEntry == 2) bitSet.size() / 2 else bitSet.size(),
+                totalCapacity = totalCapacity,
                 usedIndices = usedIndices,
                 revokedCount =
                     if (purpose == StatusPurpose.REVOCATION || row.bitsPerEntry == 2) {
@@ -821,7 +840,7 @@ class BitstringStatusListManager(
                     } else {
                         0
                     },
-                availableIndices = (if (row.bitsPerEntry == 2) bitSet.size() / 2 else bitSet.size()) - usedIndices,
+                availableIndices = totalCapacity - usedIndices,
                 lastUpdated = row.updatedAt,
             )
         }
@@ -848,26 +867,28 @@ class BitstringStatusListManager(
                     } else {
                         "SELECT id, issuer_did, purpose, size, created_at, updated_at FROM bitstring_status_lists"
                     }
-                val stmt = conn.prepareStatement(sql)
-                if (issuerDid != null) stmt.setString(1, issuerDid)
+                conn.prepareStatement(sql).use { stmt ->
+                    if (issuerDid != null) stmt.setString(1, issuerDid)
 
-                val rs = stmt.executeQuery()
-                val results = mutableListOf<StatusListMetadata>()
-                while (rs.next()) {
-                    val createdAt = rs.getTimestamp("created_at")?.toKotlinInstant() ?: Clock.System.now()
-                    val updatedAt = rs.getTimestamp("updated_at")?.toKotlinInstant() ?: Clock.System.now()
-                    results.add(
-                        StatusListMetadata(
-                            id = StatusListId(rs.getString("id")),
-                            issuerDid = rs.getString("issuer_did"),
-                            purpose = parsePurpose(rs.getString("purpose")),
-                            size = rs.getInt("size"),
-                            createdAt = createdAt,
-                            lastUpdated = updatedAt,
-                        ),
-                    )
+                    stmt.executeQuery().use { rs ->
+                        val results = mutableListOf<StatusListMetadata>()
+                        while (rs.next()) {
+                            val createdAt = rs.getTimestamp("created_at")?.toKotlinInstant() ?: Clock.System.now()
+                            val updatedAt = rs.getTimestamp("updated_at")?.toKotlinInstant() ?: Clock.System.now()
+                            results.add(
+                                StatusListMetadata(
+                                    id = StatusListId(rs.getString("id")),
+                                    issuerDid = rs.getString("issuer_did"),
+                                    purpose = parsePurpose(rs.getString("purpose")),
+                                    size = rs.getInt("size"),
+                                    createdAt = createdAt,
+                                    lastUpdated = updatedAt,
+                                ),
+                            )
+                        }
+                        results
+                    }
                 }
-                results
             }
         }
 
@@ -880,37 +901,48 @@ class BitstringStatusListManager(
                     for (table in listOf("bitstring_released_indices", "bitstring_touched_indices")) {
                         conn
                             .prepareStatement("DELETE FROM $table WHERE status_list_id = ?")
-                            .apply { setString(1, id) }
-                            .executeUpdate()
+                            .use { stmt ->
+                                stmt.setString(1, id)
+                                stmt.executeUpdate()
+                            }
                     }
                     conn
                         .prepareStatement(
                             "DELETE FROM bitstring_credential_indices WHERE status_list_id = ?",
-                        ).apply { setString(1, id) }
-                        .executeUpdate()
+                        ).use { stmt ->
+                            stmt.setString(1, id)
+                            stmt.executeUpdate()
+                        }
                     conn
                         .prepareStatement(
                             "DELETE FROM bitstring_next_index WHERE status_list_id = ?",
-                        ).apply { setString(1, id) }
-                        .executeUpdate()
+                        ).use { stmt ->
+                            stmt.setString(1, id)
+                            stmt.executeUpdate()
+                        }
                     val deleted =
                         conn
                             .prepareStatement(
                                 "DELETE FROM bitstring_status_lists WHERE id = ?",
-                            ).apply { setString(1, id) }
-                            .executeUpdate() > 0
+                            ).use { stmt ->
+                                stmt.setString(1, id)
+                                stmt.executeUpdate() > 0
+                            }
                     conn.commit()
                     localListMembership.remove(id)
                     deleted
                 } catch (cancelled: CancellationException) {
+                    runCatching { conn.rollback() }
                     throw cancelled
                 } catch (e: SQLException) {
-                    conn.rollback()
+                    runCatching { conn.rollback() }
                     logger.error("Failed to delete bitstring status list {}: {}", statusListId, e.message, e)
                     throw TrustWeaveException.InvalidState(
                         message = "Failed to delete bitstring status list $statusListId: ${e.message}",
                         cause = e,
                     )
+                } finally {
+                    runCatching { conn.autoCommit = true }
                 }
             }
         }
@@ -956,16 +988,20 @@ class BitstringStatusListManager(
                 conn
                     .prepareStatement(
                         "UPDATE bitstring_status_lists SET size = ? WHERE id = ?",
-                    ).apply {
-                        setInt(1, newSize)
-                        setString(2, statusListId.toString())
-                    }.executeUpdate()
+                    ).use { stmt ->
+                        stmt.setInt(1, newSize)
+                        stmt.setString(2, statusListId.toString())
+                        stmt.executeUpdate()
+                    }
                 conn.commit()
             } catch (cancelled: CancellationException) {
+                runCatching { conn.rollback() }
                 throw cancelled
             } catch (e: Exception) {
-                conn.rollback()
+                runCatching { conn.rollback() }
                 throw e
+            } finally {
+                runCatching { conn.autoCommit = true }
             }
         }
         Unit
@@ -1125,11 +1161,12 @@ class BitstringStatusListManager(
                 conn
                     .prepareStatement(
                         "UPDATE bitstring_status_lists SET status_list_vc = ?, updated_at = ? WHERE id = ?",
-                    ).apply {
-                        setString(1, signedVcJson)
-                        setTimestamp(2, Timestamp(Clock.System.now().toEpochMilliseconds()))
-                        setString(3, statusListId.toString())
-                    }.executeUpdate()
+                    ).use { stmt ->
+                        stmt.setString(1, signedVcJson)
+                        stmt.setTimestamp(2, Timestamp(Clock.System.now().toEpochMilliseconds()))
+                        stmt.setString(3, statusListId.toString())
+                        stmt.executeUpdate()
+                    }
             }
 
             if (signedStatusListCacheTtl.isPositive()) {
@@ -1190,10 +1227,10 @@ class BitstringStatusListManager(
                 conn.commit()
                 true
             } catch (e: CancellationException) {
-                conn.rollback()
+                runCatching { conn.rollback() }
                 throw e
             } catch (e: Exception) {
-                conn.rollback()
+                runCatching { conn.rollback() }
                 logger.error(
                     "Failed to update status entry for credential {} in bitstring status list {}: {}",
                     credentialId,
@@ -1207,6 +1244,8 @@ class BitstringStatusListManager(
                             "in bitstring status list $statusListId: ${e.message}",
                     cause = e,
                 )
+            } finally {
+                runCatching { conn.autoCommit = true }
             }
         }
     }
@@ -1221,18 +1260,19 @@ class BitstringStatusListManager(
             conn
                 .prepareStatement(
                     "SELECT 1 FROM bitstring_touched_indices WHERE status_list_id = ? AND entry_index = ?",
-                ).apply {
-                    setString(1, statusListId)
-                    setInt(2, index)
-                }.executeQuery()
-                .next()
+                ).use { stmt ->
+                    stmt.setString(1, statusListId)
+                    stmt.setInt(2, index)
+                    stmt.executeQuery().use { rs -> rs.next() }
+                }
         if (exists) return
         conn
             .prepareStatement("INSERT INTO bitstring_touched_indices (status_list_id, entry_index) VALUES (?, ?)")
-            .apply {
-                setString(1, statusListId)
-                setInt(2, index)
-            }.executeUpdate()
+            .use { stmt ->
+                stmt.setString(1, statusListId)
+                stmt.setInt(2, index)
+                stmt.executeUpdate()
+            }
     }
 
     /**
@@ -1263,28 +1303,29 @@ class BitstringStatusListManager(
                     // counter row lock also fences concurrent allocators.
                     conn
                         .prepareStatement("SELECT next_index FROM bitstring_next_index WHERE status_list_id = ? FOR UPDATE")
-                        .apply { setString(1, id) }
-                        .executeQuery()
-                        .next()
+                        .use { stmt ->
+                            stmt.setString(1, id)
+                            stmt.executeQuery().use { rs -> rs.next() }
+                        }
 
                     val bound =
                         conn
                             .prepareStatement(
                                 "SELECT 1 FROM bitstring_credential_indices WHERE status_list_id = ? AND entry_index = ?",
-                            ).apply {
-                                setString(1, id)
-                                setInt(2, index)
-                            }.executeQuery()
-                            .next()
+                            ).use { stmt ->
+                                stmt.setString(1, id)
+                                stmt.setInt(2, index)
+                                stmt.executeQuery().use { rs -> rs.next() }
+                            }
                     val touched =
                         conn
                             .prepareStatement(
                                 "SELECT 1 FROM bitstring_touched_indices WHERE status_list_id = ? AND entry_index = ?",
-                            ).apply {
-                                setString(1, id)
-                                setInt(2, index)
-                            }.executeQuery()
-                            .next()
+                            ).use { stmt ->
+                                stmt.setString(1, id)
+                                stmt.setInt(2, index)
+                                stmt.executeQuery().use { rs -> rs.next() }
+                            }
                     if (!bound || touched) {
                         conn.rollback()
                         return@withContext false
@@ -1299,29 +1340,33 @@ class BitstringStatusListManager(
                     conn
                         .prepareStatement(
                             "DELETE FROM bitstring_credential_indices WHERE status_list_id = ? AND entry_index = ?",
-                        ).apply {
-                            setString(1, id)
-                            setInt(2, index)
-                        }.executeUpdate()
+                        ).use { stmt ->
+                            stmt.setString(1, id)
+                            stmt.setInt(2, index)
+                            stmt.executeUpdate()
+                        }
                     conn
                         .prepareStatement(
                             "INSERT INTO bitstring_released_indices (status_list_id, entry_index, released_at) VALUES (?, ?, ?)",
-                        ).apply {
-                            setString(1, id)
-                            setInt(2, index)
-                            setTimestamp(3, Timestamp(Clock.System.now().toEpochMilliseconds()))
-                        }.executeUpdate()
+                        ).use { stmt ->
+                            stmt.setString(1, id)
+                            stmt.setInt(2, index)
+                            stmt.setTimestamp(3, Timestamp(Clock.System.now().toEpochMilliseconds()))
+                            stmt.executeUpdate()
+                        }
                     conn.commit()
                     true
                 } catch (cancelled: CancellationException) {
-                    conn.rollback()
+                    runCatching { conn.rollback() }
                     throw cancelled
                 } catch (e: SQLException) {
-                    conn.rollback()
+                    runCatching { conn.rollback() }
                     throw TrustWeaveException.InvalidState(
                         message = "Failed to release index $index of bitstring status list $statusListId: ${e.message}",
                         cause = e,
                     )
+                } finally {
+                    runCatching { conn.autoCommit = true }
                 }
             }
         }
@@ -1332,16 +1377,19 @@ class BitstringStatusListManager(
         row: StatusListRow,
         conn: Connection,
     ): Int {
-        val existing =
+        val existingIndex =
             conn
                 .prepareStatement(
                     "SELECT entry_index FROM bitstring_credential_indices WHERE credential_id = ? AND status_list_id = ?",
-                ).apply {
-                    setString(1, credentialId)
-                    setString(2, statusListId)
-                }.executeQuery()
+                ).use { stmt ->
+                    stmt.setString(1, credentialId)
+                    stmt.setString(2, statusListId)
+                    stmt.executeQuery().use { rs ->
+                        if (rs.next()) rs.getInt("entry_index") else null
+                    }
+                }
 
-        if (existing.next()) return existing.getInt("entry_index")
+        if (existingIndex != null) return existingIndex
 
         return insertNextAvailableIndex(credentialId, statusListId, row, conn)
     }
@@ -1369,11 +1417,12 @@ class BitstringStatusListManager(
                 conn
                     .prepareStatement(
                         "INSERT INTO bitstring_credential_indices (credential_id, status_list_id, entry_index) VALUES (?, ?, ?)",
-                    ).apply {
-                        setString(1, credentialId)
-                        setString(2, statusListId)
-                        setInt(3, next)
-                    }.executeUpdate()
+                    ).use { stmt ->
+                        stmt.setString(1, credentialId)
+                        stmt.setString(2, statusListId)
+                        stmt.setInt(3, next)
+                        stmt.executeUpdate()
+                    }
                 return next
             } catch (e: SQLException) {
                 if (!isUniqueViolation(e)) throw e
@@ -1404,16 +1453,20 @@ class BitstringStatusListManager(
         conn: Connection,
     ): Int {
         // FOR UPDATE serializes concurrent assigners on the per-list counter row.
-        val rs =
+        val (counterRowExists, next) =
             conn
                 .prepareStatement(
                     "SELECT next_index FROM bitstring_next_index WHERE status_list_id = ? FOR UPDATE",
-                ).apply {
-                    setString(1, statusListId)
-                }.executeQuery()
-
-        val counterRowExists = rs.next()
-        val next = if (counterRowExists) rs.getInt("next_index") else 0
+                ).use { stmt ->
+                    stmt.setString(1, statusListId)
+                    stmt.executeQuery().use { rs ->
+                        if (rs.next()) {
+                            true to rs.getInt("next_index")
+                        } else {
+                            false to 0
+                        }
+                    }
+                }
 
         // Prefer an index released because its credential was never issued. The counter row lock
         // taken above serializes concurrent allocators, so the delete below claims it exactly once.
@@ -1422,17 +1475,21 @@ class BitstringStatusListManager(
                 conn
                     .prepareStatement(
                         "SELECT MIN(entry_index) AS idx FROM bitstring_released_indices WHERE status_list_id = ?",
-                    ).apply { setString(1, statusListId) }
-                    .executeQuery()
-                    .let { r -> if (r.next()) r.getInt("idx").takeUnless { r.wasNull() } else null }
+                    ).use { stmt ->
+                        stmt.setString(1, statusListId)
+                        stmt.executeQuery().use { r ->
+                            if (r.next()) r.getInt("idx").takeUnless { r.wasNull() } else null
+                        }
+                    }
             if (released != null) {
                 conn
                     .prepareStatement(
                         "DELETE FROM bitstring_released_indices WHERE status_list_id = ? AND entry_index = ?",
-                    ).apply {
-                        setString(1, statusListId)
-                        setInt(2, released)
-                    }.executeUpdate()
+                    ).use { stmt ->
+                        stmt.setString(1, statusListId)
+                        stmt.setInt(2, released)
+                        stmt.executeUpdate()
+                    }
                 return released
             }
         }
@@ -1447,19 +1504,21 @@ class BitstringStatusListManager(
             conn
                 .prepareStatement(
                     "UPDATE bitstring_next_index SET next_index = ? WHERE status_list_id = ?",
-                ).apply {
-                    setInt(1, next + 1)
-                    setString(2, statusListId)
-                }.executeUpdate()
+                ).use { stmt ->
+                    stmt.setInt(1, next + 1)
+                    stmt.setString(2, statusListId)
+                    stmt.executeUpdate()
+                }
 
         if (updated == 0) {
             conn
                 .prepareStatement(
                     "INSERT INTO bitstring_next_index (status_list_id, next_index) VALUES (?, ?)",
-                ).apply {
-                    setString(1, statusListId)
-                    setInt(2, next + 1)
-                }.executeUpdate()
+                ).use { stmt ->
+                    stmt.setString(1, statusListId)
+                    stmt.setInt(2, next + 1)
+                    stmt.executeUpdate()
+                }
         }
 
         return next
@@ -1488,20 +1547,20 @@ class BitstringStatusListManager(
     private fun lockAndReadStatusList(
         statusListId: String,
         conn: Connection,
-    ): LockedStatusListState {
-        val rs =
-            conn
-                .prepareStatement(
-                    "SELECT encoded_list, size FROM bitstring_status_lists WHERE id = ? FOR UPDATE",
-                ).apply {
-                    setString(1, statusListId)
-                }.executeQuery()
-        if (!rs.next()) throw statusListUnavailable(StatusListId(statusListId))
-        return LockedStatusListState(
-            encodedList = rs.getString("encoded_list"),
-            size = rs.getInt("size"),
-        )
-    }
+    ): LockedStatusListState =
+        conn
+            .prepareStatement(
+                "SELECT encoded_list, size FROM bitstring_status_lists WHERE id = ? FOR UPDATE",
+            ).use { stmt ->
+                stmt.setString(1, statusListId)
+                stmt.executeQuery().use { rs ->
+                    if (!rs.next()) throw statusListUnavailable(StatusListId(statusListId))
+                    LockedStatusListState(
+                        encodedList = rs.getString("encoded_list"),
+                        size = rs.getInt("size"),
+                    )
+                }
+            }
 
     private fun persistEncodedList(
         statusListId: String,
@@ -1511,11 +1570,12 @@ class BitstringStatusListManager(
         conn
             .prepareStatement(
                 "UPDATE bitstring_status_lists SET encoded_list = ?, updated_at = ? WHERE id = ?",
-            ).apply {
-                setString(1, encodedList)
-                setTimestamp(2, Timestamp(Clock.System.now().toEpochMilliseconds()))
-                setString(3, statusListId)
-            }.executeUpdate()
+            ).use { stmt ->
+                stmt.setString(1, encodedList)
+                stmt.setTimestamp(2, Timestamp(Clock.System.now().toEpochMilliseconds()))
+                stmt.setString(3, statusListId)
+                stmt.executeUpdate()
+            }
     }
 
     // -------------------------------------------------------------------------
@@ -1711,33 +1771,31 @@ class BitstringStatusListManager(
         val updatedAt: Instant,
     )
 
-    private fun loadStatusListRow(statusListId: String): StatusListRow? {
-        return dataSource.connection.use { conn ->
-            val rs =
-                conn
-                    .prepareStatement(
-                        """
-                        SELECT id, issuer_did, purpose, size, bits_per_entry, encoded_list, created_at, updated_at
-                        FROM bitstring_status_lists WHERE id = ?
-                        """.trimIndent(),
-                    ).apply {
-                        setString(1, statusListId)
-                    }.executeQuery()
-
-            if (!rs.next()) return@use null
-
-            StatusListRow(
-                id = rs.getString("id"),
-                issuerDid = rs.getString("issuer_did"),
-                purpose = rs.getString("purpose"),
-                size = rs.getInt("size"),
-                bitsPerEntry = rs.getInt("bits_per_entry"),
-                encodedList = rs.getString("encoded_list"),
-                createdAt = rs.getTimestamp("created_at")?.toKotlinInstant() ?: Clock.System.now(),
-                updatedAt = rs.getTimestamp("updated_at")?.toKotlinInstant() ?: Clock.System.now(),
-            )
+    private fun loadStatusListRow(statusListId: String): StatusListRow? =
+        dataSource.connection.use { conn ->
+            conn
+                .prepareStatement(
+                    """
+                    SELECT id, issuer_did, purpose, size, bits_per_entry, encoded_list, created_at, updated_at
+                    FROM bitstring_status_lists WHERE id = ?
+                    """.trimIndent(),
+                ).use { stmt ->
+                    stmt.setString(1, statusListId)
+                    stmt.executeQuery().use { rs ->
+                        if (!rs.next()) return@use null
+                        StatusListRow(
+                            id = rs.getString("id"),
+                            issuerDid = rs.getString("issuer_did"),
+                            purpose = rs.getString("purpose"),
+                            size = rs.getInt("size"),
+                            bitsPerEntry = rs.getInt("bits_per_entry"),
+                            encodedList = rs.getString("encoded_list"),
+                            createdAt = rs.getTimestamp("created_at")?.toKotlinInstant() ?: Clock.System.now(),
+                            updatedAt = rs.getTimestamp("updated_at")?.toKotlinInstant() ?: Clock.System.now(),
+                        )
+                    }
+                }
         }
-    }
 
     // -------------------------------------------------------------------------
     // Utility

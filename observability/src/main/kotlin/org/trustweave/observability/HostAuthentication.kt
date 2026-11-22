@@ -213,7 +213,7 @@ public class HostAuthentication private constructor(
             ) {
                 private val windows = HashMap<String, Window>()
                 private var overflow: Window? = null
-                private var lastPurge = Long.MIN_VALUE
+                private var earliestExpiry = Long.MAX_VALUE
 
                 @Synchronized
                 fun take(
@@ -222,12 +222,18 @@ public class HostAuthentication private constructor(
                 ): Boolean {
                     var window = windows[caller]
                     if (window == null) {
-                        if (windows.size >= maxTrackedCallers) purgeExpired(now)
+                        if (windows.size >= maxTrackedCallers && now >= earliestExpiry) {
+                            purgeExpired(now)
+                        }
                         window =
                             if (windows.size >= maxTrackedCallers) {
                                 overflow ?: Window(now).also { overflow = it }
                             } else {
-                                Window(now).also { windows[caller] = it }
+                                Window(now).also {
+                                    windows[caller] = it
+                                    val expiry = now + windowMillis
+                                    if (expiry < earliestExpiry) earliestExpiry = expiry
+                                }
                             }
                     }
                     if (now - window.startedAt >= windowMillis) {
@@ -239,11 +245,20 @@ public class HostAuthentication private constructor(
                     return true
                 }
 
-                /** Drops expired windows, at most a few times per window so a spray cannot make it O(n) per call. */
+                /** Drops expired windows and recomputes [earliestExpiry] so stale callers never trigger overflow DoS. */
                 private fun purgeExpired(now: Long) {
-                    if (lastPurge != Long.MIN_VALUE && now - lastPurge < maxOf(1L, windowMillis / 10)) return
-                    lastPurge = now
-                    windows.values.removeIf { now - it.startedAt >= windowMillis }
+                    var nextEarliest = Long.MAX_VALUE
+                    val iterator = windows.values.iterator()
+                    while (iterator.hasNext()) {
+                        val w = iterator.next()
+                        if (now - w.startedAt >= windowMillis) {
+                            iterator.remove()
+                        } else {
+                            val expiry = w.startedAt + windowMillis
+                            if (expiry < nextEarliest) nextEarliest = expiry
+                        }
+                    }
+                    earliestExpiry = nextEarliest
                 }
             }
 
@@ -336,41 +351,8 @@ public class HostAuthentication private constructor(
         }
     }
 
-    /**
-     * Whether [rawPath] falls under a protected prefix once it is normalised the way a router
-     * would: percent-escapes decoded, empty and `.` segments dropped, `..` resolved. Compared
-     * case-insensitively, which can only gate more, never less. A raw match also counts.
-     */
-    private fun underProtectedPrefix(rawPath: String): Boolean {
-        if (protectedPathPrefixes.isEmpty()) return false
-        val normalised = normalisePath(rawPath)
-        return protectedPathPrefixes.any { prefix ->
-            rawPath.startsWith(prefix) ||
-                normalised.startsWith(normalisePath(prefix).trimEnd('/') + "/", ignoreCase = true) ||
-                normalised.equals(normalisePath(prefix), ignoreCase = true)
-        }
-    }
-
-    private fun normalisePath(path: String): String {
-        val segments = ArrayDeque<String>()
-        for (segment in path.split('/')) {
-            val decoded =
-                try {
-                    java.net.URLDecoder.decode(segment.replace("+", "%2B"), Charsets.UTF_8)
-                } catch (_: IllegalArgumentException) {
-                    segment
-                }
-            // A decoded slash would have split the path in a router that decodes first.
-            for (part in decoded.split('/', '\\')) {
-                when (part) {
-                    "", "." -> Unit
-                    ".." -> segments.removeLastOrNull()
-                    else -> segments.addLast(part)
-                }
-            }
-        }
-        return "/" + segments.joinToString("/")
-    }
+    private fun underProtectedPrefix(rawPath: String): Boolean =
+        matchesProtectedPrefix(rawPath, protectedPathPrefixes)
 
     private suspend fun ApplicationCall.tooManyRequests(limit: RateLimit) {
         response.headers.append("Retry-After", limit.retryAfterSeconds().toString())
@@ -393,8 +375,9 @@ public class HostAuthentication private constructor(
     /**
      * Installs the fail-closed default for a server the host never configured.
      *
-     * Mutating requests are refused with 503 and an actionable message. Reads still work, so a
-     * resolver or status-list endpoint keeps serving while the operator decides what to do.
+     * Mutating requests and any request under [protectedPathPrefixes] (including GET/reads) are
+     * refused with 503 and an actionable message. Other reads still work, so a resolver or
+     * status-list endpoint keeps serving while the operator decides what to do.
      */
     public class Unconfigured
         @JvmOverloads
@@ -402,17 +385,25 @@ public class HostAuthentication private constructor(
             private val serverName: String,
             /** See the [protocolAuthenticatedPaths] parameter of [HostAuthentication.install]. */
             private val protocolAuthenticatedPaths: Set<String> = emptySet(),
+            /** Path prefixes gated for every method, including GET/reads, while authentication is unconfigured. */
+            private val protectedPathPrefixes: Set<String> = emptySet(),
         ) {
             public fun install(application: Application) {
+                val escapedName = jsonEscape(serverName)
                 application.intercept(ApplicationCallPipeline.Plugins) {
-                    if (call.request.httpMethod !in MUTATING || call.request.path() in protocolAuthenticatedPaths) {
+                    val path = call.request.path()
+                    if (path in protocolAuthenticatedPaths) {
+                        proceed()
+                        return@intercept
+                    }
+                    if (call.request.httpMethod !in MUTATING && !matchesProtectedPrefix(path, protectedPathPrefixes)) {
                         proceed()
                         return@intercept
                     }
                     call.response.headers.append("Cache-Control", "no-store")
                     call.respondText(
                         """{"error":"authentication_not_configured","message":""" +
-                            """"$serverName refuses mutating requests until the host calls """ +
+                            """"$escapedName refuses protected requests until the host calls """ +
                             """withAuthentication(...). Use HostAuthentication.bearerToken or custom to """ +
                             """authenticate callers, or frontedByProxy to record what already does."}""",
                         ContentType.Application.Json,
@@ -423,3 +414,58 @@ public class HostAuthentication private constructor(
             }
         }
 }
+
+private fun matchesProtectedPrefix(
+    rawPath: String,
+    protectedPathPrefixes: Set<String>,
+): Boolean {
+    if (protectedPathPrefixes.isEmpty()) return false
+    val normalised = normaliseProtectedPath(rawPath)
+    return protectedPathPrefixes.any { prefix ->
+        rawPath.startsWith(prefix) ||
+            normalised.startsWith(normaliseProtectedPath(prefix).trimEnd('/') + "/", ignoreCase = true) ||
+            normalised.equals(normaliseProtectedPath(prefix), ignoreCase = true)
+    }
+}
+
+private fun normaliseProtectedPath(path: String): String {
+    val segments = ArrayDeque<String>()
+    for (segment in path.split('/')) {
+        val decoded =
+            try {
+                java.net.URLDecoder.decode(segment.replace("+", "%2B"), Charsets.UTF_8)
+            } catch (_: IllegalArgumentException) {
+                segment
+            }
+        // A decoded slash would have split the path in a router that decodes first.
+        for (part in decoded.split('/', '\\')) {
+            when (part) {
+                "", "." -> Unit
+                ".." -> segments.removeLastOrNull()
+                else -> segments.addLast(part)
+            }
+        }
+    }
+    return "/" + segments.joinToString("/")
+}
+
+private fun jsonEscape(value: String): String =
+    buildString(value.length) {
+        for (ch in value) {
+            when (ch) {
+                '\\' -> append("\\\\")
+                '"' -> append("\\\"")
+                '\b' -> append("\\b")
+                '\u000C' -> append("\\f")
+                '\n' -> append("\\n")
+                '\r' -> append("\\r")
+                '\t' -> append("\\t")
+                else ->
+                    if (ch.code < 0x20) {
+                        append("\\u%04x".format(ch.code))
+                    } else {
+                        append(ch)
+                    }
+            }
+        }
+    }

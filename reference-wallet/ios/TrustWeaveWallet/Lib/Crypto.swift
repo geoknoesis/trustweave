@@ -78,13 +78,13 @@ enum Crypto {
         jsonPayload: String,
         kid: String,
         typ: String = "JWT",
-        signer: (Data) -> Data
-    ) -> String {
+        signer: (Data) throws -> Data
+    ) rethrows -> String {
         let header = "{\"alg\":\"EdDSA\",\"typ\":\"\(typ)\",\"kid\":\"\(kid)\"}"
         let encodedHeader = base64UrlEncodeString(header)
         let encodedPayload = base64UrlEncodeString(jsonPayload)
         let signingInput = "\(encodedHeader).\(encodedPayload)"
-        let signature = signer(Data(signingInput.utf8))
+        let signature = try signer(Data(signingInput.utf8))
         return "\(signingInput).\(base64UrlEncode(signature))"
     }
 

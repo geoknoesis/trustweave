@@ -3,35 +3,35 @@ import { parseOid4VciCredentialOffer } from './oid4vciOffer'
 import { parsePresentationRequestQr } from './presentationRequestQr'
 import { explainPublicVerificationUrlMisscan, parsePublicVerificationUrl } from './publicVerificationUrl'
 
-/** Explain why an Add-tab scan failed — guides users away from wrong QR types/tabs. */
+/** Explain why an Add-only scan failed — guides users calmly. */
 export function explainOfferScanFailure(raw: string): string {
   const trimmed = raw.trim()
 
   if (parsePresentationRequestQr(trimmed)) {
-    return 'This is a verifier QR. Open the Share tab and scan it there — not Add.'
+    return 'This is a verification request QR. Use the Scan tab to share a credential.'
   }
 
   if (parseOid4VciCredentialOffer(trimmed)) {
-    return 'OpenID4VCI offer recognized. Claiming from the issuer in the QR…'
+    return 'Credential offer recognized. Receiving your credential…'
   }
 
   try {
     const parsed = JSON.parse(trimmed) as { type?: string }
     if (parsed.type === 'trustweave-holder') {
-      return 'This is a wallet identity QR, not a credential offer.'
+      return 'This is a wallet ID QR, not a credential offer.'
     }
     if (parsed.type === 'trustweave-presentation-request') {
-      return 'This is a verifier QR. Open the Share tab and scan it there.'
+      return 'This is a verification request QR. Use the Scan tab to share a credential.'
     }
   } catch {
     // not JSON
   }
 
   if (parseCredentialOfferQr(trimmed)) {
-    return 'Offer recognized but could not be read. Try paste instead of scan.'
+    return 'This offer could not be read automatically. Try entering the link manually.'
   }
 
-  return 'Unrecognized credential offer QR. Scan an issuer offer from any site that supports TrustWeave direct offers or OpenID4VCI wallet offers.'
+  return 'Unrecognized QR code. Point your camera at a credential offer from your issuer.'
 }
 
 export function explainVerifierScanFailure(raw: string): string {
@@ -42,20 +42,20 @@ export function explainVerifierScanFailure(raw: string): string {
   }
 
   if (parseCredentialOfferQr(trimmed) || parseOid4VciCredentialOffer(trimmed)) {
-    return 'This is a credential offer QR. Open the Add tab to receive it first.'
+    return 'This is a credential offer QR. Use the Scan tab to add it to your wallet first.'
   }
 
   try {
     const parsed = JSON.parse(trimmed) as { type?: string }
     if (parsed.type === 'trustweave-credential-offer') {
-      return 'This is an issuer offer QR. Open the Add tab first.'
+      return 'This is a credential offer QR. Use the Scan tab to add it first.'
     }
     if (parsed.type === 'trustweave-holder') {
-      return 'This is a wallet identity QR. Scan the verifier QR from the verifying organisation.'
+      return 'This is a wallet ID QR. Scan the verification QR shown by the requester.'
     }
   } catch {
     // not JSON
   }
 
-  return 'Not a verifier presentation request QR.'
+  return 'This QR code is not a verification request. Try scanning the requester’s QR code again.'
 }

@@ -8,6 +8,7 @@
 // Format: <issuer-jwt>~<disclosure>~<disclosure>~...~<kb-jwt>
 
 import Foundation
+import Security
 
 enum SdJwtError: Error {
     case emptyCredential
@@ -79,7 +80,7 @@ enum SdJwt {
     static func present(
         sdJwtVc: String,
         selectDisclose: Set<String>,
-        holderSigner: (Data) -> Data,
+        holderSigner: (Data) throws -> Data,
         holderDid: String,
         audience: String,
         nonce: String,
@@ -97,11 +98,11 @@ enum SdJwt {
             "sd_hash": sdHash,
         ]
         let payloadJson = String(data: try JSONSerialization.data(withJSONObject: kbPayload, options: [.sortedKeys]), encoding: .utf8) ?? "{}"
-        let kbJwt = Crypto.signCompactJws(
+        let kbJwt = try Crypto.signCompactJws(
             jsonPayload: payloadJson,
             kid: "\(holderDid)#\(didTail)",
             typ: "kb+jwt",
-            signer: holderSigner,
+            signer: holderSigner
         )
         return prefix + kbJwt
     }

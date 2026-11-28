@@ -1,4 +1,4 @@
-import { Platform } from 'react-native'
+import { Linking, Platform } from 'react-native'
 import NfcManager, { NfcTech } from 'react-native-nfc-manager'
 import { decodeNdefUriPayload, decodeNdefTextPayload } from '@/lib/ndefUri'
 
@@ -19,14 +19,52 @@ async function ensureStarted(): Promise<boolean> {
   }
 }
 
+export type NfcStatus = 'ready' | 'disabled' | 'unsupported'
+
+/** Distinguish ready, disabled-in-OS-settings (Android), and unsupported devices. */
+export async function getNfcStatus(): Promise<NfcStatus> {
+  if (!(await ensureStarted())) return 'unsupported'
+  try {
+    if (Platform.OS === 'android') {
+      const enabled = await NfcManager.isEnabled()
+      return enabled ? 'ready' : 'disabled'
+    }
+    return 'ready'
+  } catch {
+    return 'unsupported'
+  }
+}
+
 /** True only when NFC hardware exists and is usable on this device. */
 export async function isNfcAvailable(): Promise<boolean> {
-  if (!(await ensureStarted())) return false
+  return (await getNfcStatus()) === 'ready'
+}
+
+/** Open Android system NFC settings so users can turn NFC on in one tap. */
+export async function openNfcSettings(): Promise<void> {
+  if (Platform.OS === 'android') {
+    try {
+      await NfcManager.goToNfcSetting()
+      return
+    } catch {
+      try {
+        await Linking.sendIntent('android.settings.NFC_SETTINGS')
+        return
+      } catch {
+        await Linking.openSettings()
+      }
+    }
+    return
+  }
+  await Linking.openSettings()
+}
+
+/** Cancel any active foreground NFC session (used by the Android Cancel button). */
+export async function cancelNfcSession(): Promise<void> {
   try {
-    // Android exposes enabled-state; iOS reports supported only.
-    return Platform.OS === 'android' ? await NfcManager.isEnabled() : true
+    await NfcManager.cancelTechnologyRequest()
   } catch {
-    return false
+    /* session already closed */
   }
 }
 
@@ -40,13 +78,13 @@ export async function readVerifierTagRaw(): Promise<string> {
     throw new Error('NFC is not available on this device.')
   }
   try {
-    await NfcManager.requestTechnology(NfcTech.Ndef)
+    await NfcManager.requestTechnology(NfcTech.Ndef, {
+      alertMessage: 'Hold the top of your iPhone near the NFC reader.',
+    })
     const tag = await NfcManager.getTag()
     const records = tag?.ndefMessage ?? []
     for (const rec of records) {
       const payload = (rec.payload ?? []) as number[]
-      // Recognise NDEF well-known records only: type "U" (URI) or "T" (Text).
-      // react-native-nfc-manager may surface `type` as a byte array or a string.
       const rawType = rec.type as number[] | string | undefined
       const typeByte = Array.isArray(rawType) && rawType.length === 1 ? rawType[0] : 0
       const typeStr = typeof rawType === 'string' ? rawType : ''
@@ -58,12 +96,8 @@ export async function readVerifierTagRaw(): Promise<string> {
             : null
       if (decoded && decoded.trim()) return decoded.trim()
     }
-    throw new Error('This tag has no verifier link on it.')
+    throw new Error('This NFC tag does not contain a credential or verification link.')
   } finally {
-    try {
-      await NfcManager.cancelTechnologyRequest()
-    } catch {
-      /* session already closed */
-    }
+    await cancelNfcSession()
   }
 }

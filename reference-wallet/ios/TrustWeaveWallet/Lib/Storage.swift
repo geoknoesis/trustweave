@@ -1,19 +1,16 @@
 // Storage.swift
 //
-// Credential storage. Credentials themselves go in Keychain (`kSecClassGenericPassword`,
-// one item per credential keyed by UUID). The credential index (list of IDs +
-// preview metadata) lives in UserDefaults for cheap browsing without unlocking
-// Keychain on every list operation.
-//
-// HolderKey is managed separately by [HolderKey].
+// Credential, accepted-issuer, activity, and preferences storage on iOS.
+// Credentials live in Keychain (`WhenUnlockedThisDeviceOnly`); lightweight metadata
+// indices and preferences live in UserDefaults.
 
 import Foundation
 import Security
 
 struct StoredCredential: Codable, Identifiable {
     let id: String
-    let format: String         // "vc+jwt" or "vc+sd-jwt"
-    let credential: String     // Stored in Keychain; this is the materialised value
+    let format: String
+    let credential: String
     let receivedAt: String
     let issuerDid: String
     let subjectDid: String
@@ -21,22 +18,81 @@ struct StoredCredential: Codable, Identifiable {
     let previewTitle: String
     let previewSubtitle: String?
     let selectivelyDisclosable: [String]
+    let trustSource: String
+    let issuerName: String?
+
+    init(
+        id: String,
+        format: String,
+        credential: String,
+        receivedAt: String,
+        issuerDid: String,
+        subjectDid: String,
+        type: [String],
+        previewTitle: String,
+        previewSubtitle: String?,
+        selectivelyDisclosable: [String],
+        trustSource: String = "confirmed",
+        issuerName: String? = nil
+    ) {
+        self.id = id
+        self.format = format
+        self.credential = credential
+        self.receivedAt = receivedAt
+        self.issuerDid = issuerDid
+        self.subjectDid = subjectDid
+        self.type = type
+        self.previewTitle = previewTitle
+        self.previewSubtitle = previewSubtitle
+        self.selectivelyDisclosable = selectivelyDisclosable
+        self.trustSource = trustSource
+        self.issuerName = issuerName
+    }
 }
 
-enum StorageError: Error {
+struct ActivityEntry: Codable, Identifiable {
+    let id: String
+    let timestamp: String
+    let kind: String // "added", "shared", "removed", "trusted_issuer", "backup", "restored"
+    let title: String
+    let subtitle: String?
+    let counterparty: String?
+    let detailsShared: Int?
+    let totalDetails: Int?
+    let success: Bool
+}
+
+struct WalletPreferences: Codable {
+    var onboardingComplete: Bool = false
+    var biometricLockEnabled: Bool = true
+    var developerMode: Bool = false
+}
+
+enum StorageError: LocalizedError {
     case keychainStoreFailed(OSStatus)
     case keychainLoadFailed(OSStatus)
     case credentialNotFound
+
+    var errorDescription: String? {
+        switch self {
+        case .keychainStoreFailed(let status): return "Could not save securely to Keychain (\(status))."
+        case .keychainLoadFailed(let status): return "Could not read securely from Keychain (\(status))."
+        case .credentialNotFound: return "Credential could not be found in storage."
+        }
+    }
 }
 
 final class Storage {
 
     private static let credentialService = "org.trustweave.referencewallet.credentials"
     private static let indexKey = "trustweave.wallet.credential-index"
+    private static let acceptedIssuersKey = "trustweave.wallet.accepted-issuers"
+    private static let activityKey = "trustweave.wallet.activity-v1"
+    private static let prefsKey = "trustweave.wallet.prefs-v1"
+    private static let maxActivity = 100
 
     private let defaults = UserDefaults.standard
 
-    /// List all stored credentials (metadata + materialised credential strings).
     func loadCredentials() -> [StoredCredential] {
         guard let data = defaults.data(forKey: Self.indexKey) else { return [] }
         let metas = (try? JSONDecoder().decode([CredentialIndexEntry].self, from: data)) ?? []
@@ -53,6 +109,8 @@ final class Storage {
                 previewTitle: meta.previewTitle,
                 previewSubtitle: meta.previewSubtitle,
                 selectivelyDisclosable: meta.selectivelyDisclosable,
+                trustSource: meta.trustSource ?? "confirmed",
+                issuerName: meta.issuerName
             )
         }
     }
@@ -70,9 +128,66 @@ final class Storage {
         saveIndex(index)
     }
 
+    func loadAcceptedIssuers() -> [String] {
+        guard let data = defaults.data(forKey: Self.acceptedIssuersKey),
+              let raw = try? JSONDecoder().decode([String].self, from: data) else {
+            return []
+        }
+        return IssuerTrust.sanitize(raw)
+    }
+
+    func addAcceptedIssuer(_ did: String) throws {
+        let next = try IssuerTrust.withAccepted(loadAcceptedIssuers(), did: did)
+        if let data = try? JSONEncoder().encode(next) {
+            defaults.set(data, forKey: Self.acceptedIssuersKey)
+        }
+    }
+
+    func removeAcceptedIssuer(_ did: String) {
+        let next = loadAcceptedIssuers().filter { $0 != did }
+        if let data = try? JSONEncoder().encode(next) {
+            defaults.set(data, forKey: Self.acceptedIssuersKey)
+        }
+    }
+
+    func loadActivity() -> [ActivityEntry] {
+        guard let data = defaults.data(forKey: Self.activityKey),
+              let items = try? JSONDecoder().decode([ActivityEntry].self, from: data) else {
+            return []
+        }
+        return items
+    }
+
+    func appendActivity(_ entry: ActivityEntry) {
+        let next = Array(([entry] + loadActivity()).prefix(Self.maxActivity))
+        if let data = try? JSONEncoder().encode(next) {
+            defaults.set(data, forKey: Self.activityKey)
+        }
+    }
+
+    func clearActivity() {
+        defaults.removeObject(forKey: Self.activityKey)
+    }
+
+    func loadPreferences() -> WalletPreferences {
+        guard let data = defaults.data(forKey: Self.prefsKey),
+              let prefs = try? JSONDecoder().decode(WalletPreferences.self, from: data) else {
+            return WalletPreferences()
+        }
+        return prefs
+    }
+
+    func savePreferences(_ prefs: WalletPreferences) {
+        if let data = try? JSONEncoder().encode(prefs) {
+            defaults.set(data, forKey: Self.prefsKey)
+        }
+    }
+
     func reset() {
         for meta in loadIndex() { try? deleteCredentialString(id: meta.id) }
         defaults.removeObject(forKey: Self.indexKey)
+        defaults.removeObject(forKey: Self.acceptedIssuersKey)
+        defaults.removeObject(forKey: Self.activityKey)
     }
 
     // MARK: - Index (UserDefaults)
@@ -87,12 +202,15 @@ final class Storage {
         let previewTitle: String
         let previewSubtitle: String?
         let selectivelyDisclosable: [String]
+        let trustSource: String?
+        let issuerName: String?
 
         init(from c: StoredCredential) {
             id = c.id; format = c.format; receivedAt = c.receivedAt
             issuerDid = c.issuerDid; subjectDid = c.subjectDid; type = c.type
             previewTitle = c.previewTitle; previewSubtitle = c.previewSubtitle
             selectivelyDisclosable = c.selectivelyDisclosable
+            trustSource = c.trustSource; issuerName = c.issuerName
         }
     }
 
@@ -120,7 +238,7 @@ final class Storage {
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: Self.credentialService,
             kSecAttrAccount as String: id,
-            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock,
+            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
             kSecValueData as String: Data(credential.utf8),
         ]
         let status = SecItemAdd(query as CFDictionary, nil)

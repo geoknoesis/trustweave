@@ -26,9 +26,10 @@ export function resolveIssuerUrl(offerUrl: string, fallbackBaseUrl?: string): st
 
 export function networkErrorHint(issuerUrl: string, fallbackBaseUrl?: string): string {
   return (
-    `Cannot reach issuer at ${issuerUrl}. ` +
-    `If the QR shows localhost, re-open the issuer page on your PC using its LAN IP ` +
-    `(e.g. ${fallbackBaseUrl ?? 'http://192.168.x.x:PORT'}). ` +
-    'Phone and PC must be on the same Wi‑Fi and the issuer port must be allowed through the firewall.'
+    `Could not connect to ${issuerUrl}. ` +
+    'Check your Wi‑Fi or internet connection and try again.' +
+    (fallbackBaseUrl
+      ? ` If you are testing locally, make sure your phone and server are on the same network (${fallbackBaseUrl}).`
+      : '')
   )
 }

@@ -4,19 +4,15 @@ import android.content.Context
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 
 /**
- * Encrypted local storage for the wallet — holder identity + credentials.
+ * Encrypted local storage for the wallet — holder identity, credentials,
+ * trusted issuers, activity history, and preferences.
  *
- * Phase 2.5b: HolderIdentity now records which backend stores the signing key
- * (`keySource = "keystore"` on API 33+ vs `"software"` on older). When keystore-backed,
- * `softwarePrivateKey` is null and the actual key material lives in AndroidKeyStore
- * under [keystoreAlias]; we only keep the public key here for display + did:key
- * derivation. On the software path the private key seed continues to sit in
- * EncryptedSharedPreferences (Phase 2 baseline).
- *
- * Schema: still v2 (the HolderIdentity additions are additive with safe defaults).
+ * Additive v2 schema: all new fields carry safe defaults so existing wallets upgrade smoothly.
  */
 class Storage(context: Context) {
 
@@ -34,8 +30,6 @@ class Storage(context: Context) {
     }
 
     init {
-        // v1 → v2 migration: old shape had `vcJwt` instead of `credential`+`format`.
-        // Wipe and start fresh; acceptable for a demo wallet.
         val existingVersion = prefs.getString(KEY_SCHEMA_VERSION, null)
         if (existingVersion == null) {
             prefs.edit().putString(KEY_SCHEMA_VERSION, CURRENT_VERSION.toString()).apply()
@@ -47,12 +41,10 @@ class Storage(context: Context) {
     @Serializable
     data class HolderIdentity(
         val did: String,
-        val publicKey: String,                         // base64url — always present
-        /** "software" (Phase 2 + API 29-32) or "keystore" (API 33+ Keystore-bound). */
+        val publicKey: String,
+        /** "software" (API 29-32) or "keystore" (API 33+ Keystore-bound). */
         val keySource: String = "software",
-        /** base64url. Present only when keySource="software". */
         val softwarePrivateKey: String? = null,
-        /** Keystore alias. Present only when keySource="keystore". */
         val keystoreAlias: String? = null,
         val createdAt: String,
     )
@@ -69,6 +61,31 @@ class Storage(context: Context) {
         val previewTitle: String,
         val previewSubtitle: String? = null,
         val selectivelyDisclosable: List<String> = emptyList(),
+        /** "configured", "backend", "confirmed", or "unverified". */
+        val trustSource: String = "confirmed",
+        val issuerName: String? = null,
+    )
+
+    @Serializable
+    data class ActivityEntry(
+        val id: String,
+        val timestamp: String,
+        /** "added", "shared", "removed", "trusted_issuer", "backup", "restored". */
+        val kind: String,
+        val title: String,
+        val subtitle: String? = null,
+        val counterparty: String? = null,
+        val detailsShared: Int? = null,
+        val totalDetails: Int? = null,
+        val success: Boolean = true,
+    )
+
+    @Serializable
+    data class WalletPreferences(
+        val onboardingComplete: Boolean = false,
+        val biometricLockEnabled: Boolean = true,
+        val developerMode: Boolean = false,
+        val useDynamicColor: Boolean = false,
     )
 
     fun loadHolder(): HolderIdentity? =
@@ -80,13 +97,13 @@ class Storage(context: Context) {
 
     fun loadCredentials(): List<StoredCredential> =
         prefs.getString(KEY_CREDENTIALS, null)?.let {
-            json.decodeFromString(kotlinx.serialization.builtins.ListSerializer(StoredCredential.serializer()), it)
+            json.decodeFromString(ListSerializer(StoredCredential.serializer()), it)
         } ?: emptyList()
 
     fun saveCredentials(creds: List<StoredCredential>) {
         prefs.edit().putString(
             KEY_CREDENTIALS,
-            json.encodeToString(kotlinx.serialization.builtins.ListSerializer(StoredCredential.serializer()), creds),
+            json.encodeToString(ListSerializer(StoredCredential.serializer()), creds),
         ).apply()
     }
 
@@ -94,10 +111,10 @@ class Storage(context: Context) {
     fun loadAcceptedIssuers(): List<String> =
         try {
             prefs.getString(KEY_ACCEPTED_ISSUERS, null)
-                ?.let { json.decodeFromString(kotlinx.serialization.builtins.ListSerializer(kotlinx.serialization.serializer<String>()), it) }
+                ?.let { json.decodeFromString(ListSerializer(serializer<String>()), it) }
                 ?.let(IssuerTrust::sanitize)
                 ?: emptyList()
-        } catch (e: kotlinx.serialization.SerializationException) {
+        } catch (_: kotlinx.serialization.SerializationException) {
             emptyList()
         }
 
@@ -109,19 +126,59 @@ class Storage(context: Context) {
     private fun saveAcceptedIssuers(issuers: List<String>) {
         prefs.edit().putString(
             KEY_ACCEPTED_ISSUERS,
-            json.encodeToString(kotlinx.serialization.builtins.ListSerializer(kotlinx.serialization.serializer<String>()), issuers),
+            json.encodeToString(ListSerializer(serializer<String>()), issuers),
+        ).apply()
+    }
+
+    fun loadActivity(): List<ActivityEntry> =
+        try {
+            prefs.getString(KEY_ACTIVITY, null)?.let {
+                json.decodeFromString(ListSerializer(ActivityEntry.serializer()), it)
+            } ?: emptyList()
+        } catch (_: kotlinx.serialization.SerializationException) {
+            emptyList()
+        }
+
+    fun appendActivity(entry: ActivityEntry) {
+        val next = (listOf(entry) + loadActivity()).take(MAX_ACTIVITY)
+        prefs.edit().putString(
+            KEY_ACTIVITY,
+            json.encodeToString(ListSerializer(ActivityEntry.serializer()), next),
+        ).apply()
+    }
+
+    fun clearActivity() {
+        prefs.edit().remove(KEY_ACTIVITY).apply()
+    }
+
+    fun loadPreferences(): WalletPreferences =
+        try {
+            prefs.getString(KEY_PREFS, null)?.let {
+                json.decodeFromString(WalletPreferences.serializer(), it)
+            } ?: WalletPreferences()
+        } catch (_: kotlinx.serialization.SerializationException) {
+            WalletPreferences()
+        }
+
+    fun savePreferences(preferences: WalletPreferences) {
+        prefs.edit().putString(
+            KEY_PREFS,
+            json.encodeToString(WalletPreferences.serializer(), preferences),
         ).apply()
     }
 
     fun addCredential(cred: StoredCredential) { saveCredentials(loadCredentials() + cred) }
     fun deleteCredential(id: String) { saveCredentials(loadCredentials().filterNot { it.id == id }) }
-    fun reset() { prefs.edit().clear().apply() }
+    fun reset() { prefs.edit().clear().putString(KEY_SCHEMA_VERSION, CURRENT_VERSION.toString()).apply() }
 
     companion object {
         private const val KEY_HOLDER = "holder"
         private const val KEY_CREDENTIALS = "credentials"
         private const val KEY_ACCEPTED_ISSUERS = "accepted-issuers"
+        private const val KEY_ACTIVITY = "activity-v1"
+        private const val KEY_PREFS = "prefs-v1"
         private const val KEY_SCHEMA_VERSION = "schema-version"
         private const val CURRENT_VERSION = 2
+        private const val MAX_ACTIVITY = 100
     }
 }

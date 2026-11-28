@@ -1,125 +1,65 @@
-// PresentView.swift — choose credential + disclosures, present to demo verifier.
+// PresentView.swift — privacy-first selective disclosure with real claim values, Face ID, haptics, and dynamic verifier targets.
 
 import SwiftUI
 
 struct PresentView: View {
-    @StateObject private var wallet = Wallet()
+    @EnvironmentObject private var wallet: Wallet
+    let onOpenScan: () -> Void
+    let onDone: () -> Void
+
     private let backend = DemoBackend()
+    @State private var activeTarget: PresentationRequestPayload?
     @State private var selectedId: String?
     @State private var disclose: [String: Bool] = [:]
     @State private var status: Status = .idle
-    @State private var response: VerificationResponse?
+    @State private var showTechChecks = false
 
-    enum Status: Equatable {
-        case idle, fetchingRequest, buildingVp, verifying, done, error(String)
-    }
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                if wallet.credentials.isEmpty {
-                    emptyState
-                } else {
-                    chooseCard
-                    if let selected = selectedCred, selected.format == "vc+sd-jwt" {
-                        discloseCard(selected: selected)
-                    }
-                    actionRow
-                    if let r = response { verificationResult(r) }
-                    if case .error(let msg) = status {
-                        errorCard(msg)
-                    }
-                }
-            }
-            .padding(16)
-        }
-        .navigationTitle("Present")
-        .navigationBarTitleDisplayMode(.inline)
-        .task {
-            do {
-                try wallet.bootstrap()
-                if selectedId == nil, let first = wallet.credentials.first { selectedId = first.id }
-                resetDisclosures()
-            } catch {
-                status = .error("\(error)")
-            }
-        }
-        .onChange(of: selectedId) { _ in resetDisclosures() }
+    enum Status {
+        case idle
+        case fetchingRequest
+        case buildingVp
+        case verifying
+        case done(response: VerificationResponse, title: String, verifierName: String, shared: Int, total: Int)
+        case error(String)
     }
 
     private var selectedCred: StoredCredential? {
         wallet.credentials.first(where: { $0.id == selectedId })
     }
 
-    private var emptyState: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "tray").font(.largeTitle).foregroundStyle(.secondary)
-            Text("No credentials to present.").foregroundStyle(.secondary)
-            NavigationLink("Receive one first", destination: ReceiveView())
-                .buttonStyle(.borderedProminent)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(32)
+    private var isSelectedExpired: Bool {
+        guard let cred = selectedCred else { return false }
+        return CredentialDisplay.statusBadge(for: cred).label == "Expired"
     }
 
-    private var chooseCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Present a credential").font(.headline)
-            Text("The wallet builds a Verifiable Presentation containing the selected credential, signs it with your holder DID, and sends it to the demo verifier.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            ForEach(wallet.credentials) { c in
-                HStack {
-                    Image(systemName: selectedId == c.id ? "largecircle.fill.circle" : "circle")
-                        .foregroundColor(.accentColor)
-                    VStack(alignment: .leading) {
-                        HStack {
-                            Text(c.previewTitle).bold()
-                            Text("(\(c.format))").font(.caption2).foregroundStyle(.tertiary)
-                        }
-                        if let sub = c.previewSubtitle {
-                            Text(sub).font(.caption).foregroundStyle(.secondary)
-                        }
-                    }
-                    Spacer()
-                }
-                .contentShape(Rectangle())
-                .onTapGesture { selectedId = c.id }
-            }
-        }
-        .padding(12)
-        .background(Color(uiColor: .secondarySystemBackground))
-        .cornerRadius(8)
+    private var shareableDetails: [ShareableClaimDetail] {
+        guard let cred = selectedCred, cred.format == "vc+sd-jwt" else { return [] }
+        return CredentialDisplay.extractShareableClaimDetails(cred)
     }
 
-    private func discloseCard(selected: StoredCredential) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Disclose to verifier").font(.headline)
-            Text("Tick the claims you're willing to reveal. Unticked claims stay hashed inside the credential — the verifier sees only that the issuer signed something, not what.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            ForEach(selected.selectivelyDisclosable, id: \.self) { name in
-                Toggle(isOn: bindingFor(name)) {
-                    Text(name).font(.system(.subheadline, design: .monospaced))
-                }
-            }
-        }
-        .padding(12)
-        .background(Color(uiColor: .secondarySystemBackground))
-        .cornerRadius(8)
+    private var sharedCount: Int {
+        shareableDetails.filter { disclose[$0.name] == true }.count
     }
 
-    private var actionRow: some View {
-        Button(action: present) {
-            switch status {
-            case .fetchingRequest: HStack { ProgressView(); Text("Fetching verifier request…").padding(.leading, 4) }
-            case .buildingVp: HStack { ProgressView(); Text("Building presentation…").padding(.leading, 4) }
-            case .verifying: HStack { ProgressView(); Text("Verifying…").padding(.leading, 4) }
-            default: Text("Present to demo verifier")
+    private var shareButtonTitle: String {
+        let total = shareableDetails.count
+        let count = sharedCount
+        let unit = count == 1 ? "detail" : "details"
+        if wallet.preferences.biometricLockEnabled {
+            if total > 0 {
+                return count > 0 ? "Confirm & share (\(count) \(unit))" : "Confirm & share (proof only)"
             }
+            return "Confirm & share"
         }
-        .buttonStyle(.borderedProminent)
-        .disabled(selectedId == nil || isInProgress)
+        if total > 0 {
+            return count > 0 ? "Share (\(count) \(unit))" : "Share proof only"
+        }
+        return "Share with requester"
+    }
+
+    private var requesterHost: String? {
+        guard let urlStr = activeTarget?.verifierUrl else { return nil }
+        return URL(string: urlStr)?.host ?? urlStr
     }
 
     private var isInProgress: Bool {
@@ -129,101 +69,402 @@ struct PresentView: View {
         }
     }
 
-    private func verificationResult(_ r: VerificationResponse) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Verification result").font(.headline)
-            HStack {
-                Image(systemName: r.valid ? "checkmark.circle.fill" : "xmark.circle.fill")
-                    .foregroundColor(r.valid ? .green : .red)
-                Text(r.valid ? "Presentation verified." : "Verification failed.")
-                    .bold()
-                    .foregroundColor(r.valid ? .green : .red)
-            }
-            .padding(8)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background((r.valid ? Color.green : Color.red).opacity(0.1))
-            .cornerRadius(6)
-
-            Text("Checklist").font(.subheadline).bold()
-            ForEach(Array(r.checks.enumerated()), id: \.offset) { _, c in
-                HStack(alignment: .top, spacing: 6) {
-                    Text(c.passed ? "✓" : "✗").bold().foregroundColor(c.passed ? .green : .red)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(c.step).font(.subheadline)
-                        if let detail = c.detail {
-                            Text(detail).font(.system(.caption, design: .monospaced)).foregroundStyle(.secondary)
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                if case .done(let response, let title, let verifierName, let shared, let total) = status {
+                    outcomeView(response: response, title: title, verifierName: verifierName, shared: shared, total: total)
+                } else if wallet.credentials.isEmpty {
+                    emptyState
+                } else {
+                    if let host = requesterHost {
+                        HStack(spacing: 12) {
+                            Image(systemName: "building.2.fill")
+                                .font(.title3)
+                                .foregroundStyle(Color.trustWeaveAccent)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("REQUESTED BY").font(.caption2.bold()).foregroundStyle(Color.trustWeaveAccent)
+                                Text(host).font(.headline)
+                            }
+                            Spacer()
                         }
+                        .padding(14)
+                        .background(Color.trustWeaveAccent.opacity(0.12))
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                    } else {
+                        Text("Choose a credential and decide which personal details to reveal.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
                     }
-                }
-                .padding(6)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background((c.passed ? Color.green : Color.red).opacity(0.05))
-                .cornerRadius(4)
-            }
 
-            if let creds = r.credentials, !creds.isEmpty {
-                Text("What the verifier saw").font(.subheadline).bold()
-                ForEach(Array(creds.enumerated()), id: \.offset) { _, cred in
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("type: \(cred.type.joined(separator: ", "))")
-                            .font(.system(.caption, design: .monospaced))
-                            .foregroundColor(.accentColor)
-                        ForEach(cred.disclosedClaims.sorted(by: { $0.key < $1.key }), id: \.key) { k, v in
-                            Text("\(k): \(v.prettyString)").font(.system(.caption, design: .monospaced))
+                    chooseCard
+                    if !shareableDetails.isEmpty {
+                        discloseCard
+                    }
+                    if isSelectedExpired {
+                        HStack(alignment: .top, spacing: 10) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundStyle(.red)
+                                .font(.title3)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("This credential has expired")
+                                    .font(.subheadline.bold())
+                                    .foregroundStyle(.red)
+                                Text("The requester may reject it. You can still try sharing or request a renewal from the issuer.")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer(minLength: 0)
                         }
-                        if let withheld = cred.withheldClaimNames, !withheld.isEmpty {
-                            Divider().padding(.vertical, 2)
-                            Text("withheld:").font(.system(.caption2, design: .monospaced)).foregroundStyle(.secondary)
-                            ForEach(withheld, id: \.self) { wn in
-                                Text("  \(wn)").font(.system(.caption2, design: .monospaced)).foregroundStyle(.secondary)
+                        .padding(14)
+                        .background(Color.red.opacity(0.1))
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                        .accessibilityElement(children: .combine)
+                    }
+                    if case .error(let msg) = status {
+                        errorCard(msg)
+                    }
+                    actionRow
+                }
+            }
+            .padding(16)
+        }
+        .navigationTitle("Review & share")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Close") { onDone() }
+            }
+        }
+        .onAppear {
+            if let pending = wallet.pendingPresentation {
+                activeTarget = pending
+                wallet.pendingPresentation = nil
+            }
+            syncSelection()
+        }
+        .onChange(of: wallet.preselectedCredentialId) { _, _ in syncSelection() }
+        .onChange(of: selectedId) { _, _ in resetDisclosuresPrivacyFirst() }
+    }
+
+    private func syncSelection() {
+        if let preferred = wallet.preselectedCredentialId,
+           wallet.credentials.contains(where: { $0.id == preferred }) {
+            selectedId = preferred
+            wallet.preselectedCredentialId = nil
+        } else if selectedId == nil || !wallet.credentials.contains(where: { $0.id == selectedId }) {
+            selectedId = wallet.credentials.first?.id
+        }
+        resetDisclosuresPrivacyFirst()
+    }
+
+    /// Privacy-first default: start all optional claims OFF so users consciously choose what to share.
+    private func resetDisclosuresPrivacyFirst() {
+        disclose.removeAll()
+        for name in selectedCred?.selectivelyDisclosable ?? [] {
+            disclose[name] = false
+        }
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "wallet.pass")
+                .font(.system(size: 40))
+                .foregroundStyle(Color.trustWeaveAccent)
+                .padding(18)
+                .background(Color.trustWeaveAccent.opacity(0.12))
+                .clipShape(Circle())
+            Text("Nothing to share yet").font(.headline)
+            Text("Add a credential to your wallet first, then scan a requester's QR code or tap NFC.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+            Button {
+                onOpenScan()
+            } label: {
+                Text("Scan QR or tap NFC")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+            }
+            .buttonStyle(.borderedProminent)
+            .buttonBorderShape(.capsule)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(24)
+        .background(Color(uiColor: .secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+
+    private var chooseCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("CREDENTIAL TO SHARE")
+                .font(.caption2.bold())
+                .foregroundStyle(.secondary)
+
+            ForEach(wallet.credentials) { c in
+                Button {
+                    Haptics.selection()
+                    selectedId = c.id
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: selectedId == c.id ? "checkmark.circle.fill" : "circle")
+                            .font(.title3)
+                            .foregroundStyle(selectedId == c.id ? Color.trustWeaveAccent : .secondary)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(c.previewTitle).font(.headline)
+                            if let sub = c.previewSubtitle {
+                                Text(sub).font(.caption).foregroundStyle(.secondary)
                             }
                         }
+                        Spacer()
                     }
-                    .padding(8)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color(uiColor: .secondarySystemBackground))
-                    .cornerRadius(6)
+                    .padding(.vertical, 6)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(16)
+        .background(Color(uiColor: .secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+
+    private var discloseCard: some View {
+        let total = shareableDetails.count
+        let hidden = total - sharedCount
+
+        return VStack(alignment: .leading, spacing: 12) {
+            Text("CHOOSE WHAT TO SHARE")
+                .font(.caption2.bold())
+                .foregroundStyle(.secondary)
+            Text("Everything switched off stays completely hidden from the requester.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            HStack {
+                Label("Sharing \(sharedCount) of \(total) · \(hidden) hidden", systemImage: "eye.slash")
+                    .font(.caption.bold())
+                    .foregroundStyle(Color.trustWeaveAccent)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Color.trustWeaveAccent.opacity(0.12))
+                    .clipShape(Capsule())
+                Spacer()
+                Button("Minimal") {
+                    Haptics.selection()
+                    for item in shareableDetails { disclose[item.name] = false }
+                }
+                .font(.caption.bold())
+                Button("All") {
+                    Haptics.selection()
+                    for item in shareableDetails { disclose[item.name] = true }
+                }
+                .font(.caption.bold())
+            }
+
+            ForEach(shareableDetails) { item in
+                let isOn = disclose[item.name] ?? false
+                Toggle(isOn: bindingFor(item.name)) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(item.label).font(.subheadline.bold())
+                        Text(item.value ?? "Included in credential")
+                            .font(.subheadline)
+                            .foregroundStyle(isOn ? .primary : .secondary)
+                        Text(isOn ? "Will be shared" : "Stays hidden")
+                            .font(.caption2.bold())
+                            .foregroundStyle(isOn ? .green : .secondary)
+                    }
+                }
+                .tint(.green)
+            }
+        }
+        .padding(16)
+        .background(Color(uiColor: .secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+
+    private var actionRow: some View {
+        Button(action: initiateShare) {
+            Group {
+                switch status {
+                case .fetchingRequest:
+                    HStack(spacing: 8) { ProgressView().tint(.white); Text("Reading request…") }
+                case .buildingVp:
+                    HStack(spacing: 8) { ProgressView().tint(.white); Text("Preparing proof…") }
+                case .verifying:
+                    HStack(spacing: 8) { ProgressView().tint(.white); Text("Sharing…") }
+                default:
+                    Label(
+                        shareButtonTitle,
+                        systemImage: wallet.preferences.biometricLockEnabled ? "faceid" : "paperplane.fill"
+                    )
+                    .font(.headline)
                 }
             }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 8)
+        }
+        .buttonStyle(.borderedProminent)
+        .buttonBorderShape(.capsule)
+        .disabled(selectedId == nil || isInProgress)
+    }
+
+    private func outcomeView(
+        response: VerificationResponse,
+        title: String,
+        verifierName: String,
+        shared: Int,
+        total: Int
+    ) -> some View {
+        VStack(spacing: 16) {
+            VStack(spacing: 12) {
+                Image(systemName: response.valid ? "checkmark.circle.fill" : "xmark.circle.fill")
+                    .font(.system(size: 56))
+                    .foregroundStyle(response.valid ? .green : .red)
+                Text(response.valid ? "Shared & verified" : "Verification failed")
+                    .font(.title2.bold())
+                Text(
+                    response.valid
+                        ? "\(title) was verified by \(verifierName)."
+                        : "\(verifierName) could not verify this presentation."
+                )
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+
+                if total > 0 {
+                    Label("Shared \(shared) of \(total) details · \(total - shared) hidden", systemImage: "eye.slash")
+                        .font(.caption.bold())
+                        .foregroundStyle(Color.trustWeaveAccent)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.trustWeaveAccent.opacity(0.12))
+                        .clipShape(Capsule())
+                }
+
+                Button {
+                    status = .idle
+                    activeTarget = nil
+                    showTechChecks = false
+                    onDone()
+                } label: {
+                    Text("Done")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                }
+                .buttonStyle(.borderedProminent)
+                .buttonBorderShape(.capsule)
+                .padding(.top, 6)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(24)
+            .background(Color(uiColor: .secondarySystemBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 18))
+
+            DisclosureGroup("Technical verification checks (\(response.checks.count))", isExpanded: $showTechChecks) {
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(Array(response.checks.enumerated()), id: \.offset) { _, c in
+                        HStack(alignment: .top, spacing: 8) {
+                            Image(systemName: c.passed ? "checkmark.circle.fill" : "xmark.circle.fill")
+                                .foregroundStyle(c.passed ? .green : .red)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(c.step).font(.caption)
+                                if let detail = c.detail {
+                                    Text(detail)
+                                        .font(.system(.caption2, design: .monospaced))
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                        .padding(8)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background((c.passed ? Color.green : Color.red).opacity(0.08))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                }
+                .padding(.top, 8)
+            }
+            .padding(14)
+            .background(Color(uiColor: .secondarySystemBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
         }
     }
 
     private func errorCard(_ msg: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Failed").bold().foregroundColor(.red)
-            Text(msg).font(.caption)
+            Label("Sharing failed", systemImage: "exclamationmark.circle.fill")
+                .font(.headline)
+                .foregroundStyle(.red)
+            Text(msg).font(.subheadline)
         }
-        .padding(12)
+        .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.red.opacity(0.1))
-        .cornerRadius(8)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 
     private func bindingFor(_ name: String) -> Binding<Bool> {
         Binding(get: { disclose[name] ?? false }, set: { disclose[name] = $0 })
     }
 
-    private func resetDisclosures() {
-        disclose.removeAll()
-        for name in selectedCred?.selectivelyDisclosable ?? [] { disclose[name] = true }
-    }
-
-    private func present() {
+    private func initiateShare() {
         guard let id = selectedId, let cred = selectedCred else { return }
-        response = nil
+        let total = shareableDetails.count
+        let count = sharedCount
+        let target = activeTarget
         Task {
+            if wallet.preferences.biometricLockEnabled {
+                let reason = total > 0
+                    ? "Confirm sharing \(cred.previewTitle) (\(count) of \(total) details)"
+                    : "Confirm sharing \(cred.previewTitle)"
+                let approved = await BiometricAuth.confirm(reason: reason)
+                guard approved else { return }
+            }
             do {
                 status = .fetchingRequest
-                let req = try await backend.fetchPresentationRequest()
+                async let reqTask = backend.fetchPresentationRequest(target: target)
+                async let backendIssuersTask = backend.backendIssuers()
+                let req = try await reqTask
+                let backendIssuers = await backendIssuersTask
+
                 status = .buildingVp
                 let discloseSet = Set(disclose.filter { $0.value }.map { $0.key })
-                let vp = try wallet.createPresentation(credentialId: id, audience: req.audience, nonce: req.nonce, disclose: discloseSet)
+                let vp = try wallet.createPresentation(
+                    credentialId: id,
+                    audience: req.audience,
+                    nonce: req.nonce,
+                    disclose: discloseSet,
+                    backendIssuers: backendIssuers
+                )
                 status = .verifying
-                let res = try await backend.verify(presentation: vp, format: cred.format, expectedNonce: req.nonce)
-                response = res
-                status = .done
+                let res = try await backend.verify(
+                    presentation: vp,
+                    format: cred.format,
+                    expectedNonce: req.nonce,
+                    target: target
+                )
+                let verifierLabel = requesterHost ?? (req.verifier.hasPrefix("did:") ? "Requesting verifier" : req.verifier)
+                wallet.recordActivity(
+                    kind: "shared",
+                    title: cred.previewTitle,
+                    counterparty: verifierLabel,
+                    detailsShared: total > 0 ? discloseSet.count : nil,
+                    totalDetails: total > 0 ? total : nil,
+                    success: res.valid
+                )
+                if res.valid { Haptics.success() } else { Haptics.error() }
+                status = .done(
+                    response: res,
+                    title: cred.previewTitle,
+                    verifierName: verifierLabel,
+                    shared: discloseSet.count,
+                    total: total
+                )
             } catch {
-                status = .error("\(error)")
+                Haptics.error()
+                status = .error(error.localizedDescription)
             }
         }
     }

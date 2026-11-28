@@ -4,7 +4,11 @@
     "slug": "trustweave-reference-wallet",
     "version": "0.1.0",
     "orientation": "portrait",
-    "scheme": "trustweavewallet",
+    "scheme": [
+      "trustweavewallet",
+      "openid-credential-offer",
+      "openid4vp"
+    ],
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -18,7 +22,27 @@
     },
     "android": {
       "package": "org.trustweave.referencewallet.expo",
-      "usesCleartextTraffic": true
+      "usesCleartextTraffic": true,
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ],
+          "data": [
+            {
+              "scheme": "openid-credential-offer"
+            },
+            {
+              "scheme": "openid4vp"
+            },
+            {
+              "scheme": "trustweavewallet"
+            }
+          ]
+        }
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -30,13 +54,13 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow TrustWeave Wallet to scan degree offer QR codes from the issuer."
+          "cameraPermission": "TrustWeave uses your camera to scan QR codes when adding or sharing credentials."
         }
       ],
       [
         "react-native-nfc-manager",
         {
-          "nfcPermission": "Allow TrustWeave Wallet to read a verifier NFC tag to start a presentation."
+          "nfcPermission": "TrustWeave uses NFC to read verification tags when you tap your phone."
         }
       ]
     ],

@@ -1,5 +1,6 @@
 package org.trustweave.referencewallet.lib
 
+import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -12,12 +13,8 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.trustweave.referencewallet.BuildConfig
 
 /**
- * Thin client for the in-repo Next.js demo backend (issuer + verifier).
- *
- * Phase 2.5: receiveCredential() now returns SD-JWT VC by default with the
- * issuer's selectively-disclosable claim list; the verify() body uses the new
- * `presentation` + `format` field shape (with a `vp` legacy fallback on the
- * server side).
+ * HTTP client supporting both the default demo backend AND dynamic issuer/verifier
+ * URLs parsed from scanned QR codes, NFC NDEF tags, and OS deep links.
  */
 class DemoBackend(
     private val baseUrl: String = BuildConfig.DEMO_BACKEND_BASE_URL,
@@ -73,13 +70,65 @@ class DemoBackend(
         val expectedNonce: String,
     )
 
+    @Serializable
+    private data class Oid4VciRedeemRequest(
+        val preAuthorizedCode: String,
+        val subjectDid: String,
+    )
+
+    @Serializable
+    private data class IssuerIdentity(val issuerDids: List<String> = emptyList())
+
     suspend fun receiveCredential(subjectDid: String): CredentialOffer = withContext(Dispatchers.IO) {
-        val encoded = java.net.URLEncoder.encode(subjectDid, "UTF-8")
+        val encoded = URLEncoder.encode(subjectDid, "UTF-8")
         val req = Request.Builder().url("$baseUrl/api/demo-issuer/credential?subject=$encoded").get().build()
         http.newCall(req).execute().use { response ->
-            require(response.isSuccessful) { "Issuer request failed: HTTP ${response.code}" }
+            require(response.isSuccessful) { "Could not reach issuer (HTTP ${response.code})." }
             val body = response.body?.string() ?: error("Empty issuer response")
             json.decodeFromString(CredentialOffer.serializer(), body)
+        }
+    }
+
+    /** Claim a credential from a scanned QR / NFC / deep-link offer (direct or OpenID4VCI pre-authorized). */
+    suspend fun claimIncomingOffer(
+        offer: PayloadRouter.IncomingOffer,
+        subjectDid: String,
+    ): CredentialOffer = withContext(Dispatchers.IO) {
+        when (offer) {
+            is PayloadRouter.IncomingOffer.TrustWeaveDirect -> {
+                val resolvedBase = PayloadRouter.resolveHostUrl(offer.issuerUrl, baseUrl)
+                val endpoint = if (offer.credentialEndpoint.startsWith("/")) offer.credentialEndpoint else "/${offer.credentialEndpoint}"
+                val encodedSubject = URLEncoder.encode(subjectDid, "UTF-8")
+                val studentQuery = offer.studentId?.let { "&studentId=${URLEncoder.encode(it, "UTF-8")}" } ?: ""
+                val req = Request.Builder()
+                    .url("$resolvedBase$endpoint?subject=$encodedSubject$studentQuery")
+                    .get()
+                    .build()
+                http.newCall(req).execute().use { response ->
+                    require(response.isSuccessful) { "Issuer returned HTTP ${response.code}." }
+                    val body = response.body?.string() ?: error("Empty issuer response")
+                    json.decodeFromString(CredentialOffer.serializer(), body)
+                }
+            }
+            is PayloadRouter.IncomingOffer.Oid4VciPreAuthorized -> {
+                val resolvedBase = PayloadRouter.resolveHostUrl(offer.issuerBase, baseUrl)
+                val payload = json.encodeToString(
+                    Oid4VciRedeemRequest.serializer(),
+                    Oid4VciRedeemRequest(
+                        preAuthorizedCode = offer.preAuthorizedCode,
+                        subjectDid = subjectDid,
+                    ),
+                )
+                val req = Request.Builder()
+                    .url("$resolvedBase/api/public/credential-offer/redeem")
+                    .post(payload.toRequestBody("application/json".toMediaType()))
+                    .build()
+                http.newCall(req).execute().use { response ->
+                    require(response.isSuccessful) { "Could not redeem offer (HTTP ${response.code})." }
+                    val body = response.body?.string() ?: error("Empty issuer response")
+                    json.decodeFromString(CredentialOffer.serializer(), body)
+                }
+            }
         }
     }
 
@@ -100,19 +149,21 @@ class DemoBackend(
             }
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
-        } catch (e: java.io.IOException) {
+        } catch (_: java.io.IOException) {
             emptySet()
-        } catch (e: kotlinx.serialization.SerializationException) {
+        } catch (_: kotlinx.serialization.SerializationException) {
             emptySet()
         }
 
-    @Serializable
-    private data class IssuerIdentity(val issuerDids: List<String> = emptyList())
-
-    suspend fun fetchPresentationRequest(): PresentationRequestParams = withContext(Dispatchers.IO) {
-        val req = Request.Builder().url("$baseUrl/api/demo-verifier/request").get().build()
+    suspend fun fetchPresentationRequest(
+        target: PayloadRouter.PresentationRequestPayload? = null,
+    ): PresentationRequestParams = withContext(Dispatchers.IO) {
+        val resolvedBase = target?.let { PayloadRouter.resolveHostUrl(it.verifierUrl, baseUrl) } ?: baseUrl
+        val rawEndpoint = target?.requestEndpoint ?: "/api/demo-verifier/request"
+        val endpoint = if (rawEndpoint.startsWith("/")) rawEndpoint else "/$rawEndpoint"
+        val req = Request.Builder().url("$resolvedBase$endpoint").get().build()
         http.newCall(req).execute().use { response ->
-            require(response.isSuccessful) { "Verifier request fetch failed: HTTP ${response.code}" }
+            require(response.isSuccessful) { "Could not read verifier request (HTTP ${response.code})." }
             val body = response.body?.string() ?: error("Empty verifier-request response")
             json.decodeFromString(PresentationRequestParams.serializer(), body)
         }
@@ -122,13 +173,17 @@ class DemoBackend(
         presentation: String,
         format: String,
         expectedNonce: String,
+        target: PayloadRouter.PresentationRequestPayload? = null,
     ): VerificationResponse = withContext(Dispatchers.IO) {
+        val resolvedBase = target?.let { PayloadRouter.resolveHostUrl(it.verifierUrl, baseUrl) } ?: baseUrl
+        val rawEndpoint = target?.verifyEndpoint ?: "/api/demo-verifier/verify"
+        val endpoint = if (rawEndpoint.startsWith("/")) rawEndpoint else "/$rawEndpoint"
         val payload = json.encodeToString(
             VerifyRequest.serializer(),
             VerifyRequest(presentation = presentation, format = format, expectedNonce = expectedNonce),
         )
         val req = Request.Builder()
-            .url("$baseUrl/api/demo-verifier/verify")
+            .url("$resolvedBase$endpoint")
             .post(payload.toRequestBody("application/json".toMediaType()))
             .build()
         http.newCall(req).execute().use { response ->

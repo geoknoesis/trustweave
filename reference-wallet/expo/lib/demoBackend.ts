@@ -12,6 +12,7 @@ import {
   type IncomingCredentialOffer,
   type WalletClaimResponse,
 } from './credentialOfferIngress'
+import { loadBackendIssuers } from './issuerTrust'
 
 const baseUrl: string =
   (Constants.expoConfig?.extra?.demoBackendBaseUrl as string | undefined) ??
@@ -126,3 +127,8 @@ export async function verify(
 
 /** Exposed so the Settings screen / debug view can show what backend is in use. */
 export const demoBackendBaseUrl = baseUrl
+
+/** Fetch the issuer DIDs belonging to the wallet's own configured backend (fails closed). */
+export async function fetchBackendIssuers(): Promise<string[]> {
+  return loadBackendIssuers(baseUrl)
+}

@@ -98,15 +98,26 @@ app/
 └── lib/                      Mirror of reference-wallet/lib (web TypeScript)
 │   ├── Crypto.kt             Ed25519 + did:key + JWS sign/verify (via BC)
 │   ├── Base58.kt             Standalone bs58 codec
-│   ├── Storage.kt            EncryptedSharedPreferences adapter
-│   ├── Wallet.kt             Facade: bootstrap, store, list, createPresentation
-│   └── DemoBackend.kt        OkHttp client for issuer + verifier endpoints
-└── ui/                       Compose UI
-    ├── Theme.kt              Material 3 colours (matches web wallet palette)
-    ├── MainActivity.kt       NavHost + bottom-bar tabs
-    ├── HomeScreen.kt
-    ├── ReceiveScreen.kt
-    └── PresentScreen.kt
+│   ├── HolderKey.kt          Android Keystore (API 33+) + KeyInfo security-level inspection + software fallback
+│   ├── IssuerTrust.kt        Fail-closed issuer trust policy
+│   ├── CredentialVerification.kt Signature, holder-binding, expiry & SD-JWT disclosure checks
+│   ├── CredentialDisplay.kt  Human labels, portraits, relative times & honest status badges
+│   ├── PayloadRouter.kt      Unified QR / NFC / OS deep-link payload auto-router
+│   ├── NdefParser.kt         Pure-Kotlin NFC Forum RTD-URI / RTD-Text decoder
+│   ├── BiometricHelper.kt    Framework BiometricPrompt (API 29+) with manual confirmation fallback
+│   ├── Storage.kt            EncryptedSharedPreferences adapter (credentials, trusted issuers, activity, prefs)
+│   ├── Wallet.kt             Facade: bootstrap, fail-closed store, selective disclosure, key-free backup/restore
+│   └── DemoBackend.kt        OkHttp client for dynamic OID4VCI / OID4VP + demo issuer/verifier endpoints
+└── ui/                       Material 3 Compose UI (Light/Dark + Material You dynamic color)
+    ├── Theme.kt              Complete Light & Dark M3 schemes + Android 12+ Dynamic Color
+    ├── MainActivity.kt       3-tab NavHost (Wallet / Scan / Activity) + deep-link/NDEF routing + resume lock
+    ├── OnboardingScreen.kt   Privacy-first welcome onboarding
+    ├── HomeScreen.kt         Wallet Pass Cards, portraits, proactive expiry warnings & detail bottom sheet
+    ├── ScanScreen.kt         1-tap live CameraX + ZXing QR viewfinder, NFC Reader Mode & manual entry
+    ├── ActivityScreen.kt     Private local activity timeline
+    ├── ReceiveScreen.kt      Offer review + fail-closed UnrecognizedIssuerDialog
+    ├── PresentScreen.kt      Claim-value selective disclosure, BiometricPrompt & outcome screen
+    └── SettingsScreen.kt     KeyInfo custody details, Trusted Issuers, Backup/Restore, Wallet ID QR, Reset
 ```
 
 Same conceptual layout as the web wallet's `app/` and `lib/`. When the Kotlin

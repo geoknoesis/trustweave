@@ -1,16 +1,8 @@
 // HolderKey.swift
 //
 // Ed25519 holder identity management on iOS.
-//
-// Phase 2.5d baseline: CryptoKit `Curve25519.Signing.PrivateKey` is generated
-// in-process; the raw 32-byte seed is stored in Keychain (`kSecClassGenericPassword`).
-// Signing rehydrates the key from the stored seed.
-//
-// Phase 2.5e upgrade: bind the key directly to Secure Enclave or kSecAttrTokenID
-// for hardware-backed non-extractability. CryptoKit's `SecureEnclave.P256` works
-// natively on Secure Enclave but Ed25519 doesn't — that route requires switching to
-// P-256 + ES256 JWS alg, which is a bigger change. Most production iOS wallets pick
-// that tradeoff.
+// Stores the 32-byte seed in iOS Keychain with `WhenUnlockedThisDeviceOnly`
+// protection (never synced off-device).
 
 import CryptoKit
 import Foundation
@@ -58,8 +50,8 @@ final class HolderKey {
     }
 
     /// Sign [data] with the holder's Ed25519 private key. Returns the raw 64-byte signature.
-    func sign(_ data: Data) -> Data {
-        return try! privateKey.signature(for: data)
+    func sign(_ data: Data) throws -> Data {
+        return try privateKey.signature(for: data)
     }
 
     var did: String {
@@ -69,7 +61,6 @@ final class HolderKey {
     // MARK: - Keychain plumbing
 
     private static func storeSeedInKeychain(_ seed: Data) throws {
-        // Delete any existing entry first; Keychain has no atomic upsert.
         let deleteQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -81,7 +72,7 @@ final class HolderKey {
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
-            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock,
+            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
             kSecValueData as String: seed,
         ]
         let status = SecItemAdd(query as CFDictionary, nil)

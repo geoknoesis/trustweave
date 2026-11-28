@@ -92,6 +92,18 @@ function nodeAtob(s: string): string {
 
 // ----- compact JWS -----
 
+export function parseJwsHeader(jws: string): Record<string, unknown> | null {
+  const parts = jws.split('.')
+  if (parts.length !== 3) return null
+  try {
+    const parsed = JSON.parse(b64uDecodeString(parts[0])) as unknown
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null
+    return parsed as Record<string, unknown>
+  } catch {
+    return null
+  }
+}
+
 export function signJws(payload: Record<string, unknown>, privateKey: Uint8Array, kid: string, typ: string = 'JWT'): string {
   const header = { alg: 'EdDSA', typ, kid }
   const encodedHeader = b64uEncodeString(JSON.stringify(header))

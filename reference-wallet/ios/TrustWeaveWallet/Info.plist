@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>TrustWeave Wallet</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>UILaunchScreen</key>
+	<dict/>
+	<key>NSCameraUsageDescription</key>
+	<string>TrustWeave Wallet uses the camera to scan credential offers and verification QR codes.</string>
+	<key>NFCReaderUsageDescription</key>
+	<string>Hold your iPhone near an NFC credential offer or verifier reader to connect.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>TrustWeave Wallet uses Face ID to protect your wallet and confirm before sharing credentials.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>org.trustweave.referencewallet</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>trustweavewallet</string>
+				<string>openid-credential-offer</string>
+				<string>openid4vp</string>
+			</array>
+		</dict>
+	</array>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<!-- Permits local demo backend HTTP on localhost / local network only; use HTTPS in production. -->
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

@@ -71,22 +71,38 @@ upstream references and removal criteria. Run `npm run test:security` and
 ```
 expo/
 ├── app/                          expo-router file-based screens
-│   ├── _layout.tsx               Tabs root + polyfill import
-│   ├── index.tsx                 Home (default route)
-│   ├── receive.tsx
-│   └── present.tsx
+│   ├── _layout.tsx               Root Stack + privacy curtain + deep-link router
+│   ├── (tabs)/
+│   │   ├── _layout.tsx           3-tab navigation (Wallet / Scan / Activity)
+│   │   ├── index.tsx             Wallet Home (Pass cards, expiry warnings, pull-to-refresh)
+│   │   ├── scan.tsx              1-tap live QR camera + NFC tap + manual entry
+│   │   └── activity.tsx          Private local activity timeline
+│   ├── receive.tsx               Credential offer review + fail-closed issuer trust sheet
+│   ├── present.tsx               Selective disclosure + biometric confirm + outcome screen
+│   └── settings.tsx              Key custody details, Trusted Issuers, Backup/Restore, Dev Mode
+├── components/                   Pass cards, detail sheet, issuer trust sheet, error boundary
 ├── lib/
 │   ├── crypto.ts                 Ed25519 (@noble) + did:key + base64url + JWS
 │   ├── sdjwt.ts                  SD-JWT VC encode/decode/present + expo-crypto random
-│   ├── storage.ts                expo-secure-store wrapper
-│   ├── wallet.ts                 Facade (async — SecureStore is async)
+│   ├── issuerTrust.ts            Fail-closed issuer trust policy & DID fingerprinting
+│   ├── credentialVerification.ts Signature, holder-binding, expiry & disclosure verification
+│   ├── qrRouter.ts               Unified QR / NFC / deep-link payload auto-router
+│   ├── credentialDisplay.ts      Light & Dark WCAG AA tokens, human labels & portraits
+│   ├── biometrics.ts             Optional expo-local-authentication adapter with confirmation fallback
+│   ├── haptics.ts / clipboard.ts Optional native feedback/copy adapters
+│   ├── storage.ts                expo-secure-store wrapper (credentials, trusted issuers, activity)
+│   ├── wallet.ts                 Facade (fail-closed store, selective disclosure, key-free backup)
 │   └── demoBackend.ts            fetch() client; URL from app.json extra
 ├── polyfills.ts                  imports react-native-get-random-values
-├── app.json                      Expo config (demo URL, scheme, platforms)
+├── app.json                      Expo config (camera/NFC permissions, OID4VC/VP URL schemes)
 ├── package.json
 ├── tsconfig.json
 └── babel.config.js
 ```
+
+### Optional native enhancements
+
+Biometrics (`lib/biometrics.ts`), haptics (`lib/haptics.ts`), and clipboard (`lib/clipboard.ts`) load `expo-local-authentication`, `expo-haptics`, and `expo-clipboard` dynamically if present in a custom dev client or EAS build, and gracefully fall back to in-app confirmation / React Native `Share` when running without those native modules so the locked dependency set remains minimal.
 
 ## Tradeoff: the holder key
 

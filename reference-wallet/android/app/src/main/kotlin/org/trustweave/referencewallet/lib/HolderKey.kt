@@ -2,8 +2,10 @@ package org.trustweave.referencewallet.lib
 
 import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyInfo
 import android.security.keystore.KeyProperties
 import androidx.annotation.RequiresApi
+import java.security.KeyFactory
 import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.Signature
@@ -66,9 +68,45 @@ sealed interface HolderKey {
         override fun toString(): String = "HolderKey.Software(publicKeySize=${publicKey.size}, privateKey=[REDACTED])"
     }
 
+    /**
+     * Runtime-inspected key custody level reported by Android Keystore [KeyInfo] on API 31+.
+     * Distinguishes StrongBox, Hardware TEE, software-backed Keystore, and encrypted-prefs software
+     * keys so the UI never overclaims hardware protection from API level alone.
+     */
+    enum class KeySecurityLevel {
+        STRONGBOX,
+        TRUSTED_ENVIRONMENT,
+        SOFTWARE_KEYSTORE,
+        SOFTWARE_STORAGE,
+        UNKNOWN,
+    }
+
     companion object {
         const val ANDROID_KEYSTORE = "AndroidKeyStore"
         const val DEFAULT_ALIAS = "trustweave-wallet-holder-ed25519"
+
+        /** Inspect the actual security level of the active holder key without assuming hardware custody. */
+        fun inspectSecurityLevel(keySource: String, keystoreAlias: String?): KeySecurityLevel {
+            if (keySource != "keystore" || keystoreAlias.isNullOrBlank()) {
+                return KeySecurityLevel.SOFTWARE_STORAGE
+            }
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                return KeySecurityLevel.UNKNOWN
+            }
+            return runCatching {
+                val ks = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
+                val entry = ks.getEntry(keystoreAlias, null) as? KeyStore.PrivateKeyEntry
+                    ?: return KeySecurityLevel.UNKNOWN
+                val factory = KeyFactory.getInstance(entry.privateKey.algorithm, ANDROID_KEYSTORE)
+                val info = factory.getKeySpec(entry.privateKey, KeyInfo::class.java)
+                when (info.securityLevel) {
+                    KeyProperties.SECURITY_LEVEL_STRONGBOX -> KeySecurityLevel.STRONGBOX
+                    KeyProperties.SECURITY_LEVEL_TRUSTED_ENVIRONMENT -> KeySecurityLevel.TRUSTED_ENVIRONMENT
+                    KeyProperties.SECURITY_LEVEL_SOFTWARE -> KeySecurityLevel.SOFTWARE_KEYSTORE
+                    else -> KeySecurityLevel.UNKNOWN
+                }
+            }.getOrDefault(KeySecurityLevel.UNKNOWN)
+        }
 
         /**
          * Generate a fresh holder key. Prefers Keystore-bound Ed25519 on API 33+;
